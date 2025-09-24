@@ -8,10 +8,11 @@ header {
     display: flex;
     height: 100px;
     align-items: center;
-    padding: 0 32px;
+    padding: 0 px;
     background: #181818;
     box-shadow: 0 4px 15px rgba(0,0,0,0.7);
     position: relative;
+    z-index: 10;
 }
 header img {
     height: 100%;
@@ -29,3 +30,107 @@ header h1 {
     font-weight: 700;
     text-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
+
+/* Botones apilados y alargados */
+.btn-list {
+    max-width: 820px; /* ancho máximo del contenedor */
+    margin: 36px auto; /* centrado horizontal y separación superior */
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 16px;
+}
+.btn {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    display: flex;
+    width: 100%;
+    /* más alto: mayor padding y min-height para consistencia */
+    /* dejar espacio a la derecha para la ilustración (porcentaje igual al ancho de la imagen) */
+    padding: 26px 35% 24px 26px; /* alto para que sean más alargados */
+    min-height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #2b2b2b, #4a4a4a);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    position: relative; /* para posicionar la ilustración absolutamente */
+    overflow: hidden; /* recortar la ilustración a los bordes redondeados */
+}
+.btn:hover,
+.btn:focus {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+    outline: none;
+}
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+}
+
+/* Estructura interna del botón: texto a la izquierda, imagen pegada a la derecha */
+.btn-content {
+    display: flex;
+    align-items: center;
+    /* mantener icono + texto agrupados al inicio; la ilustración usa margin-left:auto */
+    justify-content: flex-start;
+    gap: 12px;
+    width: 65%;
+    z-index: 5;
+}
+.btn-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+.btn-icon {
+    height: 45px; /* icono pequeño a la izquierda */
+    width: 45px;
+    object-fit: contain;
+    margin-right: 5px; /* separación entre icono y texto */
+    border-radius: 8px;
+    flex: 0 0 45px; /* mantener tamaño fijo */
+}
+.btn-illustration {
+    /* hacer que la imagen ocupe toda la altura del botón */
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    /* ancho por defecto para pantallas grandes (laptop) */
+    width: 28%;
+    z-index: 3; /* encima del contenido del botón */
+    height: 100%;
+    object-fit: fill; /* cubrir el contenedor y mantener proporción */
+    border-radius: 0 20px 20px 0; /* mantener las esquinas redondeadas en el lado derecho */
+}
+
+/* Responsive: en teléfonos (ancho <= 767px) usar 55% para que la ilustración sea más grande */
+@media (max-width: 767px) {
+    .btn-illustration {
+        width: 55%;
+    }
+}
+.btn-text h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.05;
+    font-weight: 700;
+    color: #fff;
+
+}
+.btn-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #e6e6e6;
+    opacity: 0.9;
+}
+
+
+
