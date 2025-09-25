@@ -8,11 +8,16 @@ header {
     display: flex;
     height: 100px;
     align-items: center;
-    padding: 0 px;
+    padding: 0;
     background: #181818;
     box-shadow: 0 4px 15px rgba(0,0,0,0.7);
-    position: relative;
-    z-index: 10;
+    /* mantener el header siempre visible en la parte superior */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000; /* muy por encima del contenido del body */
 }
 header img {
     height: 100%;
@@ -29,6 +34,11 @@ header h1 {
     letter-spacing: 2px;
     font-weight: 700;
     text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+/* dejar espacio arriba para que el contenido no quede oculto bajo el header fijo */
+main {
+    padding-top: 120px; /* un poco más que la altura del header para separación */
 }
 
 /* Botones apilados y alargados */
@@ -61,12 +71,23 @@ header h1 {
     transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
     position: relative; /* para posicionar la ilustración absolutamente */
     overflow: hidden; /* recortar la ilustración a los bordes redondeados */
+    z-index: 1; /* por debajo del header fijo */
 }
 .btn:hover,
-.btn:focus {
+.btn:focus-visible {
+    /* show the elevated/hover state on hover and when focused via keyboard
+       (focus-visible avoids keeping the hover style after a mouse click) */
     transform: translateY(-3px);
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
     outline: none;
+}
+
+/* If the element is focused but not hovered (for example: clicked with the mouse
+   then the pointer leaves), restore the resting visual state so it doesn't remain
+   elevated. This covers browsers that don't support :focus-visible. */
+.btn:focus:not(:hover) {
+    transform: translateY(0);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }
 .btn:active {
     transform: translateY(0);
@@ -81,7 +102,7 @@ header h1 {
     justify-content: flex-start;
     gap: 12px;
     width: 65%;
-    z-index: 5;
+    z-index: 2; /* menor que el header */
 }
 .btn-text {
     display: flex;
@@ -105,7 +126,7 @@ header h1 {
     bottom: 0;
     /* ancho por defecto para pantallas grandes (laptop) */
     width: 28%;
-    z-index: 3; /* encima del contenido del botón */
+    z-index: 1; /* asegurarse que quede por debajo del header */
     height: 100%;
     object-fit: fill; /* cubrir el contenedor y mantener proporción */
     border-radius: 0 20px 20px 0; /* mantener las esquinas redondeadas en el lado derecho */
@@ -130,6 +151,23 @@ header h1 {
     font-size: 0.85rem;
     color: #e6e6e6;
     opacity: 0.9;
+}
+ 
+/* Ocultar barras de desplazamiento pero mantener el scroll funcional (cross-browser) */
+/* Aplicado a la página completa; si necesitas aplicarlo a un contenedor concreto,
+   mueve estas reglas al selector del contenedor (por ejemplo: .mi-contenedor). */
+html, body {
+    -ms-overflow-style: none; /* IE y Edge */
+    scrollbar-width: none; /* Firefox */
+}
+/* WebKit browsers (Chrome, Safari, Opera) */
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Opcional: suavizar el scroll en iOS/wasm y permitir inercia táctil */
+body {
+    -webkit-overflow-scrolling: touch;
 }
 
 
