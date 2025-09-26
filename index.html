@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/signup.css">
 </head>
 <body>
     <header>
         <img src="img/Jujutsu Kaisen.png" alt="Jujutsu Kaisen">
         <h1>Jujutsu Kaisen</h1>
     </header>
-    <main>
+    <main id="main-content">
         <section class="btn-list" aria-label="Lista de botones">
-            <button class="btn">
+            <button id="open-signup" class="btn">
                 <span class="btn-content">
                     <img src="/img/registrar.png" alt="icono" class="btn-icon">
                     <span class="btn-text">
@@ -58,5 +59,49 @@
             </button>
         </section>
     </main>
+
+    <script>
+        // Carga signup.html en el <main> manteniendo el header
+        (function(){
+            function loadSignup(){
+                return fetch('signup.html')
+                    .then(function(resp){
+                        if(!resp.ok) throw new Error('No se pudo cargar signup.html');
+                        return resp.text();
+                    })
+                    .then(function(html){
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+                        var newMain = doc.querySelector('main');
+                        if(newMain){
+                            var main = document.getElementById('main-content');
+                            main.innerHTML = newMain.innerHTML;
+                            // Actualiza el history para permitir retroceder
+                            history.pushState({page: 'signup'}, '', 'signup.html');
+                        } else {
+                            console.error('signup.html no contiene <main>');
+                        }
+                    });
+            }
+
+            var btn = document.getElementById('open-signup');
+            if(btn){
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    loadSignup().catch(function(err){ console.error(err); });
+                });
+            }
+
+            // Cuando el usuario usa atrás/adelante, recargar la página principal o la vista de signup
+            window.addEventListener('popstate', function(ev){
+                if(ev.state && ev.state.page === 'signup'){
+                    loadSignup().catch(function(){ location.reload(); });
+                } else {
+                    // Volver al index: recargar la página para restaurar el listado de botones
+                    location.reload();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
