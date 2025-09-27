@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Jujutsu Kaisen Mission Management</title>
+    <link rel="stylesheet" href="/css/add.css">
+</head>
+<body>
+    <div class="form-field" style="max-width:720px; margin:0 auto 12px;">
+        <label for="entitySelect">Selecciona qué crear</label>
+        <select id="entitySelect">
+        <option value="hechicero">Crear hechicero</option>
+        <option value="tecnica">Crear técnica maldita</option>
+        <option value="maldicion">Crear maldición</option>
+        </select>
+    </div>
+    <div class="container">
+        <h2>Registro</h2>
+
+        <!-- Forms: only one is visible at a time -->
+        <form id="registroForm">
+            <!-- Hechicero -->
+            <fieldset data-for="hechicero">
+                <label for="h_nombre">Nombre</label>
+                <input id="h_nombre" name="nombre" type="text" required>
+
+                <label for="h_grado">Grado dentro de la jerarquía</label>
+                <select id="h_grado" name="grado" required>
+                    <option value="estudiante">Estudiante</option>
+                    <option value="aprendiz">Aprendiz</option>
+                    <option value="grado medio">Grado medio</option>
+                    <option value="grado alto">Grado alto</option>
+                    <option value="grado especial">Grado especial</option>
+                </select>
+
+                <label for="h_tecnica">Técnica maldita principal</label>
+                <input id="h_tecnica" name="tecnica" type="text">
+
+                <label for="h_experiencia">Años de experiencia</label>
+                <input id="h_experiencia" name="experiencia" type="number" min="0">
+            </fieldset>
+
+            <!-- Técnica maldita -->
+            <fieldset data-for="tecnica" style="display:none">
+                <label for="t_nombre">Nombre</label>
+                <input id="t_nombre" name="nombre" type="text" required>
+
+                <label for="t_tipo">Tipo</label>
+                <select id="t_tipo" name="tipo">
+                    <option value="amplificacion">Técnica de amplificación</option>
+                    <option value="dominio">Dominio</option>
+                    <option value="restriccion">Restricción</option>
+                    <option value="soporte">Soporte</option>
+                </select>
+
+                <label for="t_hechicero">Hechicero que la utiliza</label>
+                <input id="t_hechicero" name="hechicero" type="text">
+
+                <div class="row">
+                    <div class="col">
+                        <label for="t_nivel">Nivel de dominio</label>
+                        <input id="t_nivel" name="nivel" type="number" min="0">
+                    </div>
+                    <div class="col">
+                        <label for="t_efectividad">Efectividad en combate</label>
+                        <select id="t_efectividad" name="efectividad">
+                            <option value="alta">Alta</option>
+                            <option value="media">Media</option>
+                            <option value="baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label for="t_condiciones">Condiciones / limitaciones</label>
+                <textarea id="t_condiciones" name="condiciones" rows="3"></textarea>
+            </fieldset>
+
+            <!-- Maldición -->
+            <fieldset data-for="maldicion" style="display:none">
+                <label for="m_nombre">Nombre</label>
+                <input id="m_nombre" name="nombre" type="text" required>
+
+                <label for="m_grado">Grado</label>
+                <select id="m_grado" name="grado">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="semi-especial">Semi-especial</option>
+                    <option value="especial">Especial</option>
+                </select>
+
+                <label for="m_tipo">Tipo</label>
+                <select id="m_tipo" name="tipo">
+                    <option value="maligna">Maligna</option>
+                    <option value="semi-maldicion">Semi-maldición</option>
+                    <option value="residual">Residual</option>
+                    <option value="desconocida">Desconocida</option>
+                </select>
+
+                <label for="m_ubicacion">Ubicación</label>
+                <input id="m_ubicacion" name="ubicacion" type="text">
+
+                <div class="row">
+                    <div class="col">
+                        <label for="m_fecha">Fecha y hora de aparición</label>
+                        <input id="m_fecha" name="fecha" type="datetime-local">
+                    </div>
+                    <div class="col">
+                        <label for="m_estado">Estado actual</label>
+                        <select id="m_estado" name="estado">
+                            <option value="activa">Activa</option>
+                            <option value="en proceso de exorcismo">En proceso de exorcismo</option>
+                            <option value="exorcizada">Exorcizada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label for="m_hechicero">Hechicero principal asignado</label>
+                <input id="m_hechicero" name="hechicero" type="text">
+            </fieldset>
+
+            <div class="actions">
+                <button type="button" class="btn-back" id="resetBtn">Limpiar</button>
+                <button type="submit" class="btn-register">Registrar</button>
+            </div>
+        </form>
+
+        <div id="result" class="result" style="display:none"></div>
+    </div>
+
+    <script src="/js/add.js"></script>
+</body>
+</html>

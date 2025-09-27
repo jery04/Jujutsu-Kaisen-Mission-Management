@@ -101,7 +101,7 @@ main {
     /* mantener icono + texto agrupados al inicio; la ilustración usa margin-left:auto */
     justify-content: flex-start;
     gap: 12px;
-    width: 65%;
+    width: 100%;
     z-index: 2; /* menor que el header */
 }
 .btn-text {
