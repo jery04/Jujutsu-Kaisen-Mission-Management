@@ -7,7 +7,7 @@ module.exports = new EntitySchema({
     id: { type: 'bigint', primary: true, generated: true },
     fecha: { type: 'datetime' },
     motivo: { type: 'varchar', length: 255, nullable: true },
-    estado: { type: 'enum', enum: ['programado','en_curso','finalizado'], default: 'programado' },
+    estado: { type: 'enum', enum: ['programado', 'en_curso', 'finalizado'], default: 'programado' },
     created_at: { type: 'timestamp', createDate: true },
     updated_at: { type: 'timestamp', updateDate: true }
   },
@@ -37,5 +37,10 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'support_staff_id' },
       nullable: false
     }
-  }
+  },
+  indices: [
+    { columns: ['mission'] },
+    { columns: ['support_staff'] },
+    { columns: ['estado'] }
+  ]
 });

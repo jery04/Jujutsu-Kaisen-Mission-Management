@@ -2,8 +2,9 @@ require('reflect-metadata');
 const express = require('express');
 const typeorm = require('typeorm');
 const cors = require('cors');
+const path = require('path');
 
-// Entidades de TypeORM
+// Entidades TypeORM
 const Location = require('../database_tables/Location');
 const Sorcerer = require('../database_tables/Sorcerer');
 const SupportStaff = require('../database_tables/SupportStaff');
@@ -16,10 +17,20 @@ const MissionParticipant = require('../database_tables/MissionParticipant');
 const MissionTechniqueUsage = require('../database_tables/MissionTechniqueUsage');
 const Transfer = require('../database_tables/Transfer');
 
-//Creamos la instancia de express(app)
+// Express
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Servir frontend estático (index.html, css, js, html/*)
+const staticRoot = path.join(__dirname, '..');
+app.use(express.static(staticRoot));
+// Logger básico de peticiones
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+const dropSchema = String(process.env.DROP_SCHEMA || '').toLowerCase() === 'true';
 
 typeorm.createConnection({
   type: 'mysql',
@@ -41,18 +52,59 @@ typeorm.createConnection({
     MissionTechniqueUsage,
     Transfer
   ],
-  synchronize: false
+  synchronize: true, // Habilitar sincronización automática para desarrollo
+  dropSchema // Permite resetear el esquema si cambian metadatos (solo usar en dev con cuidado)
 }).then(async (dbConn) => {
   console.log('Conectado a la base de datos jujutsu_misiones_db');
 
   // Salud de la API
-  app.get('/', (req, res) => {
+  app.get('/health', (req, res) => {
     res.json({ ok: true, message: 'API Jujutsu Misiones - running' });
+  });
+
+  // Ubicaciones
+  app.get('/locations', async (req, res) => {
+    try {
+      const repo = dbConn.getRepository('Location');
+      const list = await repo.find();
+      const data = list.map(l => ({ id: l.id, nombre: l.nombre, region: l.region }));
+      res.json({ ok: true, data });
+    } catch (error) {
+      console.error('Error listando ubicaciones:', error);
+      res.status(500).json({ ok: false, message: 'Error obteniendo ubicaciones' });
+    }
+  });
+
+  // Crear ubicación
+  app.post('/locations', async (req, res) => {
+    try {
+      const { nombre, region, tipo, lat, lon } = req.body || {};
+      if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
+      if (!region) return res.status(400).json({ message: 'region requerida' });
+      const repo = dbConn.getRepository('Location');
+      // Evitar duplicados por (nombre, region)
+      const dup = await repo.findOne({ where: { nombre, region } });
+      if (dup) {
+        return res.status(409).json({ message: 'Ubicación ya existe', id: dup.id });
+      }
+      const entity = repo.create({ nombre, region, tipo: tipo || null, lat: lat ?? null, lon: lon ?? null });
+      console.log('POST /locations body:', req.body);
+      const saved = await repo.save(entity);
+      res.status(201).json(saved);
+    } catch (error) {
+      console.error('Error creando ubicación:', error);
+      // ER_DUP_ENTRY -> 409
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Ubicación ya existe' });
+      }
+      res.status(500).json({ message: 'Error creando ubicación', details: error.message });
+    }
   });
 
   // Crear hechicero
   app.post('/sorcerer', async (req, res) => {
     try {
+      console.log('POST /sorcerer body:', req.body);
       const sorcererRepo = dbConn.getRepository('Sorcerer');
       const newSorcerer = sorcererRepo.create(req.body);
       const result = await sorcererRepo.save(newSorcerer);
@@ -60,6 +112,10 @@ typeorm.createConnection({
 
     } catch (error) {
       console.error('Error al crear Hechicero:', error);
+      // Duplicado por unique(nombre) -> 409
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Hechicero ya existe' });
+      }
       res.status(500).json({
         message: 'Error en el servidor. Asegúrate de que los IDs de las Foreign Keys existan (ej. tecnica_principal_id).',
         details: error.message
@@ -86,6 +142,7 @@ typeorm.createConnection({
   // Crear técnica
   app.post('/technique', async (req, res) => {
     try {
+      console.log('POST /technique body:', req.body);
       const { nombre, tipo, hechicero, nivel_dominio, efectividad_inicial, condiciones, activa } = req.body;
       if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
       if (!tipo) return res.status(400).json({ message: 'tipo requerido' });
@@ -96,6 +153,11 @@ typeorm.createConnection({
       if (!owner) return res.status(400).json({ message: `Hechicero no encontrado: ${hechicero}` });
 
       const techRepo = dbConn.getRepository('Technique');
+      // Evitar duplicado por unique(nombre, sorcerer)
+      const existing = await techRepo.findOne({ where: { nombre, sorcerer: { id: owner.id } } });
+      if (existing) {
+        return res.status(409).json({ message: 'Técnica ya existe', id: existing.id });
+      }
       const tech = techRepo.create({
         nombre,
         tipo,
@@ -109,6 +171,9 @@ typeorm.createConnection({
       res.status(201).json(saved);
     } catch (error) {
       console.error('Error al crear Técnica:', error);
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Técnica ya existe' });
+      }
       res.status(500).json({ message: 'Error creando técnica', details: error.message });
     }
   });
@@ -116,6 +181,7 @@ typeorm.createConnection({
   // Crear maldición
   app.post('/curses', async (req, res) => {
     try {
+      console.log('POST /curses body:', req.body);
       let { nombre, grado, tipo, ubicacion, fecha, estado, hechicero } = req.body;
       if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
       if (!grado) return res.status(400).json({ message: 'grado requerido' });
@@ -143,11 +209,17 @@ typeorm.createConnection({
       }
 
       const curseRepo = dbConn.getRepository('Curse');
+      // Evitar duplicado por unique(nombre, fecha_aparicion)
+      const fechaDate = new Date(fecha);
+      const dup = await curseRepo.findOne({ where: { nombre, fecha_aparicion: fechaDate } });
+      if (dup) {
+        return res.status(409).json({ message: 'Maldición ya existe', id: dup.id });
+      }
       const entity = curseRepo.create({
         nombre,
         grado,
         tipo,
-        fecha_aparicion: new Date(fecha),
+        fecha_aparicion: fechaDate,
         estado: estado || 'activa',
         location,
         assigned_sorcerer: assigned || null
@@ -156,6 +228,9 @@ typeorm.createConnection({
       res.status(201).json(saved);
     } catch (error) {
       console.error('Error al crear Maldición:', error);
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Maldición ya existe' });
+      }
       res.status(500).json({ message: 'Error creando maldición', details: error.message });
     }
   });
@@ -233,11 +308,32 @@ typeorm.createConnection({
     }
   });
 
-  // Arranque del servidor
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
-  });
+  // Arranque del servidor con tolerancia a puerto en uso (solo dev).
+  const requestedPort = Number(process.env.PORT) || 3000;
+  const maxAttempts = 5;
+  let attempt = 0;
+
+  const tryListen = (port) => {
+    attempt += 1;
+    const server = app.listen(port, () => {
+      console.log(`Servidor escuchando en http://localhost:${port}`);
+    });
+    server.on('error', (err) => {
+      if (err && err.code === 'EADDRINUSE' && attempt < maxAttempts) {
+        const nextPort = port + 1;
+        console.warn(`Puerto ${port} en uso. Probando ${nextPort}...`);
+        setTimeout(() => tryListen(nextPort), 300);
+      } else if (err && err.code === 'EADDRINUSE') {
+        console.error(`No fue posible iniciar el servidor tras ${attempt} intentos. Establece PORT en un puerto libre.`);
+        process.exit(1);
+      } else {
+        console.error('Error iniciando servidor:', err);
+        process.exit(1);
+      }
+    });
+  };
+
+  tryListen(requestedPort);
 
 }).catch(err => {
   console.error('Error conexión DB:', err);

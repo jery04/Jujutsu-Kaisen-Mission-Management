@@ -6,11 +6,11 @@ module.exports = new EntitySchema({
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
     nombre: { type: 'varchar', length: 120 },
-    grado: { type: 'enum', enum: ['estudiante','aprendiz','grado_medio','grado_alto','grado_especial'] },
+    grado: { type: 'enum', enum: ['estudiante', 'aprendiz', 'grado_medio', 'grado_alto', 'grado_especial'] },
     tecnica_principal_id: { type: 'bigint', nullable: true },
     anios_experiencia: { type: 'tinyint', unsigned: true, default: 0 },
-    estado_operativo: { type: 'enum', enum: ['activo','lesionado','recuperacion','baja','inactivo_temporal','fallecido'], default: 'activo' },
-    tipo_fallecimiento: { type: 'enum', enum: ['','en_mision','por_edad'], default: '' },
+    estado_operativo: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'], default: 'activo' },
+    tipo_fallecimiento: { type: 'enum', enum: ['', 'en_mision', 'por_edad'], default: '' },
     curse_causa_muerte_id: { type: 'bigint', nullable: true },
     fecha_fallecimiento: { type: 'date', nullable: true },
     nivel_exito_cache: { type: 'decimal', precision: 5, scale: 2, nullable: true },
@@ -32,5 +32,13 @@ module.exports = new EntitySchema({
       nullable: true,
       cascade: false
     }
-  }
+  },
+  uniques: [
+    { columns: ['nombre'] }
+  ],
+  indices: [
+    { columns: ['grado'] },
+    { columns: ['estado_operativo'] },
+    { columns: ['tipo_fallecimiento'] }
+  ]
 });

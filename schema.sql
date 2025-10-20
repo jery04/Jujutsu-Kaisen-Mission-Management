@@ -1,7 +1,7 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Limpieza para re-ejecución idempotente (ambiente de desarrollo)
+-- Limpieza de tablas existentes para evitar errores al ejecutar el script varias veces
 DROP TABLE IF EXISTS mission_technique_usage;
 DROP TABLE IF EXISTS mission_participant;
 DROP TABLE IF EXISTS transfer;
@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS support_staff;
 DROP TABLE IF EXISTS sorcerer;
 DROP TABLE IF EXISTS location;
 
--- 1. Ubicaciones
+-- Tabla de ubicaciones: almacena lugares donde ocurren eventos importantes
 CREATE TABLE IF NOT EXISTS location (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(150) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS location (
   KEY idx_location_region (region)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Hechiceros
+-- Tabla de hechiceros: información sobre los hechiceros y su estado
 CREATE TABLE IF NOT EXISTS sorcerer (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS sorcerer (
   KEY idx_sorcerer_tipo_fallecimiento (tipo_fallecimiento)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Personal de soporte
+-- Tabla de personal de soporte: roles y estados del personal auxiliar
 CREATE TABLE IF NOT EXISTS support_staff (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(120) NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS support_staff (
   KEY idx_support_staff_estado (estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Historial de estado operativo
+-- Historial de estados: cambios en el estado operativo de los hechiceros
 CREATE TABLE IF NOT EXISTS sorcerer_status_history (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   sorcerer_id BIGINT NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS sorcerer_status_history (
   KEY idx_status_history_sorcerer_fecha (sorcerer_id, fecha_cambio)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 5. Relaciones (mentor-discipulo / equipo)
+-- Relaciones entre hechiceros: mentoría o trabajo en equipo
 CREATE TABLE IF NOT EXISTS sorcerer_relationship (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   mentor_id BIGINT NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS sorcerer_relationship (
   KEY idx_relationship_tipo (tipo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 6. Tecnicas
+-- Tabla de técnicas: habilidades utilizadas por los hechiceros
 CREATE TABLE IF NOT EXISTS technique (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(150) NOT NULL,
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS technique (
   KEY idx_technique_sorcerer (sorcerer_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 7. Maldiciones
+-- Maldiciones: entidades que los hechiceros deben enfrentar
 CREATE TABLE IF NOT EXISTS curse (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(150) NOT NULL,

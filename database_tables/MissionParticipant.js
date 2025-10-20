@@ -5,8 +5,8 @@ module.exports = new EntitySchema({
   tableName: 'mission_participant',
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
-    rol: { type: 'enum', enum: ['ejecutor','apoyo','supervisor','refuerzo'], default: 'ejecutor' },
-    resultado: { type: 'enum', enum: ['exito','fracaso','retirado','herido','fallecido','cancelado'], nullable: true },
+    rol: { type: 'enum', enum: ['ejecutor', 'apoyo', 'supervisor', 'refuerzo'], default: 'ejecutor' },
+    resultado: { type: 'enum', enum: ['exito', 'fracaso', 'retirado', 'herido', 'fallecido', 'cancelado'], nullable: true },
     observaciones: { type: 'text', nullable: true },
     created_at: { type: 'timestamp', createDate: true },
     updated_at: { type: 'timestamp', updateDate: true }
@@ -25,5 +25,12 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'sorcerer_id' },
       nullable: false
     }
-  }
+  },
+  uniques: [
+    { columns: ['mission', 'sorcerer'] }
+  ],
+  indices: [
+    { columns: ['rol'] },
+    { columns: ['resultado'] }
+  ]
 });

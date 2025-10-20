@@ -6,10 +6,10 @@ module.exports = new EntitySchema({
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
     nombre: { type: 'varchar', length: 150 },
-    grado: { type: 'enum', enum: ['1','2','3','semi-especial','especial'] },
-    tipo: { type: 'enum', enum: ['maligna','semi-maldicion','residual','desconocida'] },
+    grado: { type: 'enum', enum: ['1', '2', '3', 'semi-especial', 'especial'] },
+    tipo: { type: 'enum', enum: ['maligna', 'semi-maldicion', 'residual', 'desconocida'] },
     fecha_aparicion: { type: 'datetime' },
-    estado: { type: 'enum', enum: ['activa','en_proceso_exorcismo','exorcizada'], default: 'activa' },
+    estado: { type: 'enum', enum: ['activa', 'en_proceso_exorcismo', 'exorcizada'], default: 'activa' },
     descripcion: { type: 'text', nullable: true },
     threat_nivel: { type: 'tinyint', unsigned: true, nullable: true },
     created_at: { type: 'timestamp', createDate: true },
@@ -34,5 +34,14 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'mission_exorcismo_id' },
       nullable: true
     }
-  }
+  },
+  uniques: [
+    { columns: ['nombre', 'fecha_aparicion'] }
+  ],
+  indices: [
+    { columns: ['estado'] },
+    { columns: ['grado'] },
+    { columns: ['location'] },
+    { columns: ['mission_exorcismo'] }
+  ]
 });

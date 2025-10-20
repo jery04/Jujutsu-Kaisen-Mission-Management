@@ -20,7 +20,7 @@ const Mission = require('../database_tables/Mission');
       password: '1234',
       database: 'jujutsu_misiones_db',
       entities: [Location, Sorcerer, SupportStaff, Technique, Curse, Mission],
-      synchronize: false
+      synchronize: true
     });
 
     //verificamos que se haya establecido la conexion

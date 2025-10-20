@@ -7,8 +7,8 @@ module.exports = new EntitySchema({
     id: { type: 'bigint', primary: true, generated: true },
     fecha_inicio: { type: 'datetime' },
     fecha_fin: { type: 'datetime', nullable: true },
-    urgencia: { type: 'enum', enum: ['planificada','urgente','emergencia_critica'] },
-    estado: { type: 'enum', enum: ['pendiente','en_progreso','completada_exito','completada_fracaso','cancelada'], default: 'pendiente' },
+    urgencia: { type: 'enum', enum: ['planificada', 'urgente', 'emergencia_critica'] },
+    estado: { type: 'enum', enum: ['pendiente', 'en_progreso', 'completada_exito', 'completada_fracaso', 'cancelada'], default: 'pendiente' },
     descripcion_eventos: { type: 'text', nullable: true },
     tecnicas_resumen: { type: 'text', nullable: true },
     danos_colaterales: { type: 'text', nullable: true },
@@ -34,5 +34,13 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'supervisor_id' },
       nullable: false
     }
-  }
+  },
+  indices: [
+    { columns: ['estado'] },
+    { columns: ['urgencia'] },
+    { columns: ['location'] },
+    { columns: ['curse'] },
+    { columns: ['supervisor'] },
+    { columns: ['fecha_inicio', 'fecha_fin'] }
+  ]
 });

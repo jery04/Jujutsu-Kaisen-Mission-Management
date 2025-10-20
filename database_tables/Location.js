@@ -12,5 +12,8 @@ module.exports = new EntitySchema({
     lon: { type: 'decimal', precision: 9, scale: 6, nullable: true },
     created_at: { type: 'timestamp', createDate: true },
     updated_at: { type: 'timestamp', updateDate: true }
-  }
+  },
+  uniques: [
+    { columns: ['nombre', 'region'] }
+  ]
 });

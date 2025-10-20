@@ -10,7 +10,7 @@ Instrucciones rápidas:
    cd /mnt/data/jujutsu_misiones_nodejs
    npm install
    ```
-4. Para crear las tablas manualmente (opcional), ejecuta `schema.sql` en tu servidor MySQL (base de datos: jujutsu_misiones_db).
+4. Esquema de BD: El archivo `schema.sql` es solo de referencia/documentación. La creación y actualización del esquema se hace 100% con el ORM (TypeORM) mediante `synchronize: true` en desarrollo o migraciones en producción. No ejecutes `schema.sql`.
 5. Ejecuta en modo desarrollo:
    ```bash
    npm run dev

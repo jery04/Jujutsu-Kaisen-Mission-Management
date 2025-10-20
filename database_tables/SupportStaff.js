@@ -6,9 +6,15 @@ module.exports = new EntitySchema({
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
     nombre: { type: 'varchar', length: 120 },
-    rol: { type: 'enum', enum: ['logistica','coordinacion','comunicaciones','otro'], default: 'logistica' },
-    estado: { type: 'enum', enum: ['activo','inactivo'], default: 'activo' },
+    rol: { type: 'enum', enum: ['logistica', 'coordinacion', 'comunicaciones', 'otro'], default: 'logistica' },
+    estado: { type: 'enum', enum: ['activo', 'inactivo'], default: 'activo' },
     created_at: { type: 'timestamp', createDate: true },
     updated_at: { type: 'timestamp', updateDate: true }
-  }
+  },
+  uniques: [
+    { columns: ['nombre'] }
+  ],
+  indices: [
+    { columns: ['estado'] }
+  ]
 });

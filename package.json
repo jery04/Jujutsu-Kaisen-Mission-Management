@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node js/server.js",
     "dev": "nodemon js/server.js",
-    "db:apply": "node scripts/applySchema.js",
-    "setup": "npm install"
+    "setup": "npm install",
+    "smoke": "node scripts/smoke.js",
+    "seed": "node scripts/seed.js"
   },
   "author": "Josué",
   "license": "ISC",

@@ -5,7 +5,7 @@ module.exports = new EntitySchema({
   tableName: 'sorcerer_relationship',
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
-    tipo: { type: 'enum', enum: ['mentoria','equipo'], default: 'mentoria' },
+    tipo: { type: 'enum', enum: ['mentoria', 'equipo'], default: 'mentoria' },
     fecha_inicio: { type: 'date' },
     fecha_fin: { type: 'date', nullable: true },
     created_at: { type: 'timestamp', createDate: true }
@@ -23,5 +23,12 @@ module.exports = new EntitySchema({
       joinColumn: { name: 'subordinado_id' },
       nullable: false
     }
-  }
+  },
+  uniques: [
+    { columns: ['mentor', 'subordinado', 'tipo', 'fecha_inicio'] }
+  ],
+  indices: [
+    { columns: ['subordinado'] },
+    { columns: ['tipo'] }
+  ]
 });

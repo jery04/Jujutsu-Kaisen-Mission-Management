@@ -5,8 +5,8 @@ module.exports = new EntitySchema({
   tableName: 'sorcerer_status_history',
   columns: {
     id: { type: 'bigint', primary: true, generated: true },
-    estado_anterior: { type: 'enum', enum: ['activo','lesionado','recuperacion','baja','inactivo_temporal','fallecido'], nullable: true },
-    estado_nuevo: { type: 'enum', enum: ['activo','lesionado','recuperacion','baja','inactivo_temporal','fallecido'] },
+    estado_anterior: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'], nullable: true },
+    estado_nuevo: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'] },
     fecha_cambio: { type: 'datetime', default: () => 'CURRENT_TIMESTAMP' },
     motivo: { type: 'varchar', length: 255, nullable: true },
     created_at: { type: 'timestamp', createDate: true }
@@ -19,5 +19,8 @@ module.exports = new EntitySchema({
       nullable: false,
       cascade: false
     }
-  }
+  },
+  indices: [
+    { columns: ['sorcerer', 'fecha_cambio'] }
+  ]
 });

@@ -1,36 +1,80 @@
-// add.js — Envío de formularios al backend (POST)
+// Maneja el formulario de registro y habla con la API
 (function () {
     'use strict';
 
-    // Elementos del DOM
+    // Punto único para la URL del backend; si existe window.API_BASE, se usa.
+    const API_BASE = window.API_BASE || 'http://localhost:3000';
+
+    // Referencias de DOM que reutilizamos
     const entitySelect = document.getElementById('entitySelect');
     const form = document.getElementById('registroForm');
-    // Fieldsets específicos por entidad
     const fieldsets = Array.from(form.querySelectorAll('fieldset'));
     const resultEl = document.getElementById('result');
+    const resetBtn = document.getElementById('resetBtn');
+    const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Mostrar/ocultar el fieldset según la entidad activa
+    // Muestra/oculta fieldsets según la entidad activa
     function showFor(value) {
         fieldsets.forEach(fs => {
-            if (fs.getAttribute('data-for') === value) {
-                fs.style.display = ''; // Mostrar el fieldset activo
-            } else {
-                fs.style.display = 'none'; // Ocultar los demás
-            }
+            fs.style.display = (fs.getAttribute('data-for') === value) ? '' : 'none';
         });
-        // Reiniciar estilos de resultado al cambiar de formulario
-        resultEl.style.display = 'none';
-        resultEl.style.color = 'black';
-        resultEl.style.backgroundColor = 'transparent';
+        // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
+        if (value === 'maldicion') {
+            prefillDatalists().catch(() => { /* silencioso: no bloquear el uso si falla */ });
+        }
     }
 
-    // Inicialización y cambios en el selector de entidad
-    entitySelect.addEventListener('change', e => showFor(e.target.value));
-    showFor(entitySelect.value); // Carga inicial
+    // Limpia la caja de resultado
+    function clearResult() {
+        resultEl.style.display = 'none';
+        resultEl.style.color = '';
+        resultEl.style.backgroundColor = '';
+        resultEl.innerHTML = '';
+    }
+
+    // Comprobación rápida de salud del backend
+    async function checkBackendHealth() {
+        try {
+            const resp = await fetch(`${API_BASE}/`);
+            if (!resp.ok) throw new Error('La API respondió con un estado no OK');
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    // Inicialización: pinta el fieldset actual y oculta el resto
+    entitySelect.addEventListener('change', e => {
+        clearResult();
+        showFor(e.target.value);
+    });
+    showFor(entitySelect.value);
+
+    // Limpia el formulario visible sin perder la selección
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            const activeFs = fieldsets.find(fs => fs.style.display !== 'none');
+            if (!activeFs) return;
+            const inputs = Array.from(activeFs.querySelectorAll('input, select, textarea'));
+            inputs.forEach(i => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; });
+            clearResult();
+        });
+    }
 
     // Envío del formulario activo
     form.addEventListener('submit', async e => {
         e.preventDefault();
+        console.log('[add.js] submit clicked');
+
+        const backendOk = await checkBackendHealth();
+        if (!backendOk) {
+            clearResult();
+            resultEl.style.backgroundColor = '#f8d7da';
+            resultEl.style.color = '#721c24';
+            resultEl.innerHTML = 'No pude conectar con el servidor de la API. ¿Está corriendo en ' + API_BASE + ' ?';
+            resultEl.style.display = 'block';
+            return;
+        }
 
         const activeFs = fieldsets.find(fs => fs.style.display !== 'none');
         if (!activeFs) return;
@@ -40,11 +84,11 @@
         inputs.forEach(i => { if (i.name) raw[i.name] = i.value; });
 
         const entityType = activeFs.getAttribute('data-for');
-        let endpoint = 'http://localhost:3000';
+        let endpoint = API_BASE; // base de API configurable
         let payload = {};
 
         if (entityType === 'hechicero') {
-            // Sorcerer: convertir grado a enums del backend
+            // Sorcerer: convertimos el texto del select a los enums esperados por el backend
             const gradoMap = {
                 'grado medio': 'grado_medio',
                 'grado alto': 'grado_alto',
@@ -56,11 +100,11 @@
                 nombre: raw.nombre,
                 grado,
                 anios_experiencia
-                // tecnica_principal_id opcional si se desea buscar por nombre
+                // Si en el futuro quieres asociar técnica por nombre, habría que resolver el ID primero en el backend
             };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
-            // Technique: requiere nombre del hechicero propietario
+            // Technique: requiere que exista un hechicero con ese nombre
             payload = {
                 nombre: raw.nombre,
                 tipo: raw.tipo,
@@ -72,7 +116,7 @@
             };
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
-            // Curse: búsqueda por nombre de location y hechicero asignado
+            // Curse: la ubicacion debe existir en BD (por nombre), y el hechicero es opcional
             payload = {
                 nombre: raw.nombre,
                 grado: raw.grado,
@@ -84,53 +128,103 @@
             };
             endpoint += '/curses';
         } else {
+            clearResult();
             resultEl.innerHTML = 'Entidad no soportada';
             resultEl.style.display = 'block';
             return;
         }
 
-        // Feedback de envío
+        // Feedback de envío y bloqueo de doble submit
+        clearResult();
         resultEl.innerHTML = `<span style="color:blue;">Enviando ${entityType}...</span>`;
         resultEl.style.backgroundColor = '#f0f0f0';
         resultEl.style.display = 'block';
+        if (submitBtn) submitBtn.disabled = true;
 
         try {
-            // Petición POST al backend
+            console.log('[add.js] sending to endpoint:', endpoint, 'payload:', payload);
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
-            const result = await response.json();
+            // Intenta parsear JSON; si falla, usa objeto vacío
+            let result;
+            try { result = await response.json(); } catch (_) { result = {}; }
 
+            console.log('[add.js] response status:', response.status, 'body:', result);
             if (!response.ok) {
-                // Error de negocio/servidor: priorizar el mensaje del backend si existe
-                throw new Error(result.message || result.details || `Error ${response.status} en el servidor.`);
+                const serverMsg = result && (result.message || result.details);
+                // Mensajes más claros para casos comunes
+                let friendly = serverMsg || `Error ${response.status} en el servidor.`;
+                if (/Ubicación no encontrada/i.test(serverMsg || '')) {
+                    friendly += ' (Crea la ubicación primero o usa un nombre existente)';
+                }
+                if (/Hechicero no encontrado/i.test(serverMsg || '')) {
+                    friendly += ' (Primero registra al hechicero desde la opción correspondiente)';
+                }
+                throw new Error(friendly);
             }
 
-            // Éxito: mostrar resultado y limpiar
+            // Éxito: muestra resultado y deja el formulario listo para otro
             const id = result.id || result?.sorcerer?.id || 'N/A';
-
-            resultEl.style.backgroundColor = '#d4edda'; // Verde claro para éxito
+            resultEl.style.backgroundColor = '#d4edda'; // verde claro
             resultEl.style.color = '#155724';
-            resultEl.innerHTML = `✅ Registro de **${entityType}** exitoso. ID: **${id}**<br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+            resultEl.innerHTML = `✅ Registro de <strong>${entityType}</strong> exitoso. ID: <strong>${id}</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
+            resultEl.style.display = 'block';
 
             form.reset();
-            showFor(entitySelect.value); // Ocultar mensaje y mostrar el formulario
-            resultEl.style.display = 'block'; // Mostrar solo el mensaje de éxito
+            // No llamamos a showFor() aquí para no tocar el mensaje ni estilos.
             console.log('Registro guardado:', result);
 
         } catch (error) {
-            // Error: mostrar feedback
-            resultEl.style.backgroundColor = '#f8d7da'; // Rojo claro para error
+            // Error: pinta feedback y loguea para depuración
+            resultEl.style.backgroundColor = '#f8d7da';
             resultEl.style.color = '#721c24';
-            resultEl.innerHTML = `❌ ERROR al registrar **${entityType}**:<br>${error.message}`;
+            resultEl.innerHTML = `❌ No se pudo registrar <strong>${entityType}</strong>:<br>${error.message}`;
             resultEl.style.display = 'block';
             console.error('Error al enviar datos:', error);
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
         }
     });
+
+    // Precarga datalists (ubicaciones y hechiceros)
+    async function prefillDatalists() {
+        const dlUbic = document.getElementById('dl_ubicaciones');
+        const dlHech = document.getElementById('dl_hechiceros');
+        if (!dlUbic || !dlHech) return;
+
+        // Evitar duplicar opciones si ya fueron cargadas
+        if (dlUbic.children.length === 0) {
+            try {
+                const r = await fetch(`${API_BASE}/locations`);
+                const data = await r.json();
+                if (r.ok && data && Array.isArray(data.data)) {
+                    data.data.forEach(loc => {
+                        const opt = document.createElement('option');
+                        opt.value = loc.nombre;
+                        opt.label = loc.region ? `${loc.nombre} (${loc.region})` : loc.nombre;
+                        dlUbic.appendChild(opt);
+                    });
+                }
+            } catch (_) { /* no-op */ }
+        }
+
+        if (dlHech.children.length === 0) {
+            try {
+                const r = await fetch(`${API_BASE}/sorcerer`);
+                const list = await r.json();
+                if (r.ok && Array.isArray(list)) {
+                    list.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.nombre;
+                        dlHech.appendChild(opt);
+                    });
+                }
+            } catch (_) { /* no-op */ }
+        }
+    }
 
 })();

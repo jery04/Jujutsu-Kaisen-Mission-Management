@@ -32,5 +32,13 @@ module.exports = new EntitySchema({
       nullable: false,
       onDelete: 'CASCADE'
     }
-  }
+  },
+  uniques: [
+    { columns: ['mission', 'technique', 'sorcerer'] }
+  ],
+  indices: [
+    { columns: ['mission'] },
+    { columns: ['sorcerer'] },
+    { columns: ['efectividad_valor'] }
+  ]
 });
