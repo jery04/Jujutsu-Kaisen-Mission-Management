@@ -24,7 +24,7 @@
     <div class="container">
         <h2>Registro</h2>
 
-        <!-- Forms: only one is visible at a time -->
+    <!-- Un solo formulario visible a la vez -->
         <form id="registroForm">
             <!-- Hechicero -->
             <fieldset data-for="hechicero">
@@ -105,12 +105,13 @@
                 </select>
 
                 <label for="m_ubicacion">Ubicación</label>
-                <input id="m_ubicacion" name="ubicacion" type="text">
+                <input id="m_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones" autocomplete="off" required>
+                <datalist id="dl_ubicaciones"></datalist>
 
                 <div class="row">
                     <div class="col">
                         <label for="m_fecha">Fecha y hora de aparición</label>
-                        <input id="m_fecha" name="fecha" type="datetime-local">
+                        <input id="m_fecha" name="fecha" type="datetime-local" required>
                     </div>
                     <div class="col">
                         <label for="m_estado">Estado actual</label>
@@ -123,7 +124,8 @@
                 </div>
 
                 <label for="m_hechicero">Hechicero principal asignado</label>
-                <input id="m_hechicero" name="hechicero" type="text">
+                <input id="m_hechicero" name="hechicero" type="text" list="dl_hechiceros" autocomplete="off">
+                <datalist id="dl_hechiceros"></datalist>
             </fieldset>
 
             <div class="actions">
@@ -135,6 +137,10 @@
         <div id="result" class="result" style="display:none"></div>
     </div>
 
+    <script>
+        // Asegura que el frontend hable con el mismo host:puerto desde el que se sirve la página
+        window.API_BASE = window.location.origin;
+    </script>
     <script src="/js/add.js"></script>
 </body>
 </html>

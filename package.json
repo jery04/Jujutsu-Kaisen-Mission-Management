@@ -1,0 +1,25 @@
+{
+  "name": "jujutsu_misiones",
+  "version": "1.0.0",
+  "description": "Sistema de Gestión de Misiones y Maldiciones (Jujutsu Kaisen) - API Node.js + Express + TypeORM + MySQL (EntitySchema JS)",
+  "main": "js/server.js",
+  "scripts": {
+    "start": "node js/server.js",
+    "dev": "nodemon js/server.js",
+    "setup": "npm install",
+    "smoke": "node scripts/smoke.js",
+    "seed": "node scripts/seed.js"
+  },
+  "author": "Josué",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mysql2": "^3.3.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.17"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
