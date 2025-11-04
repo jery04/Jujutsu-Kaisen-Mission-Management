@@ -172,3 +172,12 @@
 
 /* Prevent button text from wrapping onto multiple lines */
 .btn-back, .btn-register { white-space: nowrap; }
+
+/* Universal pointer cursor for all button-like controls */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"] {
+    cursor: pointer;
+}

@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
   const signupBtn = document.getElementById('open-signup');
   const addBtn = document.getElementById('open-add');
+  const queryBtn = document.getElementById('open-query');
+
 
   if (signupBtn) {
     signupBtn.addEventListener('click', () => {
@@ -13,6 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     addBtn.addEventListener('click', () => {
       // Navigate to the add page (relative to index.html)
       window.location.href = 'html/add.html';
+    });
+  }
+
+  if (queryBtn) {
+    queryBtn.addEventListener('click', () => {
+      // Navigate to the query page (relative to index.html)
+      window.location.href = 'html/query.html';
     });
   }
 });

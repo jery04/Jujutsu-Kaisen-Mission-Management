@@ -1,9 +1,9 @@
 /* Global page settings moved from :root/body */
 html {
-    font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
     padding: 20px;
     background: #f7f7f7;
-    color: #111;
+    color: #222;
     padding-top: 140px;
 }
 
@@ -25,7 +25,7 @@ html {
     font-size: 1.25rem;
     letter-spacing: 0.4px;
     text-align: center;
-    color: #181818;
+    color: #222;
 }
 
 /* Form fields */
@@ -86,3 +86,12 @@ fieldset { border:none; padding:0; margin:0 }
 
 /* small responsive tweaks */
 @media (max-width:520px){ .container { padding:18px } .row { flex-direction:column } }
+
+/* Universal pointer cursor for all button-like controls */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"] {
+    cursor: pointer;
+}
