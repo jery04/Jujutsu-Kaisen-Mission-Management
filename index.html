@@ -6,6 +6,25 @@
     <title>Document</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/signup.css">
+    <script>
+        // Asegura el estado inicial antes del primer repintado
+        document.documentElement.classList.add('page-enter');
+    </script>
+    <style>
+        /* Aparición suave al cargar la página */
+        body {
+            transition: opacity 380ms ease, transform 450ms cubic-bezier(.22,.61,.36,1);
+            will-change: opacity, transform;
+        }
+        html.page-enter body {
+            opacity: 0;
+            transform: translateY(10px) scale(.995);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body { transition: none !important; transform: none !important; }
+            html.page-enter body { opacity: 1; transform: none; }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -65,5 +84,20 @@
         window.API_BASE = window.location.origin;
     </script>
     <script src="./js/index.js"></script>
+    <script>
+        // Retira el estado inicial y deja que la transición haga el resto
+        (function(){
+            var reveal = function(){
+                requestAnimationFrame(function(){
+                    document.documentElement.classList.remove('page-enter');
+                });
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', reveal, { once: true });
+            } else {
+                reveal();
+            }
+        })();
+    </script>
 </body>
 </html>
