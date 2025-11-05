@@ -4,8 +4,13 @@ html {
     padding: 20px;
     background: #f7f7f7;
     color: #222;
-    padding-top: 140px;
+    padding-top: 150px;
 }
+
+/* Title block styling aligned with query page */
+.title { text-align: center; margin-bottom: 30px; }
+.title h2 { margin: 0 0 6px 0; }
+.title p { margin: 0; }
 
 /* Container styled like the signup box you provided */
 .container {
@@ -71,13 +76,13 @@ textarea { resize: vertical; min-height: 72px; }
     background: #181818; color: #fff; font-weight:700; cursor: pointer;
     box-shadow: 0 6px 18px rgba(17,119,224,0.28);
 }
-.btn-register:active { transform: translateY(1px) }
+.btn-register:active { transform: scale(1) }
 
 .btn-back {
     display: inline-flex; align-items:center; justify-content:center; text-decoration:none;
     padding:8px 14px; border-radius:12px; background: #e4e4e7; color:#222; font-weight:600; border:1px solid #d0d0d4; cursor:pointer;
 }
-.btn-back:active { transform: translateY(1px) }
+.btn-back:active { transform: scale(1) }
 
 /* result box */
 .result { margin-top:12px; padding:10px; background:#eef6ff; border-radius:8px; font-family:monospace; white-space:pre-wrap }
@@ -95,3 +100,14 @@ input[type="reset"],
 [role="button"] {
     cursor: pointer;
 }
+
+/* Info boxes under each entity form */
+.info-box {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #fff7e6; /* suave tono informativo */
+    border: 1px solid #ffd8a8;
+    border-radius: 20px;
+    color: #3d2b1f;
+}
+.info-box p { margin: 6px 0 0 0; line-height: 1.4; }

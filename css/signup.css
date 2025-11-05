@@ -1,4 +1,13 @@
 /* ------------------- Signup box ------------------- */
+.title {
+    text-align: center; /* mirror query page centering for the title block */
+}
+.title h2 {
+    margin-bottom: 6px; /* same spacing as query.css */
+}
+.title p {
+    margin: 0; /* tuck paragraph under the h2 */
+}
 .signup-container {
     display: flex;
     justify-content: center;
@@ -145,7 +154,7 @@
     box-shadow: 0 6px 18px rgba(17,119,224,0.28);
 }
 .btn-register:active {
-    transform: translateY(1px);
+    transform: scale(1);
 }
 /* Back button (left) */
 .btn-back {
@@ -159,10 +168,10 @@
     color: #222;
     font-weight: 600;
     border: 1px solid #d0d0d4;
+    transition: transform .15s ease, box-shadow .2s ease;
 }
-.btn-back:active {
-    transform: translateY(1px);
-}
+.btn-back:hover { transform: scale(1.03); }
+.btn-back:active { transform: scale(0.97); }
 
 /* Keep small horizontal padding control */
 .form-actions { padding: 0; }

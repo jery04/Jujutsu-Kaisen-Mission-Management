@@ -4,7 +4,7 @@ html{
 
 /* Reduce the default margins so the heading and paragraph sit closer */
 .title h2 {
-    margin: 0 0 6px 0; /* small separation below the title */
+    margin-bottom: 6px; /* small separation below the title */
 }
 .title p {
     margin: 0; /* remove top margin to tuck under the h2 */
@@ -97,18 +97,21 @@ input[type="reset"],
     padding: 0;
     margin: 0;
     line-height: 0; /* remove extra inline spacing */
+    transition: transform .25s ease, filter .2s ease;
 }
 
 .icon-btn .icon {
     width: 40px;
     height: 40px;
     display: block;
+    transition: transform .25s ease, filter .2s ease;
 }
 
 .icon-btn:hover .icon {
-    filter: brightness(0.9);
+    filter: brightness(1.2);
+    transform: scale(1.1);
 }
 
 .icon-btn:active .icon {
-    transform: scale(0.98);
+    transform: scale(1);
 }

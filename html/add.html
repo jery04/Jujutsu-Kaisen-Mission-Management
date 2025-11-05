@@ -11,8 +11,14 @@
 <body>
     <header>
         <h1>Jujutsu Kaisen</h1>
+        <p>Explora el universo de Jujutsu Kaisen con una plataforma que transforma la gestión de misiones y maldiciones en una experiencia estratégica y dinámica</p>
     </header>
     
+    <div class="title">
+        <h2>Consulta de Entidades</h2>
+        <p>Aquí podrás visualizar, modificar y administrar integralmente las entidades registradas en el sistema.</p>
+    </div>
+
     <div class="form-field" style="max-width:720px; margin:0 auto 12px;">
         <label for="entitySelect">Selecciona qué crear</label>
         <select id="entitySelect">
@@ -45,6 +51,13 @@
 
                 <label for="h_experiencia">Años de experiencia</label>
                 <input id="h_experiencia" name="experiencia" type="number" min="0">
+
+                <div class="info-box">
+                    <span style="color:#d00000; font-weight:700;">Info:</span>
+                    <p>
+                        Un hechicero es un combatiente especializado en exorcizar maldiciones, clasificado por grado y experiencia. Participa en misiones, usa técnicas malditas, registra resultados y colabora con personal de soporte para coordinar operaciones, optimizar recursos y enfrentar amenazas sobrenaturales.
+                    </p>
+                </div>
             </fieldset>
 
             <!-- Técnica maldita -->
@@ -80,6 +93,13 @@
 
                 <label for="t_condiciones">Condiciones / limitaciones</label>
                 <textarea id="t_condiciones" name="condiciones" rows="3"></textarea>
+
+                <div class="info-box">
+                    <span style="color:#d00000; font-weight:700;">Info:</span>
+                    <p>
+                        Una técnica maldita es una habilidad sobrenatural única utilizada por los hechiceros para combatir maldiciones, caracterizada por su tipo, nivel de dominio, efectividad en combate y condiciones específicas de uso; su registro en el sistema permite evaluar el desempeño del hechicero, optimizar la asignación de misiones y mejorar la coordinación operativa en situaciones críticas.
+                    </p>
+                </div>
             </fieldset>
 
             <!-- Maldición -->
@@ -126,9 +146,17 @@
                 <label for="m_hechicero">Hechicero principal asignado</label>
                 <input id="m_hechicero" name="hechicero" type="text" list="dl_hechiceros" autocomplete="off">
                 <datalist id="dl_hechiceros"></datalist>
+
+                <div class="info-box">
+                    <span style="color:#d00000; font-weight:700;">Info:</span>
+                    <p>
+                        Una maldición consiste en una entidad sobrenatural clasificada por grado y tipo, que representa una amenaza para los humanos. Se registra con datos como ubicación, estado, fecha de aparición y el hechicero asignado para su exorcismo, permitiendo gestionar misiones y evaluar riesgos de forma precisa y coordinada.
+                    </p>
+                </div>
             </fieldset>
 
             <div class="actions">
+                <button type="button" class="btn-back" id="goBackBtn" title="Volver a la página anterior">Volver</button>
                 <button type="button" class="btn-back" id="resetBtn">Limpiar</button>
                 <button type="submit" class="btn-register">Registrar</button>
             </div>

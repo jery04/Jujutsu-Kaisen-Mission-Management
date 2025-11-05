@@ -11,6 +11,7 @@
     const fieldsets = Array.from(form.querySelectorAll('fieldset'));
     const resultEl = document.getElementById('result');
     const resetBtn = document.getElementById('resetBtn');
+    const goBackBtn = document.getElementById('goBackBtn');
     const submitBtn = form.querySelector('button[type="submit"]');
 
     // Muestra/oculta fieldsets según la entidad activa
@@ -49,6 +50,17 @@
         showFor(e.target.value);
     });
     showFor(entitySelect.value);
+
+    // Botón Volver: intenta ir a la página anterior; si no hay historial, vuelve al inicio
+    if (goBackBtn) {
+        goBackBtn.addEventListener('click', () => {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/index.html';
+            }
+        });
+    }
 
     // Limpia el formulario visible sin perder la selección
     if (resetBtn) {
