@@ -55,5 +55,16 @@
             </div>
         </section>
     </main>
+    <script>
+        // Navigate to add.html when any edit button is clicked
+        document.addEventListener('DOMContentLoaded', function () {
+            var editButtons = document.querySelectorAll('.btn-edit');
+            editButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    window.location.href = '/html/add.html';
+                });
+            });
+        });
+    </script>
 </body>
 </html>
