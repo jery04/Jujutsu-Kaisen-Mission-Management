@@ -148,6 +148,32 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Mostrar mensaje flash si existe (de ediciones/acciones previas)
+        try {
+            const raw = sessionStorage.getItem('flash');
+            if (raw) {
+                sessionStorage.removeItem('flash');
+                const data = JSON.parse(raw);
+                const toast = document.createElement('div');
+                toast.textContent = data && data.text ? data.text : 'Operación realizada';
+                toast.style.position = 'fixed';
+                toast.style.top = '12px';
+                toast.style.right = '12px';
+                toast.style.zIndex = '9999';
+                toast.style.padding = '10px 14px';
+                toast.style.borderRadius = '6px';
+                toast.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                if (data && data.type === 'success') {
+                    toast.style.backgroundColor = '#d4edda';
+                    toast.style.color = '#155724';
+                } else {
+                    toast.style.backgroundColor = '#e2e3e5';
+                    toast.style.color = '#383d41';
+                }
+                document.body.appendChild(toast);
+                setTimeout(() => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); }, 2500);
+            }
+        } catch (_) { }
         // Inicializa base si viene definida en la página
         if (!window.API_BASE) { try { window.API_BASE = API_BASE; } catch (_) { } }
 
@@ -159,7 +185,16 @@
         if (btnTec) btnTec.addEventListener('click', loadTechniques);
         if (btnCur) btnCur.addEventListener('click', loadCurses);
 
-        // Carga inicial por defecto: hechiceros
-        loadSorcerers().catch(() => { });
+        // Carga inicial según parámetro ?entity= (sorcerer|technique|curses); por defecto hechiceros
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const view = params.get('entity');
+            if (view === 'sorcerer') loadSorcerers().catch(() => { });
+            else if (view === 'technique') loadTechniques().catch(() => { });
+            else if (view === 'curses') loadCurses().catch(() => { });
+            else loadSorcerers().catch(() => { });
+        } catch (_) {
+            loadSorcerers().catch(() => { });
+        }
     });
 })();

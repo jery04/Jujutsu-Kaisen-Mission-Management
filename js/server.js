@@ -139,6 +139,42 @@ typeorm.createConnection({
     }
   });
 
+  // Obtener hechicero por id
+  app.get('/sorcerer/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Sorcerer');
+      const ent = await repo.findOne({ where: { id } });
+      if (!ent) return res.status(404).json({ message: 'Hechicero no encontrado' });
+      res.json(ent);
+    } catch (error) {
+      console.error('Error obteniendo Hechicero:', error);
+      res.status(500).json({ message: 'Error obteniendo hechicero', details: error.message });
+    }
+  });
+
+  // Actualizar hechicero
+  app.put('/sorcerer/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Sorcerer');
+      const ent = await repo.findOne({ where: { id } });
+      if (!ent) return res.status(404).json({ message: 'Hechicero no encontrado' });
+      const { nombre, grado, anios_experiencia } = req.body || {};
+      if (typeof nombre === 'string') ent.nombre = nombre;
+      if (typeof grado === 'string') ent.grado = grado;
+      if (anios_experiencia != null) ent.anios_experiencia = Number(anios_experiencia) || 0;
+      const saved = await repo.save(ent);
+      res.json(saved);
+    } catch (error) {
+      console.error('Error actualizando Hechicero:', error);
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Nombre de Hechicero ya existe' });
+      }
+      res.status(500).json({ message: 'Error actualizando hechicero', details: error.message });
+    }
+  });
+
   // Crear técnica
   app.post('/technique', async (req, res) => {
     try {
@@ -196,6 +232,64 @@ typeorm.createConnection({
     } catch (error) {
       console.error('Error listando técnicas:', error);
       res.status(500).json({ ok: false, message: 'Error listando técnicas' });
+    }
+  });
+
+  // Obtener técnica por id
+  app.get('/technique/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Technique');
+      const ent = await repo.findOne({ where: { id }, relations: ['sorcerer'] });
+      if (!ent) return res.status(404).json({ message: 'Técnica no encontrada' });
+      const payload = {
+        id: ent.id,
+        nombre: ent.nombre,
+        tipo: ent.tipo,
+        nivel_dominio: ent.nivel_dominio,
+        efectividad_inicial: ent.efectividad_inicial,
+        condiciones: ent.condiciones,
+        activa: ent.activa,
+        hechicero: ent.sorcerer ? ent.sorcerer.nombre : null
+      };
+      res.json(payload);
+    } catch (error) {
+      console.error('Error obteniendo Técnica:', error);
+      res.status(500).json({ message: 'Error obteniendo técnica', details: error.message });
+    }
+  });
+
+  // Actualizar técnica
+  app.put('/technique/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Technique');
+      const ent = await repo.findOne({ where: { id }, relations: ['sorcerer'] });
+      if (!ent) return res.status(404).json({ message: 'Técnica no encontrada' });
+
+      const { nombre, tipo, hechicero, nivel_dominio, efectividad_inicial, condiciones, activa } = req.body || {};
+      if (typeof nombre === 'string') ent.nombre = nombre;
+      if (typeof tipo === 'string') ent.tipo = tipo;
+      if (nivel_dominio != null) ent.nivel_dominio = Number(nivel_dominio) || 0;
+      if (typeof efectividad_inicial === 'string') ent.efectividad_inicial = efectividad_inicial;
+      if (typeof condiciones === 'string' || condiciones === null) ent.condiciones = condiciones || null;
+      if (activa != null) ent.activa = Number(activa) ? 1 : 0;
+
+      if (typeof hechicero === 'string' && hechicero.trim()) {
+        const sorRepo = dbConn.getRepository('Sorcerer');
+        const owner = await sorRepo.findOne({ where: { nombre: hechicero } });
+        if (!owner) return res.status(400).json({ message: `Hechicero no encontrado: ${hechicero}` });
+        ent.sorcerer = owner;
+      }
+
+      const saved = await repo.save(ent);
+      res.json(saved);
+    } catch (error) {
+      console.error('Error actualizando Técnica:', error);
+      if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
+        return res.status(409).json({ message: 'Técnica ya existe' });
+      }
+      res.status(500).json({ message: 'Error actualizando técnica', details: error.message });
     }
   });
 
@@ -326,6 +420,67 @@ typeorm.createConnection({
     } catch (err) {
       console.error(err);
       res.status(500).json({ ok: false, message: 'Error obteniendo maldiciones' });
+    }
+  });
+
+  // Obtener maldición por id
+  app.get('/curses/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Curse');
+      const ent = await repo.findOne({ where: { id }, relations: ['location', 'assigned_sorcerer'] });
+      if (!ent) return res.status(404).json({ message: 'Maldición no encontrada' });
+      res.json(ent);
+    } catch (err) {
+      console.error('Error obteniendo Maldición:', err);
+      res.status(500).json({ message: 'Error obteniendo maldición', details: err.message });
+    }
+  });
+
+  // Actualizar maldición
+  app.put('/curses/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Curse');
+      const ent = await repo.findOne({ where: { id }, relations: ['location', 'assigned_sorcerer'] });
+      if (!ent) return res.status(404).json({ message: 'Maldición no encontrada' });
+
+      let { nombre, grado, tipo, ubicacion, fecha, estado, hechicero } = req.body || {};
+      if (typeof nombre === 'string') ent.nombre = nombre;
+      if (typeof grado === 'string') ent.grado = grado;
+      if (typeof tipo === 'string') ent.tipo = tipo;
+      if (fecha) {
+        const newDate = new Date(fecha);
+        if (!isNaN(newDate.getTime())) ent.fecha_aparicion = newDate;
+      }
+      if (estado) {
+        const map = { 'en proceso de exorcismo': 'en_proceso_exorcismo' };
+        ent.estado = map[estado] || estado;
+      }
+      if (typeof ubicacion === 'string' && ubicacion.trim()) {
+        const locRepo = dbConn.getRepository('Location');
+        const loc = await locRepo.findOne({ where: { nombre: ubicacion } });
+        if (!loc) return res.status(400).json({ message: `Ubicación no encontrada: ${ubicacion}` });
+        ent.location = loc;
+      }
+      if (hechicero !== undefined) {
+        if (hechicero === null || hechicero === '') {
+          ent.assigned_sorcerer = null;
+        } else {
+          const sorRepo = dbConn.getRepository('Sorcerer');
+          const s = await sorRepo.findOne({ where: { nombre: hechicero } });
+          if (!s) return res.status(400).json({ message: `Hechicero asignado no encontrado: ${hechicero}` });
+          ent.assigned_sorcerer = s;
+        }
+      }
+      const saved = await repo.save(ent);
+      res.json(saved);
+    } catch (err) {
+      console.error('Error actualizando Maldición:', err);
+      if (err && (err.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(err.message || ''))) {
+        return res.status(409).json({ message: 'Maldición duplicada' });
+      }
+      res.status(500).json({ message: 'Error actualizando maldición', details: err.message });
     }
   });
 

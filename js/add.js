@@ -17,7 +17,11 @@
     // Muestra/oculta fieldsets según la entidad activa
     function showFor(value) {
         fieldsets.forEach(fs => {
-            fs.style.display = (fs.getAttribute('data-for') === value) ? '' : 'none';
+            const active = (fs.getAttribute('data-for') === value);
+            fs.style.display = active ? '' : 'none';
+            // Deshabilita fieldsets ocultos para que no participen en la validación nativa
+            // y evita "An invalid form control is not focusable"
+            fs.disabled = !active;
         });
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
