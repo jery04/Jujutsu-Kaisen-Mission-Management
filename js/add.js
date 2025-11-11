@@ -132,8 +132,8 @@
             payload = {
                 nombre: raw.nombre,
                 grado,
-                anios_experiencia
-                // Si en el futuro quieres asociar técnica por nombre, habría que resolver el ID primero en el backend
+                anios_experiencia,
+                tecnica: raw.tecnica || null
             };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {

@@ -97,6 +97,7 @@
                 form.nombre.value = record.nombre || '';
                 form.grado.value = record.grado || 'estudiante';
                 form.experiencia.value = record.anios_experiencia != null ? record.anios_experiencia : '';
+                try { if (record.tecnica_principal && record.tecnica_principal.nombre) { form.tecnica.value = record.tecnica_principal.nombre; } } catch (_) { }
             } else if (fsKey === 'tecnica') {
                 form.nombre.value = record.nombre || '';
                 form.tipo.value = record.tipo || 'amplificacion';
@@ -153,7 +154,7 @@
         if (fsKey === 'hechicero') {
             const gradoMap = { 'grado medio': 'grado_medio', 'grado alto': 'grado_alto', 'grado especial': 'grado_especial' };
             const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
-            return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0 };
+            return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null };
         } else if (fsKey === 'tecnica') {
             return { nombre: raw.nombre, tipo: raw.tipo, hechicero: raw.hechicero, nivel_dominio: raw.nivel ? Number(raw.nivel) : 0, efectividad_inicial: raw.efectividad || 'media', condiciones: raw.condiciones || null, activa: 1 };
         } else if (fsKey === 'maldicion') {

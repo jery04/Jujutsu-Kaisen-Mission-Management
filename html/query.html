@@ -111,9 +111,15 @@
                 // Volver
                 var backBtn = event.target.closest('#go-back');
                 if (backBtn) { window.location.href = '/index.html'; return; }
-                // Navegar a detalle (placeholder)
+                // Navegar a detalle con entity & id
                 var queryItem = event.target.closest('.query-item');
-                if (queryItem) { window.location.href = '/html/show.html'; }
+                if (queryItem) {
+                    var ent = queryItem.getAttribute('data-entity');
+                    var id = queryItem.getAttribute('data-id');
+                    var url = '/html/show.html';
+                    if (ent && id) { url += '?entity=' + encodeURIComponent(ent) + '&id=' + encodeURIComponent(id); }
+                    window.location.href = url;
+                }
             });
         });
     </script>

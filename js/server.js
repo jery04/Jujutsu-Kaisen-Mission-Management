@@ -106,9 +106,36 @@ typeorm.createConnection({
     try {
       console.log('POST /sorcerer body:', req.body);
       const sorcererRepo = dbConn.getRepository('Sorcerer');
-      const newSorcerer = sorcererRepo.create(req.body);
-      const result = await sorcererRepo.save(newSorcerer);
-      res.status(201).json(result);
+      const { nombre, grado, anios_experiencia, tecnica } = req.body || {};
+      if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
+      if (!grado) return res.status(400).json({ message: 'grado requerido' });
+      if (!tecnica || !String(tecnica).trim()) return res.status(400).json({ message: 'tecnica principal requerida' });
+      const newSorcerer = sorcererRepo.create({ nombre, grado, anios_experiencia });
+      const saved = await sorcererRepo.save(newSorcerer);
+
+      // Si llega un nombre de técnica principal, intenta asociarla o crearla con valores por defecto
+      if (typeof tecnica === 'string' && tecnica.trim()) {
+        const techRepo = dbConn.getRepository('Technique');
+        // Buscar técnica con ese nombre para este hechicero
+        let mainTech = await techRepo.findOne({ where: { nombre: tecnica, sorcerer: { id: saved.id } }, relations: ['sorcerer'] });
+        if (!mainTech) {
+          // Crear con valores por defecto mínimos
+          mainTech = techRepo.create({
+            nombre: tecnica,
+            tipo: 'soporte',
+            nivel_dominio: 0,
+            efectividad_inicial: 'media',
+            condiciones: null,
+            activa: 1,
+            sorcerer: saved
+          });
+          mainTech = await techRepo.save(mainTech);
+        }
+        saved.tecnica_principal = mainTech;
+        await sorcererRepo.save(saved);
+      }
+
+      res.status(201).json(saved);
 
     } catch (error) {
       console.error('Error al crear Hechicero:', error);
@@ -144,7 +171,7 @@ typeorm.createConnection({
     try {
       const id = Number(req.params.id);
       const repo = dbConn.getRepository('Sorcerer');
-      const ent = await repo.findOne({ where: { id } });
+      const ent = await repo.findOne({ where: { id }, relations: ['tecnica_principal'] });
       if (!ent) return res.status(404).json({ message: 'Hechicero no encontrado' });
       res.json(ent);
     } catch (error) {
@@ -160,10 +187,29 @@ typeorm.createConnection({
       const repo = dbConn.getRepository('Sorcerer');
       const ent = await repo.findOne({ where: { id } });
       if (!ent) return res.status(404).json({ message: 'Hechicero no encontrado' });
-      const { nombre, grado, anios_experiencia } = req.body || {};
+      const { nombre, grado, anios_experiencia, tecnica } = req.body || {};
       if (typeof nombre === 'string') ent.nombre = nombre;
       if (typeof grado === 'string') ent.grado = grado;
       if (anios_experiencia != null) ent.anios_experiencia = Number(anios_experiencia) || 0;
+      // Manejar técnica principal (obligatoria ahora)
+      if (!tecnica || !String(tecnica).trim()) {
+        return res.status(400).json({ message: 'tecnica principal requerida' });
+      }
+      const techRepo = dbConn.getRepository('Technique');
+      let mainTech = await techRepo.findOne({ where: { nombre: tecnica, sorcerer: { id: ent.id } }, relations: ['sorcerer'] });
+      if (!mainTech) {
+        mainTech = techRepo.create({
+          nombre: tecnica,
+          tipo: 'soporte',
+          nivel_dominio: 0,
+          efectividad_inicial: 'media',
+          condiciones: null,
+          activa: 1,
+          sorcerer: ent
+        });
+        mainTech = await techRepo.save(mainTech);
+      }
+      ent.tecnica_principal = mainTech;
       const saved = await repo.save(ent);
       res.json(saved);
     } catch (error) {
