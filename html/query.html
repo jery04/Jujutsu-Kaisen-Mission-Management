@@ -54,20 +54,58 @@
                     </div>
                 </div>
             </div>
-            <!-- Botón centrado para exportar la consulta como PDF -->
-            <div class="btn-group">
+            <!-- Botones de exportación y volver (apilados verticalmente) -->
+            <div class="btn-group stacked">
                 <button id="export-pdf" class="btn-action">exportar consulta como PDF</button>
+                <button id="go-back" class="btn-action">Volver</button>
             </div>
+
         </section>
     </main>
     <script>
-        // Navigate to add.html when any edit button is clicked
+        // Navega a edit.html al hacer clic en cualquier botón de editar
         document.addEventListener('DOMContentLoaded', function () {
-            var editButtons = document.querySelectorAll('.btn-edit');
-            editButtons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    window.location.href = '/html/add.html';
-                });
+            document.addEventListener('click', function (event) {
+                // Manejo de botón Editar (delegado para soportar elementos dinámicos)
+                var editBtn = event.target.closest('.btn-edit');
+                if (editBtn) {
+                    window.location.href = '/html/edit.html';
+                    return;
+                }
+
+                // Eliminar el elemento .query-item correspondiente al hacer clic en su botón de eliminar
+                var deleteBtn = event.target.closest('.btn-delete');
+                if (deleteBtn) {
+                    var item = deleteBtn.closest('.query-item');
+                    if (item) {
+                        // Añade clase para animación de desvanecimiento
+                        item.classList.add('fade-out');
+                        // Remueve tras finalizar la transición de opacidad
+                        var safeTimeout = setTimeout(function(){
+                            if (item && item.isConnected) item.remove();
+                        }, 600); // respaldo si no se dispara transitionend
+                        item.addEventListener('transitionend', function handler(e) {
+                            if (e.propertyName === 'opacity') {
+                                clearTimeout(safeTimeout);
+                                item.remove();
+                            }
+                        }, { once: true });
+                    }
+                    return; // evita navegar a show.html cuando se hace clic en eliminar
+                }
+
+                // Navegar a index.html al hacer clic en "Volver"
+                var backBtn = event.target.closest('#go-back');
+                if (backBtn) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                // Navegar a show.html al hacer clic en la tarjeta/ítem
+                var queryItem = event.target.closest('.query-item');
+                if (queryItem) {
+                    window.location.href = '/html/show.html';
+                }
             });
         });
     </script>

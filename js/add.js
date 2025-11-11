@@ -8,7 +8,7 @@
     // Referencias de DOM que reutilizamos
     const entitySelect = document.getElementById('entitySelect');
     const form = document.getElementById('registroForm');
-    const fieldsets = Array.from(form.querySelectorAll('fieldset'));
+    const fieldsets = form ? Array.from(form.querySelectorAll('fieldset')) : [];
     const resultEl = document.getElementById('result');
     const resetBtn = document.getElementById('resetBtn');
     const goBackBtn = document.getElementById('goBackBtn');
@@ -44,20 +44,37 @@
         }
     }
 
-    // Inicialización: pinta el fieldset actual y oculta el resto
-    entitySelect.addEventListener('change', e => {
-        clearResult();
-        showFor(e.target.value);
-    });
-    showFor(entitySelect.value);
+    // Inicialización: pinta el fieldset actual y oculta el resto (solo si existe selector)
+    if (entitySelect) {
+        entitySelect.addEventListener('change', e => {
+            clearResult();
+            showFor(e.target.value);
+        });
+        showFor(entitySelect.value);
+    }
 
     // Botón Volver: intenta ir a la página anterior; si no hay historial, vuelve al inicio
     if (goBackBtn) {
         goBackBtn.addEventListener('click', () => {
-            if (window.history.length > 1) {
+            const ref = document.referrer;
+            let sameOriginRef = false;
+            try {
+                if (ref) {
+                    const refUrl = new URL(ref, window.location.href);
+                    sameOriginRef = refUrl.origin === window.location.origin;
+                }
+            } catch (_) { /* no-op */ }
+
+            if (sameOriginRef) {
+                // Volver a la página que nos trajo aquí dentro de la misma app
+                window.location.href = ref;
+            } else if (window.history.length > 1) {
+                // Fallback al historial si existe
                 window.history.back();
             } else {
-                window.location.href = '/index.html';
+                // Último recurso: ir a la vista de consulta si existe; si no, al inicio
+                const fallback = '/html/query.html';
+                window.location.href = fallback;
             }
         });
     }
@@ -74,7 +91,7 @@
     }
 
     // Envío del formulario activo
-    form.addEventListener('submit', async e => {
+    if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
         console.log('[add.js] submit clicked');
 

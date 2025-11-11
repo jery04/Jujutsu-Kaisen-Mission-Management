@@ -14,6 +14,14 @@ html{
     margin-top: 20px; /* spacing above the button group */
 }
 
+/* Stacked variant: place buttons one below the other and center them */
+.query-section .btn-group.stacked {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
 .query-section .btn-group .btn-action {
     display: inline-flex; 
     align-items:center; 
@@ -69,11 +77,24 @@ input[type="reset"],
     border-radius: 20px;       /* rounded corners */
     background: #fff;
     box-shadow: 0 2px 3px rgba(0,0,0,0.2);
-    transition: transform .25s ease; /* smooth hover scale */
+    /* Added opacity & subtle scale transition for removal animation */
+    transition: transform .25s ease, opacity .35s ease; /* smooth hover + fade */
+}
+
+/* Estado al eliminar: se desvanece y reduce ligeramente */
+.query-item.fade-out {
+    opacity: 0;
+    transform: scale(0.96);
 }
 
 .query-item:hover {
     transform: scale(1.02);
+}
+
+/* On click/press, reset scale to 1 for a pressed effect,
+   except when the click is on an internal action button */
+.query-item:active:not(:has(.icon-btn:active)) {
+    transform: scale(1);
 }
 
 .query-item h3 {
