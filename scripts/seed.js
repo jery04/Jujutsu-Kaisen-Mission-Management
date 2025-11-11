@@ -1,20 +1,43 @@
 // Semillado de datos vía API (sin SQL): inserta ubicaciones, hechiceros, técnicas y maldiciones
-// Usa global fetch (Node >= 18). Configura la base con BASE; si no, intenta descubrir servidor activo
-// probando puertos 3000..3004 contra /health.
+// Autodescubre la BASE leyendo runtime-server.json si existe o escaneando puertos comunes.
+const fs = require('fs');
+const path = require('path');
+
+function readRuntimeBase() {
+    try {
+        const p = path.resolve(__dirname, '..', 'runtime-server.json');
+        if (fs.existsSync(p)) {
+            const { base } = JSON.parse(fs.readFileSync(p, 'utf8'));
+            if (base) return base;
+        }
+    } catch (_) { }
+    return null;
+}
 
 async function discoverBase() {
     if (process.env.BASE) return process.env.BASE;
-    const candidates = [3000, 3001, 3002, 3003, 3004].map(p => `http://localhost:${p}`);
+    const runtime = readRuntimeBase();
+    if (runtime) return runtime;
+    const candidates = [];
+    // Prefer PORT env if provided
+    if (process.env.PORT) {
+        const p = Number(process.env.PORT);
+        if (!Number.isNaN(p)) candidates.push(`http://127.0.0.1:${p}`);
+    }
+    // Common dev ports
+    const ports = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 8080, 8081, 5000];
+    for (const p of ports) candidates.push(`http://127.0.0.1:${p}`);
     for (const base of candidates) {
         try {
             const r = await fetch(base + '/health', { method: 'GET' });
             if (r.ok) return base;
         } catch { }
     }
-    return 'http://localhost:3000';
+    return 'http://127.0.0.1:3000';
 }
 
 async function post(BASE, path, body) {
+    console.log(`[seed] POST ${BASE + path} body=${JSON.stringify(body)}`);
     const res = await fetch(BASE + path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,6 +64,15 @@ async function tryCreateLocation(BASE, nombre, region, tipo) {
 async function seed() {
     const BASE = await discoverBase();
     console.log(`Semillando contra: ${BASE}`);
+    // Verifica salud antes de continuar
+    try {
+        const health = await fetch(BASE + '/health');
+        if (!health.ok) throw new Error('Respuesta /health no OK: ' + health.status);
+        console.log('[seed] Health OK');
+    } catch (e) {
+        console.error('[seed] No se pudo conectar a /health en', BASE, 'error:', e.message);
+        throw e;
+    }
     // 1) Ubicaciones
     await tryCreateLocation(BASE, 'Shibuya', 'Tokyo', 'urbana');
     await tryCreateLocation(BASE, 'Sendai', 'Miyagi', 'urbana');

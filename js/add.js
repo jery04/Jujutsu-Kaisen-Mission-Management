@@ -2,8 +2,41 @@
 (function () {
     'use strict';
 
-    // Punto único para la URL del backend; si existe window.API_BASE, se usa.
-    const API_BASE = window.API_BASE || 'http://localhost:3000';
+    // Punto único para la URL del backend (mutable para poder autodetectar)
+    let API_BASE = (typeof window !== 'undefined' && window.API_BASE)
+        ? window.API_BASE
+        : (window.location && window.location.origin ? window.location.origin : 'http://127.0.0.1:3000');
+
+    // Descubre una base funcional consultando /health en puertos comunes
+    async function discoverApiBase() {
+        const candidates = [];
+        const origins = [];
+        try { if (window && window.location && window.location.origin) origins.push(window.location.origin); } catch (_) { }
+        // Preferir origen actual
+        candidates.push(...origins);
+        // Escanear http localhost e IP loopback en puertos frecuentes
+        const ports = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 8080, 8081, 5000];
+        ports.forEach(p => {
+            candidates.push(`http://127.0.0.1:${p}`);
+            candidates.push(`http://localhost:${p}`);
+        });
+
+        const ac = new AbortController();
+        const withTimeout = (ms) => setTimeout(() => ac.abort(), ms);
+        for (const base of candidates) {
+            try {
+                const t = withTimeout(900);
+                const r = await fetch(base + '/health', { signal: ac.signal });
+                clearTimeout(t);
+                if (r.ok) {
+                    API_BASE = base;
+                    try { window.API_BASE = base; } catch (_) { }
+                    return base;
+                }
+            } catch (_) { /* probar siguiente */ }
+        }
+        return API_BASE; // lo que tenga, aunque no respondiera
+    }
 
     // Referencias de DOM que reutilizamos
     const entitySelect = document.getElementById('entitySelect');
@@ -17,11 +50,26 @@
     // Muestra/oculta fieldsets según la entidad activa
     function showFor(value) {
         fieldsets.forEach(fs => {
-            fs.style.display = (fs.getAttribute('data-for') === value) ? '' : 'none';
+            const active = (fs.getAttribute('data-for') === value);
+            fs.style.display = active ? '' : 'none';
+            // Desactivar validación de campos ocultos para evitar errores "not focusable"
+            const inputs = fs.querySelectorAll('input, select, textarea');
+            inputs.forEach(el => {
+                if (!active) {
+                    // Guardar si era required
+                    if (el.required) el.dataset.wasRequired = '1';
+                    el.required = false; // evita que el navegador intente validar un campo oculto
+                    el.disabled = true;  // lo excluye del formulario
+                } else {
+                    el.disabled = false;
+                    // Restaurar required si lo tenía originalmente
+                    if (el.dataset.wasRequired === '1') el.required = true; else if (!el.dataset.wasRequired) el.required = el.required;
+                }
+            });
         });
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
-            prefillDatalists().catch(() => { /* silencioso: no bloquear el uso si falla */ });
+            prefillDatalists().catch(() => { /* silencioso */ });
         }
     }
 
@@ -36,11 +84,18 @@
     // Comprobación rápida de salud del backend
     async function checkBackendHealth() {
         try {
-            const resp = await fetch(`${API_BASE}/`);
-            if (!resp.ok) throw new Error('La API respondió con un estado no OK');
+            // Reintenta autodetectando si falla el origen actual
+            let resp = await fetch(`${API_BASE}/health`);
+            if (!resp.ok) throw new Error('no ok');
             return true;
         } catch (_) {
-            return false;
+            try {
+                await discoverApiBase();
+                const again = await fetch(`${API_BASE}/health`);
+                return !!again.ok;
+            } catch (_) {
+                return false;
+            }
         }
     }
 
@@ -93,7 +148,7 @@
 
         const inputs = Array.from(activeFs.querySelectorAll('input, select, textarea'));
         const raw = {};
-        inputs.forEach(i => { if (i.name) raw[i.name] = i.value; });
+        inputs.forEach(i => { if (i.name) raw[i.name] = (typeof i.value === 'string' ? i.value.trim() : i.value); });
 
         const entityType = activeFs.getAttribute('data-for');
         let endpoint = API_BASE; // base de API configurable
@@ -129,12 +184,20 @@
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
             // Curse: la ubicacion debe existir en BD (por nombre), y el hechicero es opcional
+            // Normaliza fecha a ISO para que el backend la parsee correctamente
+            let fechaIso = raw.fecha;
+            try {
+                if (raw.fecha) {
+                    const d = new Date(raw.fecha);
+                    if (!isNaN(d.getTime())) fechaIso = d.toISOString();
+                }
+            } catch (_) { /* usar valor crudo si falla */ }
             payload = {
                 nombre: raw.nombre,
                 grado: raw.grado,
                 tipo: raw.tipo,
                 ubicacion: raw.ubicacion,
-                fecha: raw.fecha,
+                fecha: fechaIso,
                 estado: raw.estado,
                 hechicero: raw.hechicero || null
             };
@@ -187,6 +250,7 @@
             resultEl.style.display = 'block';
 
             form.reset();
+            try { alert(`Registro de ${entityType} creado correctamente.`); } catch (_) { }
             // No llamamos a showFor() aquí para no tocar el mensaje ni estilos.
             console.log('Registro guardado:', result);
 

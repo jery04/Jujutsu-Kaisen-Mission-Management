@@ -308,24 +308,39 @@ typeorm.createConnection({
     }
   });
 
-  // Arranque del servidor con tolerancia a puerto en uso (solo dev).
+  // Arranque del servidor con tolerancia a puertos bloqueados/en uso (solo dev)
   const requestedPort = Number(process.env.PORT) || 3000;
-  const maxAttempts = 5;
-  let attempt = 0;
+  const candidatePorts = [];
+  // Intentar la solicitada y 9 siguientes
+  for (let p = requestedPort; p < requestedPort + 10; p++) candidatePorts.push(p);
+  // Puertos comunes alternos
+  [8080, 8081, 5000].forEach(p => { if (!candidatePorts.includes(p)) candidatePorts.push(p); });
 
-  const tryListen = (port) => {
-    attempt += 1;
+  let idx = 0;
+  const tryListen = () => {
+    if (idx >= candidatePorts.length) {
+      console.error('No fue posible iniciar el servidor: no hay puertos disponibles. Establece PORT a un puerto libre.');
+      process.exit(1);
+    }
+    const port = candidatePorts[idx++];
     const server = app.listen(port, () => {
-      console.log(`Servidor escuchando en http://localhost:${port}`);
+      const base = `http://127.0.0.1:${port}`;
+      console.log(`Servidor escuchando en ${base}`);
+      // Escribir runtime-server.json sólo si refleja el puerto en el que realmente quedó
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(__dirname, '..', 'runtime-server.json');
+        const payload = { base, host: '127.0.0.1', port };
+        fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8');
+      } catch (e) {
+        console.warn('Error preparando runtime-server.json:', e && e.message);
+      }
     });
     server.on('error', (err) => {
-      if (err && err.code === 'EADDRINUSE' && attempt < maxAttempts) {
-        const nextPort = port + 1;
-        console.warn(`Puerto ${port} en uso. Probando ${nextPort}...`);
-        setTimeout(() => tryListen(nextPort), 300);
-      } else if (err && err.code === 'EADDRINUSE') {
-        console.error(`No fue posible iniciar el servidor tras ${attempt} intentos. Establece PORT en un puerto libre.`);
-        process.exit(1);
+      if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
+        console.warn(`Puerto ${port} no disponible (${err.code}). Probando el siguiente...`);
+        setTimeout(tryListen, 250);
       } else {
         console.error('Error iniciando servidor:', err);
         process.exit(1);
@@ -333,7 +348,7 @@ typeorm.createConnection({
     });
   };
 
-  tryListen(requestedPort);
+  tryListen();
 
 }).catch(err => {
   console.error('Error conexión DB:', err);
