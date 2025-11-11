@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Consulta | Jujutsu Kaisen</title>
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/query.css">
 
@@ -69,7 +70,13 @@
                 // Editar
                 var editBtn = event.target.closest('.btn-edit');
                 if (editBtn) {
-                    window.location.href = '/html/edit.html';
+                    var item = editBtn.closest('.query-item');
+                    if (!item) { window.location.href = '/html/edit.html'; return; }
+                    var entity = item.getAttribute('data-entity');
+                    var id = item.getAttribute('data-id');
+                    if (!entity || !id) { window.location.href = '/html/edit.html'; return; }
+                    var url = '/html/edit.html?entity=' + encodeURIComponent(entity) + '&id=' + encodeURIComponent(id);
+                    window.location.href = url;
                     return;
                 }
                 // Eliminar: llama a la API y luego retira del DOM
@@ -104,9 +111,15 @@
                 // Volver
                 var backBtn = event.target.closest('#go-back');
                 if (backBtn) { window.location.href = '/index.html'; return; }
-                // Navegar a detalle (placeholder)
+                // Navegar a detalle con entity & id
                 var queryItem = event.target.closest('.query-item');
-                if (queryItem) { window.location.href = '/html/show.html'; }
+                if (queryItem) {
+                    var ent = queryItem.getAttribute('data-entity');
+                    var id = queryItem.getAttribute('data-id');
+                    var url = '/html/show.html';
+                    if (ent && id) { url += '?entity=' + encodeURIComponent(ent) + '&id=' + encodeURIComponent(id); }
+                    window.location.href = url;
+                }
             });
         });
     </script>

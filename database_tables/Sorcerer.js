@@ -7,7 +7,7 @@ module.exports = new EntitySchema({
     id: { type: 'bigint', primary: true, generated: true },
     nombre: { type: 'varchar', length: 120 },
     grado: { type: 'enum', enum: ['estudiante', 'aprendiz', 'grado_medio', 'grado_alto', 'grado_especial'] },
-    tecnica_principal_id: { type: 'bigint', nullable: true },
+    tecnica_principal_id: { type: 'bigint', nullable: false },
     anios_experiencia: { type: 'tinyint', unsigned: true, default: 0 },
     estado_operativo: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'], default: 'activo' },
     tipo_fallecimiento: { type: 'enum', enum: ['', 'en_mision', 'por_edad'], default: '' },
@@ -22,7 +22,7 @@ module.exports = new EntitySchema({
       target: 'Technique',
       type: 'many-to-one',
       joinColumn: { name: 'tecnica_principal_id' },
-      nullable: true,
+      nullable: false,
       cascade: false
     },
     curse_causa_muerte: {
