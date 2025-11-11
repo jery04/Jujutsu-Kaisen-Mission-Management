@@ -63,51 +63,53 @@
         </section>
     </main>
     <script>
-        // Navega a edit.html al hacer clic en cualquier botón de editar
+        // Delegación para editar/eliminar y volver (listados generados dinámicamente)
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('click', function (event) {
-                // Manejo de botón Editar (delegado para soportar elementos dinámicos)
+                // Editar
                 var editBtn = event.target.closest('.btn-edit');
                 if (editBtn) {
                     window.location.href = '/html/edit.html';
                     return;
                 }
-
-                // Eliminar el elemento .query-item correspondiente al hacer clic en su botón de eliminar
+                // Eliminar: llama a la API y luego retira del DOM
                 var deleteBtn = event.target.closest('.btn-delete');
                 if (deleteBtn) {
                     var item = deleteBtn.closest('.query-item');
-                    if (item) {
-                        // Añade clase para animación de desvanecimiento
-                        item.classList.add('fade-out');
-                        // Remueve tras finalizar la transición de opacidad
-                        var safeTimeout = setTimeout(function(){
-                            if (item && item.isConnected) item.remove();
-                        }, 600); // respaldo si no se dispara transitionend
-                        item.addEventListener('transitionend', function handler(e) {
-                            if (e.propertyName === 'opacity') {
-                                clearTimeout(safeTimeout);
-                                item.remove();
+                    if (!item) return;
+                    var entity = item.getAttribute('data-entity'); // 'sorcerer' | 'technique' | 'curses'
+                    var id = item.getAttribute('data-id');
+                    if (!entity || !id) { alert('No se pudo determinar la entidad a eliminar.'); return; }
+                    if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+                    var base = (window.API_BASE || (window.location && window.location.origin) || 'http://127.0.0.1:3000');
+                    fetch(base + '/' + entity + '/' + id, { method: 'DELETE' })
+                        .then(function(resp){ return resp.json().then(function(j){ return { ok: resp.ok, status: resp.status, body: j }; }); })
+                        .then(function(res){
+                            if (!res.ok) {
+                                var msg = (res.body && res.body.message) ? res.body.message : ('Error ' + res.status);
+                                throw new Error(msg);
                             }
-                        }, { once: true });
-                    }
-                    return; // evita navegar a show.html cuando se hace clic en eliminar
-                }
-
-                // Navegar a index.html al hacer clic en "Volver"
-                var backBtn = event.target.closest('#go-back');
-                if (backBtn) {
-                    window.location.href = '/index.html';
+                            // Animación de remoción
+                            item.classList.add('fade-out');
+                            var safeTimeout = setTimeout(function(){ if (item && item.isConnected) item.remove(); }, 600);
+                            item.addEventListener('transitionend', function handler(e){
+                                if (e.propertyName === 'opacity') { clearTimeout(safeTimeout); item.remove(); }
+                            }, { once: true });
+                        })
+                        .catch(function(err){
+                            alert('No se pudo eliminar: ' + err.message);
+                        });
                     return;
                 }
-
-                // Navegar a show.html al hacer clic en la tarjeta/ítem
+                // Volver
+                var backBtn = event.target.closest('#go-back');
+                if (backBtn) { window.location.href = '/index.html'; return; }
+                // Navegar a detalle (placeholder)
                 var queryItem = event.target.closest('.query-item');
-                if (queryItem) {
-                    window.location.href = '/html/show.html';
-                }
+                if (queryItem) { window.location.href = '/html/show.html'; }
             });
         });
     </script>
+    <script src="/js/query.js"></script>
 </body>
 </html>

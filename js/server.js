@@ -178,6 +178,79 @@ typeorm.createConnection({
     }
   });
 
+  // Listar técnicas (incluye nombre del hechicero propietario)
+  app.get('/technique', async (req, res) => {
+    try {
+      const techRepo = dbConn.getRepository('Technique');
+      const list = await techRepo.find({ relations: ['sorcerer'] });
+      const data = list.map(t => ({
+        id: t.id,
+        nombre: t.nombre,
+        tipo: t.tipo,
+        nivel_dominio: t.nivel_dominio,
+        efectividad_inicial: t.efectividad_inicial,
+        activa: t.activa,
+        hechicero: t.sorcerer ? t.sorcerer.nombre : null
+      }));
+      res.json({ ok: true, count: data.length, data });
+    } catch (error) {
+      console.error('Error listando técnicas:', error);
+      res.status(500).json({ ok: false, message: 'Error listando técnicas' });
+    }
+  });
+
+  // --- Eliminaciones ---
+  app.delete('/sorcerer/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Sorcerer');
+      const ent = await repo.findOne({ where: { id } });
+      if (!ent) return res.status(404).json({ ok: false, message: 'Hechicero no encontrado' });
+      await repo.remove(ent);
+      res.json({ ok: true, deleted: id });
+    } catch (error) {
+      console.error('Error eliminando Hechicero:', error);
+      if (error && (error.code === 'ER_ROW_IS_REFERENCED_2' || /foreign key/i.test(error.message || ''))) {
+        return res.status(409).json({ ok: false, message: 'No se puede eliminar: el hechicero está referenciado por otras entidades.' });
+      }
+      res.status(500).json({ ok: false, message: 'Error eliminando hechicero', details: error.message });
+    }
+  });
+
+  app.delete('/technique/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Technique');
+      const ent = await repo.findOne({ where: { id } });
+      if (!ent) return res.status(404).json({ ok: false, message: 'Técnica no encontrada' });
+      await repo.remove(ent);
+      res.json({ ok: true, deleted: id });
+    } catch (error) {
+      console.error('Error eliminando Técnica:', error);
+      if (error && (error.code === 'ER_ROW_IS_REFERENCED_2' || /foreign key/i.test(error.message || ''))) {
+        return res.status(409).json({ ok: false, message: 'No se puede eliminar: la técnica está referenciada por otras entidades.' });
+      }
+      res.status(500).json({ ok: false, message: 'Error eliminando técnica', details: error.message });
+    }
+  });
+
+  app.delete('/curses/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const repo = dbConn.getRepository('Curse');
+      const ent = await repo.findOne({ where: { id } });
+      if (!ent) return res.status(404).json({ ok: false, message: 'Maldición no encontrada' });
+      await repo.remove(ent);
+      res.json({ ok: true, deleted: id });
+    } catch (error) {
+      console.error('Error eliminando Maldición:', error);
+      if (error && (error.code === 'ER_ROW_IS_REFERENCED_2' || /foreign key/i.test(error.message || ''))) {
+        return res.status(409).json({ ok: false, message: 'No se puede eliminar: la maldición está referenciada por otras entidades.' });
+      }
+      res.status(500).json({ ok: false, message: 'Error eliminando maldición', details: error.message });
+    }
+  });
+
   // Crear maldición
   app.post('/curses', async (req, res) => {
     try {
