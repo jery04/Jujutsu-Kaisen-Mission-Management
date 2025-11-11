@@ -7,6 +7,7 @@ const path = require('path');
 // Entidades TypeORM
 const Location = require('../database_tables/Location');
 const Sorcerer = require('../database_tables/Sorcerer');
+const Administrator = require('../database_tables/Administrator');
 const SupportStaff = require('../database_tables/SupportStaff');
 const SorcererStatusHistory = require('../database_tables/SorcererStatusHistory');
 const SorcererRelationship = require('../database_tables/SorcererRelationship');
@@ -42,6 +43,7 @@ typeorm.createConnection({
   entities: [
     Location,
     Sorcerer,
+    Administrator,
     SupportStaff,
     SorcererStatusHistory,
     SorcererRelationship,
@@ -150,6 +152,21 @@ typeorm.createConnection({
     }
   });
 
+  // Buscar hechicero por nombre exacto (para autenticación/administrador)
+  app.get('/sorcerer/name/:nombre', async (req, res) => {
+    try {
+      const nombre = String(req.params.nombre || '').trim();
+      if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
+      const sorcererRepo = dbConn.getRepository('Sorcerer');
+      const sor = await sorcererRepo.findOne({ where: { nombre } });
+      if (!sor) return res.status(404).json({ message: 'Hechicero no encontrado' });
+      res.json(sor);
+    } catch (error) {
+      console.error('Error buscando Hechicero por nombre:', error);
+      res.status(500).json({ message: 'Error buscando por nombre', details: error.message });
+    }
+  });
+
   // Listar hechiceros
   app.get('/sorcerer', async (req, res) => {
     try {
@@ -163,6 +180,27 @@ typeorm.createConnection({
         message: 'Error al obtener la lista de hechiceros.',
         details: error.message
       });
+    }
+  });
+
+  // --- Administrador ---
+  app.post('/admin', async (req, res) => {
+    try {
+      const { nombre, contrasenna } = req.body || {};
+      if (!nombre) return res.status(400).json({ message: 'nombre requerido' });
+      if (!contrasenna) return res.status(400).json({ message: 'contrasenna requerida' });
+      const sorRepo = dbConn.getRepository('Sorcerer');
+      const sor = await sorRepo.findOne({ where: { nombre } });
+      if (!sor) return res.status(404).json({ message: 'Hechicero no encontrado' });
+      const adminRepo = dbConn.getRepository('Administrator');
+      const exists = await adminRepo.findOne({ where: { sorcerer_id: sor.id } });
+      if (exists) return res.status(409).json({ message: 'Administrador ya existe para este hechicero' });
+      const admin = adminRepo.create({ sorcerer_id: sor.id, contrasenna });
+      const saved = await adminRepo.save(admin);
+      res.status(201).json({ ok: true, admin: saved });
+    } catch (error) {
+      console.error('Error creando administrador:', error);
+      res.status(500).json({ ok: false, message: 'Error creando administrador', details: error.message });
     }
   });
 

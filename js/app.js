@@ -5,6 +5,7 @@ const typeorm = require('typeorm');
 // Ajuste de rutas: los esquemas están en la carpeta raíz `database_tables/`
 const Location = require('../database_tables/Location');
 const Sorcerer = require('../database_tables/Sorcerer');
+const Administrator = require('../database_tables/Administrator');
 const SupportStaff = require('../database_tables/SupportStaff');
 const Technique = require('../database_tables/Technique');
 const Curse = require('../database_tables/Curse');
@@ -19,7 +20,7 @@ const Mission = require('../database_tables/Mission');
       username: 'root',
       password: '1234',
       database: 'jujutsu_misiones_db',
-      entities: [Location, Sorcerer, SupportStaff, Technique, Curse, Mission],
+      entities: [Location, Sorcerer, Administrator, SupportStaff, Technique, Curse, Mission],
       synchronize: true
     });
 
