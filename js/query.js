@@ -64,13 +64,42 @@
         return div;
     }
 
-    function renderSorcerers(list) {
+    // Paginación genérica
+    function renderPaginated(list, renderFn, entityType) {
         clearResults();
         if (!Array.isArray(list) || list.length === 0) {
-            results.innerHTML = '<div class="query-item"><h3>No hay hechiceros</h3></div>';
+            results.innerHTML = `<div class="query-item"><h3>No hay ${entityType}</h3></div>`;
             return;
         }
-        list.forEach(s => {
+        let currentPage = 1;
+        const pageSize = 10;
+        const totalPages = Math.ceil(list.length / pageSize);
+
+        function showPage(page) {
+            clearResults();
+            const start = (page - 1) * pageSize;
+            const end = start + pageSize;
+            list.slice(start, end).forEach(renderFn);
+            // Controles de paginación
+            const pagination = document.createElement('div');
+            pagination.className = 'pagination-controls';
+            pagination.style.textAlign = 'center';
+            pagination.style.margin = '18px 0 0 0';
+            pagination.innerHTML = `
+                <button class="btn-action" id="prev-page" ${page === 1 ? 'disabled' : ''}>Anterior</button>
+                <span style="margin:0 12px;">Página ${page} de ${totalPages}</span>
+                <button class="btn-action" id="next-page" ${page === totalPages ? 'disabled' : ''}>Siguiente</button>
+            `;
+            results.appendChild(pagination);
+            // Eventos
+            pagination.querySelector('#prev-page').onclick = function(){ if (currentPage > 1) { currentPage--; showPage(currentPage); } };
+            pagination.querySelector('#next-page').onclick = function(){ if (currentPage < totalPages) { currentPage++; showPage(currentPage); } };
+        }
+        showPage(currentPage);
+    }
+
+    function renderSorcerers(list) {
+        renderPaginated(list, function(s){
             const lines = [
                 `Grado: <strong>${s.grado}</strong>`,
                 `Años de experiencia: <strong>${s.anios_experiencia ?? 0}</strong>`
@@ -79,17 +108,12 @@
             item.dataset.entity = 'sorcerer';
             if (s.id != null) item.dataset.id = String(s.id);
             results.appendChild(item);
-        });
+        }, 'hechiceros');
     }
 
     function renderTechniques(payload) {
-        clearResults();
         const data = Array.isArray(payload) ? payload : (payload && payload.data ? payload.data : []);
-        if (!Array.isArray(data) || data.length === 0) {
-            results.innerHTML = '<div class="query-item"><h3>No hay técnicas</h3></div>';
-            return;
-        }
-        data.forEach(t => {
+        renderPaginated(data, function(t){
             const lines = [
                 `Tipo: <strong>${t.tipo}</strong> | Nivel: <strong>${t.nivel_dominio}</strong> | Efectividad: <strong>${t.efectividad_inicial}</strong>`,
                 `Hechicero: <strong>${t.hechicero ?? '-'}</strong>`
@@ -98,17 +122,12 @@
             item.dataset.entity = 'technique';
             if (t.id != null) item.dataset.id = String(t.id);
             results.appendChild(item);
-        });
+        }, 'técnicas');
     }
 
     function renderCurses(payload) {
-        clearResults();
         const data = payload && payload.data ? payload.data : [];
-        if (!Array.isArray(data) || data.length === 0) {
-            results.innerHTML = '<div class="query-item"><h3>No hay maldiciones</h3></div>';
-            return;
-        }
-        data.forEach(c => {
+        renderPaginated(data, function(c){
             const ubi = c.location ? (c.location.nombre + (c.location.region ? ` (${c.location.region})` : '')) : '-';
             const lines = [
                 `Grado: <strong>${c.grado}</strong> | Tipo: <strong>${c.tipo}</strong> | Estado: <strong>${c.estado}</strong>`,
@@ -119,7 +138,7 @@
             item.dataset.entity = 'curses';
             if (c.id != null) item.dataset.id = String(c.id);
             results.appendChild(item);
-        });
+        }, 'maldiciones');
     }
 
     async function loadSorcerers() {
