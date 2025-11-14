@@ -7,7 +7,8 @@ module.exports = new EntitySchema({
     id: { type: 'bigint', primary: true, generated: true },
     nombre: { type: 'varchar', length: 120 },
     grado: { type: 'enum', enum: ['estudiante', 'aprendiz', 'grado_medio', 'grado_alto', 'grado_especial'] },
-    tecnica_principal_id: { type: 'bigint', nullable: false },
+    // Hacer nullable para romper ciclo de dependencia TypeORM (se valida en lógica de negocio)
+    tecnica_principal_id: { type: 'bigint', nullable: true },
     anios_experiencia: { type: 'tinyint', unsigned: true, default: 0 },
     estado_operativo: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'], default: 'activo' },
     tipo_fallecimiento: { type: 'enum', enum: ['', 'en_mision', 'por_edad'], default: '' },
@@ -22,7 +23,8 @@ module.exports = new EntitySchema({
       target: 'Technique',
       type: 'many-to-one',
       joinColumn: { name: 'tecnica_principal_id' },
-      nullable: false,
+      // Mantener nullable true para evitar error circular; la aplicación exige técnica principal luego
+      nullable: true,
       cascade: false
     },
     curse_causa_muerte: {
