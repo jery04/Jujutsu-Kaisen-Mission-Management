@@ -176,6 +176,41 @@ body {
     filter: contrast(105%) saturate(110%);
 }
 
+/* ---- Caption y flechas sobre la imagen (estilo del mockup) ---- */
+.media-caption {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 35px; /* subido para que se vean los 4 bordes */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: none; /* evita bloquear el arrastre de la tarjeta */
+}
+
+.caption-bubble {
+    flex: 1 1 auto;
+    min-height: 48px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,.22);
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
+    color: #111;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.35);
+    pointer-events: auto;
+    opacity: .0;
+    transform: translateY(6px) scale(.98);
+    transition: opacity 620ms cubic-bezier(.22,.61,.36,1), transform 620ms cubic-bezier(.22,.61,.36,1);
+    will-change: opacity, transform;
+}
+.caption-bubble.is-show { opacity: 1; transform: none; }
+
+/* se eliminaron los botones de navegación */
+
 .panel-right {
     display: flex;
     flex-direction: column;
@@ -270,6 +305,8 @@ h2 {
     .panel-left {
         min-height: 320px;
     }
+    .media-caption { left: 12px; right: 12px; bottom: 18px; }
+    .caption-bubble { min-height: 44px; padding: 8px 12px; }
     .features {
         grid-template-columns: 1fr;
     }
