@@ -120,13 +120,16 @@
         let endpoint = API_BASE; // base de API configurable
         let payload = {};
 
+        let userId = '';
+        try {
+            userId = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
+        } catch (_) {}
+
         if (entityType === 'hechicero') {
-            // Sorcerer: convertimos el texto del select a los enums esperados por el backend
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
-            // Technique: requiere que exista un hechicero con ese nombre
             payload = {
                 nombre: raw.nombre,
                 tipo: raw.tipo,
@@ -138,7 +141,6 @@
             };
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
-            // Curse: ubicacion libre (texto), sin relaciones
             payload = { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
             endpoint += '/curses';
         } else {
@@ -159,7 +161,10 @@
             console.log('[register.js] sending to endpoint:', endpoint, 'payload:', payload);
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(userId ? { 'x-user-id': userId } : {})
+                },
                 body: JSON.stringify(payload),
             });
 

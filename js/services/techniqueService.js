@@ -1,14 +1,22 @@
 const { getRepository } = require('../repositories');
 
 module.exports = {
-  async create(db, payload) {
+  async create(db, payload, userId) {
     const { nombre, tipo, descripcion, condiciones } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!tipo) throw Object.assign(new Error('tipo requerido'), { status: 400 });
     const techRepo = getRepository(db, 'Technique');
     const dup = await techRepo.getOne({ nombre });
     if (dup) { const err = new Error('Técnica ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    return await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones: condiciones || null });
+    const saved = await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones: condiciones || null });
+    // Vincular al usuario si viene en el contexto
+    if (saved && userId) {
+      try {
+        const linkRepo = getRepository(db, 'UserTechnique');
+        await linkRepo.add({ user_id: userId, technique_id: saved.id });
+      } catch (e) { console.warn('[techniqueService] No se pudo vincular técnica a usuario:', e.message); }
+    }
+    return saved;
   },
   async list(db) {
     const techRepo = getRepository(db, 'Technique');

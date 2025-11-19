@@ -2,7 +2,10 @@ const service = require('../services/curseService');
 
 module.exports = (db) => ({
     create: async (req, res) => {
-        try { const saved = await service.create(db, req.body); res.status(201).json(saved); }
+        try {
+            const userId = req.headers['x-user-id'];
+            const saved = await service.create(db, req.body, userId); res.status(201).json(saved);
+        }
         catch (error) {
             console.error('Error al crear Maldición:', error);
             if (error.status === 409) return res.status(409).json({ message: 'Maldición ya existe' });

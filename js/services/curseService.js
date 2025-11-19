@@ -1,7 +1,7 @@
 const { getRepository } = require('../repositories');
 
 module.exports = {
-  async create(db, payload) {
+  async create(db, payload, userId) {
     let { nombre, grado, tipo, ubicacion, fecha, estado } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
@@ -13,7 +13,14 @@ module.exports = {
     const fechaDate = new Date(fecha);
     const dup = await curseRepo.findOne({ where: { nombre, fecha_aparicion: fechaDate } });
     if (dup) { const err = new Error('Maldición ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    return await curseRepo.add({ nombre, grado, tipo, fecha_aparicion: fechaDate, ubicacion, estado: estado || '' });
+    const saved = await curseRepo.add({ nombre, grado, tipo, fecha_aparicion: fechaDate, ubicacion, estado: estado || '' });
+    if (saved && userId) {
+      try {
+        const linkRepo = getRepository(db, 'UserCurse');
+        await linkRepo.add({ user_id: userId, curse_id: saved.id });
+      } catch (e) { console.warn('[curseService] No se pudo vincular maldición a usuario:', e.message); }
+    }
+    return saved;
   },
   async list(db, estado) {
     const repo = getRepository(db, 'Curse');

@@ -1,7 +1,7 @@
 const { getRepository } = require('../repositories');
 
 module.exports = {
-  async create(db, payload) {
+  async create(db, payload, userId) {
     const sorcererRepo = getRepository(db, 'Sorcerer');
     const techniqueRepo = getRepository(db, 'Technique');
     const linkRepo = getRepository(db, 'SorcererTechnique');
@@ -16,6 +16,7 @@ module.exports = {
       causa_muerte: causa_muerte || null,
       fecha_fallecimiento: fecha_fallecimiento ? new Date(fecha_fallecimiento) : null
     });
+    let result = saved;
     // Si se envía una técnica principal por nombre, crear el vínculo en sorcerer_technique
     if (saved && tecnica && String(tecnica).trim()) {
       const nombreTec = String(tecnica).trim();
@@ -29,9 +30,16 @@ module.exports = {
       try { await linkRepo.clearPrincipal(saved.id); } catch (_) { /* defensivo */ }
       await linkRepo.setPrincipal(saved.id, tech.id, 0);
       // Incluir referencia ligera en respuesta para conveniencia
-      return { ...saved, tecnica_principal: nombreTec };
+      result = { ...saved, tecnica_principal: nombreTec };
     }
-    return saved;
+    // Vincular hechicero al usuario SIEMPRE
+    if (saved && userId) {
+      try {
+        const userLinkRepo = getRepository(db, 'UserSorcerer');
+        await userLinkRepo.add({ user_id: userId, sorcerer_id: saved.id });
+      } catch (e) { console.warn('[sorcererService] No se pudo vincular hechicero a usuario:', e.message); }
+    }
+    return result;
   },
   async getByName(db, nombre) {
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
