@@ -51,6 +51,14 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: rlMax, standardHeaders: true,
 // Servir frontend estático (css, js, html/*) sin index automático
 const staticRoot = path.join(__dirname, '..');
 app.use(express.static(staticRoot, { index: false }));
+// Servir librería jsPDF local desde node_modules para entorno offline
+try {
+  const jspdfDist = path.join(__dirname, '..', 'node_modules', 'jspdf', 'dist');
+  app.use('/lib/jspdf', express.static(jspdfDist));
+  console.log('Ruta /lib/jspdf habilitada.');
+} catch (e) {
+  console.warn('No se pudo registrar ruta /lib/jspdf:', e.message);
+}
 // Hacer que la ruta raíz entregue home.html
 app.get('/', (_req, res) => {
   res.sendFile(path.join(staticRoot, 'home.html'));

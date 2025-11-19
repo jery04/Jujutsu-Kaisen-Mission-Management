@@ -237,5 +237,127 @@
       loadSorcerers().catch((e2) => { console.debug('fallback loadSorcerers failed', e2); });
       if (entitySelect) entitySelect.value = 'sorcerer';
     }
+
+    // Exportar resultados visibles como PDF
+    const exportBtn = document.getElementById('export-pdf');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function () {
+        try {
+          const container = document.getElementById('results');
+          if (!container) { alert('No se encontró el contenedor de resultados.'); return; }
+          const items = Array.from(container.querySelectorAll('.query-item')).filter(it => !it.classList.contains('pagination-controls'));
+          if (!items.length) { alert('No hay resultados para exportar.'); return; }
+
+          function ensureJsPDF(cb) {
+            // Ya presente
+            const direct = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || (window.jspdf && window.jspdf);
+            if (direct && (direct.name === 'jsPDF' || direct === window.jsPDF || (window.jspdf && window.jspdf.jsPDF))) { cb((window.jspdf && window.jspdf.jsPDF) || window.jsPDF || direct); return; }
+            const SOURCES = [
+              '/lib/jspdf/jspdf.umd.min.js', // servido localmente
+              'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+              'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+              'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+            ];
+            let idx = 0;
+            function attempt() {
+              if (idx >= SOURCES.length) { alert('No se pudo cargar jsPDF desde ningún CDN.'); return; }
+              const url = SOURCES[idx++];
+              const script = document.createElement('script');
+              script.src = url;
+              script.async = true;
+              let done = false;
+              const timeout = setTimeout(function () { if (done) return; script.remove(); attempt(); }, 7000); // 7s timeout
+              script.onload = function () {
+                done = true; clearTimeout(timeout);
+                try {
+                  const ctor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || (window.jspdf && window.jspdf);
+                  if (!ctor) { attempt(); return; }
+                  cb(ctor);
+                } catch (e) { console.error('jsPDF post-load error', e); attempt(); }
+              };
+              script.onerror = function () { done = true; clearTimeout(timeout); attempt(); };
+              document.head.appendChild(script);
+            }
+            attempt();
+          }
+
+          // Construir estructura textual de cada item
+          ensureJsPDF(function (JsPDFCtor) {
+            const doc = new JsPDFCtor({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const entitySelect = document.getElementById('entity-select');
+            const tipo = entitySelect && entitySelect.value ? entitySelect.value : 'consulta';
+            const fecha = new Date();
+            const ts = fecha.toLocaleString();
+            let y = 15;
+            doc.setFontSize(16);
+            doc.text('Resultados de ' + tipo, 10, y);
+            y += 8;
+            doc.setFontSize(10);
+            doc.text('Generado: ' + ts, 10, y);
+            y += 8;
+            doc.setLineWidth(0.2);
+            doc.line(10, y, 200, y);
+            y += 6;
+
+            doc.setFontSize(12);
+            items.forEach(function (item, idx) {
+              // Evitar que la paginación se interprete como ítem
+              if (item.classList.contains('pagination-controls')) return;
+              const tituloEl = item.querySelector('h3');
+              const titulo = tituloEl ? (tituloEl.textContent || '').trim() : 'Item ' + (idx + 1);
+              const bodyLines = [];
+              const p = item.querySelector('p');
+              if (p) {
+                // Cada <div> dentro de p
+                bodyLines.push(...Array.from(p.querySelectorAll('div')).map(d => (d.textContent || '').trim()));
+              }
+              const rawText = item.textContent || '';
+              // Limpiar acciones
+              const filtered = rawText.replace(/Editar\s*Eliminar/gi, '').trim();
+              // Si no hay líneas del <p>, usar fallback a líneas manuales
+              if (!bodyLines.length) {
+                filtered.split(/\n+/).map(l => l.trim()).filter(l => l && l !== titulo).forEach(l => bodyLines.push(l));
+              }
+
+              // Manejar salto de página
+              const neededSpace = 8 + (bodyLines.length * 5) + 4;
+              if (y + neededSpace > 285) {
+                doc.addPage();
+                y = 15;
+              }
+              doc.setFontSize(12);
+              doc.text(titulo, 10, y);
+              y += 6;
+              doc.setFontSize(10);
+              bodyLines.forEach(line => {
+                // Wrap manual simple si línea muy larga
+                const maxChars = 95;
+                if (line.length > maxChars) {
+                  const parts = [];
+                  let start = 0;
+                  while (start < line.length) {
+                    parts.push(line.slice(start, start + maxChars));
+                    start += maxChars;
+                  }
+                  parts.forEach(part => { doc.text(part, 12, y); y += 5; });
+                } else {
+                  doc.text(line, 12, y);
+                  y += 5;
+                }
+              });
+              y += 3; // Espacio entre ítems
+            });
+
+            // Nombre de archivo
+            const fileTs = fecha.toISOString().replace(/[:T]/g, '-').split('.')[0];
+            const filename = 'consulta-' + tipo + '-' + fileTs + '.pdf';
+            doc.save(filename);
+          });
+        } catch (err) {
+          console.error('Export PDF error', err);
+          alert('Ocurrió un error al exportar: ' + err.message);
+        }
+      });
+    }
   });
 })();
