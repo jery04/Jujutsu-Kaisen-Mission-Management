@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio | Jujutsu Kaisen</title>
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/index.css">
     <link rel="stylesheet" href="./css/signup.css">
 </head>
 <body>
@@ -15,6 +15,14 @@
     </header>
     
     <main id="main-content">
+        <section class="user-center" aria-label="Usuario y sesión">
+            <div class="user-badge" id="user-badge" aria-live="polite">
+                <div class="avatar" id="user-avatar" aria-hidden="true">U</div>
+                <span class="username" id="user-name">Usuario</span>
+            </div>
+            <button id="btn-logout" class="logout-btn" type="button" title="Cerrar sesión">Cerrar sesión</button>
+        </section>
+
         <section class="btn-list" aria-label="Lista de botones">
             <button id="open-add" class="btn">
                 <span class="btn-content">
@@ -62,41 +70,6 @@
         </section>
     </main>
 
-    <script>
-        window.API_BASE = window.location.origin;
-    </script>
     <script src="./js/index.js"></script>
-    <script>
-        // Asegura el estado inicial antes del primer repintado
-        (function(){
-            try {
-                var comingFromHome = sessionStorage.getItem('flowFromHome') === '1';
-                // Solo animar si venimos de home; en otros casos, sin animación
-                if (comingFromHome) {
-                    document.documentElement.classList.add('flow-enter');
-                }
-            } catch (_) {
-                // Sin animación en caso de error de sessionStorage
-            }
-        })();
-
-        // Retira el estado inicial y deja que la transición haga el resto
-        (function(){
-            var reveal = function(){
-                requestAnimationFrame(function(){
-                    var html = document.documentElement;
-                    if (html.classList.contains('flow-enter')) {
-                        html.classList.remove('flow-enter');
-                        try { sessionStorage.removeItem('flowFromHome'); } catch(_) {}
-                    }
-                });
-            };
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', reveal, { once: true });
-            } else {
-                reveal();
-            }
-        })();
-    </script>
 </body>
 </html>
