@@ -15,6 +15,8 @@ window.addEventListener('keydown', function(e) {
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
+        // Marca un traspaso de animación para index.html
+        try { sessionStorage.setItem('flowFromHome', '1'); } catch(_) {}
         document.body.classList.add('leaving');
         const DURATION = 520;
 

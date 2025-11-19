@@ -52,7 +52,7 @@
         return e;
     }
 
-    // Prefill datalists same as add.js
+    // Prefill datalists same as register.js
     async function prefillDatalists() {
         const dlUbic = document.getElementById('dl_ubicaciones');
         const dlHech = document.getElementById('dl_hechiceros');

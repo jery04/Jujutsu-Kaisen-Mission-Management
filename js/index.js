@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addBtn) {
     addBtn.addEventListener('click', () => {
       // Navigate to the add page (relative to index.html)
-      window.location.href = 'html/add.html';
+      window.location.href = 'html/register.html';
     });
   }
 

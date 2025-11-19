@@ -9,7 +9,17 @@
     <link rel="stylesheet" href="./css/signup.css">
     <script>
         // Asegura el estado inicial antes del primer repintado
-        document.documentElement.classList.add('page-enter');
+        (function(){
+            try {
+                var comingFromHome = sessionStorage.getItem('flowFromHome') === '1';
+                // Solo animar si venimos de home; en otros casos, sin animación
+                if (comingFromHome) {
+                    document.documentElement.classList.add('flow-enter');
+                }
+            } catch (_) {
+                // Sin animación en caso de error de sessionStorage
+            }
+        })();
     </script>
     <style>
         /* Aparición suave al cargar la página */
@@ -17,13 +27,21 @@
             transition: opacity 380ms ease, transform 450ms cubic-bezier(.22,.61,.36,1);
             will-change: opacity, transform;
         }
+        /* Entrada normal (acceso directo) */
         html.page-enter body {
             opacity: 0;
             transform: translateY(10px) scale(.995);
         }
+        /* Continuación de flujo desde home (panel se fue hacia abajo, este cae desde arriba) */
+        html.flow-enter body {
+            opacity: 0;
+            transform: translateY(-64px) scale(.995);
+            /* Duración alineada con la salida de home */
+            transition: opacity 420ms ease, transform 520ms cubic-bezier(.22,.61,.36,1);
+        }
         @media (prefers-reduced-motion: reduce) {
             body { transition: none !important; transform: none !important; }
-            html.page-enter body { opacity: 1; transform: none; }
+            html.page-enter body, html.flow-enter body { opacity: 1; transform: none; }
         }
     </style>
 </head>
@@ -35,17 +53,6 @@
     
     <main id="main-content">
         <section class="btn-list" aria-label="Lista de botones">
-            <button id="open-signup" class="btn">
-                <span class="btn-content">
-                    <img src="/img/registrar.png" alt="icono" class="btn-icon">
-                    <span class="btn-text">
-                        <h1>Añadir Personal</h1>
-                        <p>Incorporación de miembros al equipo operativo y administrativo, preparados para coordinar tareas esenciales dentro del sistema</p>
-                    </span>
-                </span>
-                <img src="/img/part1.png" alt="Jujutsu Kaisen" class="btn-illustration">
-            </button>
-
             <button id="open-add" class="btn">
                 <span class="btn-content">
                     <img src="/img/historias.png" alt="icono" class="btn-icon">
@@ -54,7 +61,7 @@
                         <p>Instanciación de entidades como hechiceros, técnicas malditas y maldiciones, con sus respectivos campos</p>
                     </span>
                 </span>
-                <img src="/img/part2.png" alt="Jujutsu Kaisen" class="btn-illustration">
+                <img src="/img/part1.png" alt="Jujutsu Kaisen" class="btn-illustration">
             </button>
 
             <button id="open-query" class ="btn">
@@ -63,6 +70,17 @@
                     <span class="btn-text">
                         <h1>Consultar</h1>
                         <p>Visualización, modificación y administración integral de las entidades registradas</p>
+                    </span>
+                </span>
+                <img src="/img/part2.png" alt="Jujutsu Kaisen" class="btn-illustration">
+            </button>
+            
+            <button id="open-add" class="btn">
+                <span class="btn-content">
+                    <img src="" alt="icono" class="btn-icon">
+                    <span class="btn-text">
+                        <h1>Boton 3</h1>
+                        <p>Descripción o subtítulo</p>
                     </span>
                 </span>
                 <img src="/img/part3.png" alt="Jujutsu Kaisen" class="btn-illustration">
@@ -90,7 +108,11 @@
         (function(){
             var reveal = function(){
                 requestAnimationFrame(function(){
-                    document.documentElement.classList.remove('page-enter');
+                    var html = document.documentElement;
+                    if (html.classList.contains('flow-enter')) {
+                        html.classList.remove('flow-enter');
+                        try { sessionStorage.removeItem('flowFromHome'); } catch(_) {}
+                    }
                 });
             };
             if (document.readyState === 'loading') {
