@@ -4,12 +4,9 @@ module.exports = new EntitySchema({
   name: 'MissionParticipant',
   tableName: 'mission_participant',
   columns: {
-    id: { type: 'bigint', primary: true, generated: true },
-    rol: { type: 'enum', enum: ['ejecutor', 'apoyo', 'supervisor', 'refuerzo'], default: 'ejecutor' },
-    resultado: { type: 'enum', enum: ['exito', 'fracaso', 'retirado', 'herido', 'fallecido', 'cancelado'], nullable: true },
-    observaciones: { type: 'text', nullable: true },
-    created_at: { type: 'timestamp', createDate: true },
-    updated_at: { type: 'timestamp', updateDate: true }
+    mission_id: { type: 'int', primary: true },
+    sorcerer_id: { type: 'int', primary: true },
+    rol: { type: 'varchar', length: 100 }
   },
   relations: {
     mission: {
@@ -23,14 +20,11 @@ module.exports = new EntitySchema({
       target: 'Sorcerer',
       type: 'many-to-one',
       joinColumn: { name: 'sorcerer_id' },
-      nullable: false
+      nullable: false,
+      onDelete: 'CASCADE'
     }
   },
-  uniques: [
-    { columns: ['mission', 'sorcerer'] }
-  ],
   indices: [
-    { columns: ['rol'] },
-    { columns: ['resultado'] }
+    { columns: ['rol'] }
   ]
 });

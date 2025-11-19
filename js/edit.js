@@ -28,7 +28,7 @@
             // Deshabilitar los fieldsets no activos para evitar validación en campos ocultos
             fs.disabled = !active;
         });
-        if (value === 'maldicion') { prefillDatalists().catch(() => { }); }
+        if (value === 'maldicion') { prefillDatalists().catch((e) => { console.debug('prefill datalists (maldicion) failed', e); }); }
     }
 
     function clearResult() {
@@ -54,24 +54,16 @@
 
     // Prefill datalists same as add.js
     async function prefillDatalists() {
-        const dlUbic = document.getElementById('dl_ubicaciones');
+        // Ya no hay locations; solo podemos sugerir hechiceros si el datalist existe
         const dlHech = document.getElementById('dl_hechiceros');
-        if (!dlUbic || !dlHech) return;
-        if (dlUbic.children.length === 0) {
-            try {
-                const r = await fetch(API_BASE + '/locations'); const data = await r.json();
-                if (r.ok && data && Array.isArray(data.data)) {
-                    data.data.forEach(loc => { const opt = document.createElement('option'); opt.value = loc.nombre; opt.label = loc.region ? `${loc.nombre} (${loc.region})` : loc.nombre; dlUbic.appendChild(opt); });
-                }
-            } catch { }
-        }
+        if (!dlHech) return;
         if (dlHech.children.length === 0) {
             try {
                 const r = await fetch(API_BASE + '/sorcerer'); const list = await r.json();
                 if (r.ok && Array.isArray(list)) {
                     list.forEach(s => { const opt = document.createElement('option'); opt.value = s.nombre; dlHech.appendChild(opt); });
                 }
-            } catch { }
+            } catch (e) { console.debug('prefill datalists (hechiceros) error', e); }
         }
     }
 
@@ -97,7 +89,7 @@
                 form.nombre.value = record.nombre || '';
                 form.grado.value = record.grado || 'estudiante';
                 form.experiencia.value = record.anios_experiencia != null ? record.anios_experiencia : '';
-                try { if (record.tecnica_principal && record.tecnica_principal.nombre) { form.tecnica.value = record.tecnica_principal.nombre; } } catch (_) { }
+                try { if (record.tecnica_principal && record.tecnica_principal.nombre) { form.tecnica.value = record.tecnica_principal.nombre; } } catch (e) { console.debug('read tecnica_principal failed', e); }
             } else if (fsKey === 'tecnica') {
                 form.nombre.value = record.nombre || '';
                 form.tipo.value = record.tipo || 'amplificacion';
@@ -110,22 +102,15 @@
                 form.nombre.value = record.nombre || '';
                 form.grado.value = record.grado || '1';
                 form.tipo.value = record.tipo || 'maligna';
-                // GET /curses/:id returns full entity including location
-                const locName = record.location ? record.location.nombre : '';
-                form.ubicacion.value = locName;
+                form.ubicacion.value = record.ubicacion || '';
                 if (record.fecha_aparicion) {
                     // convert to local datetime-local value
                     const dt = new Date(record.fecha_aparicion);
                     const iso = dt.toISOString();
                     form.fecha.value = iso.slice(0, 16); // YYYY-MM-DDTHH:MM
                 }
-                // estado mapping if needed
-                let estado = record.estado;
-                const mapRev = { en_proceso_exorcismo: 'en proceso de exorcismo' };
-                estado = mapRev[estado] || estado;
-                form.estado.value = estado || 'activa';
-                form.hechicero.value = record.assigned_sorcerer ? record.assigned_sorcerer.nombre : '';
-                prefillDatalists().catch(() => { });
+                form.estado.value = record.estado || '';
+                prefillDatalists().catch((e) => { console.debug('prefill datalists in loadExisting failed', e); });
             }
             // Mark editing mode
             if (submitBtn) submitBtn.textContent = 'Actualizar';
@@ -158,8 +143,7 @@
         } else if (fsKey === 'tecnica') {
             return { nombre: raw.nombre, tipo: raw.tipo, hechicero: raw.hechicero, nivel_dominio: raw.nivel ? Number(raw.nivel) : 0, efectividad_inicial: raw.efectividad || 'media', condiciones: raw.condiciones || null, activa: 1 };
         } else if (fsKey === 'maldicion') {
-            let estado = raw.estado; const map = { 'en proceso de exorcismo': 'en_proceso_exorcismo' }; estado = map[estado] || estado;
-            return { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado, hechicero: raw.hechicero || null };
+            return { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
         }
         return null;
     }
@@ -203,7 +187,7 @@
                 try {
                     const flash = { type: 'success', text: 'Actualización exitosa' };
                     sessionStorage.setItem('flash', JSON.stringify(flash));
-                } catch (_) { }
+                } catch (e) { console.debug('set flash failed', e); }
                 const target = '/html/query.html?entity=' + encodeURIComponent(apiEntity);
                 window.location.href = target;
                 return;
@@ -226,5 +210,5 @@
     // Initialization
     const fsKeyInit = normalizeEntity(entity);
     showFor(fsKeyInit);
-    loadExisting().catch(() => { });
+    loadExisting().catch((e) => { console.debug('loadExisting failed', e); });
 })();

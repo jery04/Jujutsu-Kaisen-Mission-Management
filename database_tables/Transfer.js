@@ -4,43 +4,23 @@ module.exports = new EntitySchema({
   name: 'Transfer',
   tableName: 'transfer',
   columns: {
-    id: { type: 'bigint', primary: true, generated: true },
-    fecha: { type: 'datetime' },
+    id: { type: 'int', primary: true, generated: true },
+    fecha: { type: 'date' },
     motivo: { type: 'varchar', length: 255, nullable: true },
-    estado: { type: 'enum', enum: ['programado', 'en_curso', 'finalizado'], default: 'programado' },
-    created_at: { type: 'timestamp', createDate: true },
-    updated_at: { type: 'timestamp', updateDate: true }
+    estado: { type: 'varchar', length: 100 },
+    origen_ubicacion: { type: 'varchar', length: 150 },
+    destino_ubicacion: { type: 'varchar', length: 150 }
   },
   relations: {
-    mission: {
-      target: 'Mission',
+    manager: {
+      target: 'Sorcerer',
       type: 'many-to-one',
-      joinColumn: { name: 'mission_id' },
-      nullable: true,
-      onDelete: 'SET NULL'
-    },
-    origen_location: {
-      target: 'Location',
-      type: 'many-to-one',
-      joinColumn: { name: 'origen_location_id' },
-      nullable: false
-    },
-    destino_location: {
-      target: 'Location',
-      type: 'many-to-one',
-      joinColumn: { name: 'destino_location_id' },
-      nullable: false
-    },
-    support_staff: {
-      target: 'SupportStaff',
-      type: 'many-to-one',
-      joinColumn: { name: 'support_staff_id' },
+      joinColumn: { name: 'manager_sorcerer_id' },
       nullable: false
     }
   },
   indices: [
-    { columns: ['mission'] },
-    { columns: ['support_staff'] },
-    { columns: ['estado'] }
+    { columns: ['estado'] },
+    // Foreign key columns get indexed by the database; no need to specify here when not declared in columns
   ]
 });

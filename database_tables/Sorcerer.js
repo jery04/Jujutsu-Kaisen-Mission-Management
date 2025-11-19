@@ -4,43 +4,26 @@ module.exports = new EntitySchema({
   name: 'Sorcerer',
   tableName: 'sorcerer',
   columns: {
-    id: { type: 'bigint', primary: true, generated: true },
+    id: { type: 'int', primary: true, generated: true },
     nombre: { type: 'varchar', length: 120 },
-    grado: { type: 'enum', enum: ['estudiante', 'aprendiz', 'grado_medio', 'grado_alto', 'grado_especial'] },
-    // Hacer nullable para romper ciclo de dependencia TypeORM (se valida en lógica de negocio)
-    tecnica_principal_id: { type: 'bigint', nullable: true },
-    anios_experiencia: { type: 'tinyint', unsigned: true, default: 0 },
-    estado_operativo: { type: 'enum', enum: ['activo', 'lesionado', 'recuperacion', 'baja', 'inactivo_temporal', 'fallecido'], default: 'activo' },
-    tipo_fallecimiento: { type: 'enum', enum: ['', 'en_mision', 'por_edad'], default: '' },
-    curse_causa_muerte_id: { type: 'bigint', nullable: true },
+    // Grado solicitado como string (no enum)
+    grado: { type: 'varchar', length: 60 },
+    // Años de experiencia como entero
+    anios_experiencia: { type: 'int', default: 0 },
+    // Estados solicitados: (activo, lesionado, en recuperacion, dado de baja, inactivo temporalmente)
+    estado_operativo: { type: 'enum', enum: ['activo', 'lesionado', 'en_recuperacion', 'dado_de_baja', 'inactivo_temporalmente'], default: 'activo' },
+    // Causa de muerte como string + fecha de muerte
+    causa_muerte: { type: 'varchar', length: 255, nullable: true },
     fecha_fallecimiento: { type: 'date', nullable: true },
-    nivel_exito_cache: { type: 'decimal', precision: 5, scale: 2, nullable: true },
-    created_at: { type: 'timestamp', createDate: true },
-    updated_at: { type: 'timestamp', updateDate: true }
+    // Nota: se eliminaron campos no especificados por el usuario
   },
-  relations: {
-    tecnica_principal: {
-      target: 'Technique',
-      type: 'many-to-one',
-      joinColumn: { name: 'tecnica_principal_id' },
-      // Mantener nullable true para evitar error circular; la aplicación exige técnica principal luego
-      nullable: true,
-      cascade: false
-    },
-    curse_causa_muerte: {
-      target: 'Curse',
-      type: 'many-to-one',
-      joinColumn: { name: 'curse_causa_muerte_id' },
-      nullable: true,
-      cascade: false
-    }
-  },
+  relations: {},
   uniques: [
     { columns: ['nombre'] }
   ],
   indices: [
     { columns: ['grado'] },
     { columns: ['estado_operativo'] },
-    { columns: ['tipo_fallecimiento'] }
+    { columns: ['fecha_fallecimiento'] }
   ]
 });

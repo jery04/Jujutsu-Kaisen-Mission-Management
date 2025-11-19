@@ -9,7 +9,7 @@ async function discoverBase() {
         try {
             const r = await fetch(base + '/health', { method: 'GET' });
             if (r.ok) return base;
-        } catch { }
+        } catch (e) { console.debug('seed discover probe failed', base, e); }
     }
     return 'http://localhost:3000';
 }
@@ -21,7 +21,7 @@ async function post(BASE, path, body) {
         body: JSON.stringify(body)
     });
     let json = null;
-    try { json = await res.json(); } catch { }
+    try { json = await res.json(); } catch (e) { console.debug('seed parse json failed', e); }
     if (!res.ok) {
         throw new Error(`POST ${path} -> ${res.status} ${res.statusText} | ${JSON.stringify(json)}`);
     }

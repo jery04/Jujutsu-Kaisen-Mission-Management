@@ -20,8 +20,7 @@
 
             var name = document.getElementById('name')?.value?.trim() || '';
             var rank = document.getElementById('rank')?.value || '';
-            var password = document.getElementById('password')?.value || '';
-            var adminPassword = document.getElementById('admin-password')?.value || '';
+            // Removed unused password fields from backend; keep UI decoupled
 
             if (!name) {
                 alert('El nombre es obligatorio');

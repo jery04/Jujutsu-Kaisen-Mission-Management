@@ -32,22 +32,14 @@ async function get(path) {
         const health = await fetch(BASE + '/health').then(r => r.ok ? 'OK' : r.status);
         console.log('Health:', health);
 
-        console.log('Creating Location...');
-        let loc;
+        console.log('Creating Sorcerer...');
+        const sorcName = 'Hechicero de Prueba';
         try {
-            loc = await post('/locations', { nombre: 'Shibuya', region: 'Tokyo' });
-            console.log('Location:', loc);
+            await post('/sorcerer', { nombre: sorcName, grado: 'grado medio', anios_experiencia: 3, estado_operativo: 'activo' });
+            console.log('Sorcerer created');
         } catch (e) {
-            if (String(e.message).includes(' 409 ') || /Ubicación ya existe/.test(String(e.message))) {
-                console.log('Location already exists, continuing.');
-            } else {
-                throw e;
-            }
+            console.warn('Sorcerer create may have failed or already exists:', e.message);
         }
-
-        console.log('Listing Locations...');
-        const locs = await get('/locations');
-        console.log('Locations count:', locs?.data?.length);
 
         console.log('Creating Curse...');
         const uniqueName = 'Maldición de Prueba ' + new Date().toISOString();

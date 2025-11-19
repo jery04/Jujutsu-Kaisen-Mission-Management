@@ -8,7 +8,7 @@
 
     async function discoverApiBase() {
         const candidates = [];
-        try { if (window.location && window.location.origin) candidates.push(window.location.origin); } catch (_) { }
+        try { if (window.location && window.location.origin) candidates.push(window.location.origin); } catch (e) { console.debug('origin check failed', e); }
         const ports = [3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 8080, 8081, 5000];
         ports.forEach(p => {
             candidates.push(`http://127.0.0.1:${p}`);
@@ -17,8 +17,8 @@
         for (const base of candidates) {
             try {
                 const r = await fetch(base + '/health');
-                if (r.ok) { API_BASE = base; try { window.API_BASE = base; } catch (_) { }; return base; }
-            } catch (_) { }
+                if (r.ok) { API_BASE = base; try { window.API_BASE = base; } catch (e1) { console.debug('persist API_BASE failed', e1); } return base; }
+            } catch (e) { console.debug('health probe failed for', base, e); }
         }
         return API_BASE;
     }
@@ -28,9 +28,9 @@
             const r = await fetch(API_BASE + '/health');
             if (!r.ok) throw new Error('no ok');
             return true;
-        } catch (_) {
+        } catch (e) {
             await discoverApiBase();
-            try { const r2 = await fetch(API_BASE + '/health'); return !!r2.ok; } catch { return false; }
+            try { const r2 = await fetch(API_BASE + '/health'); return !!r2.ok; } catch (e2) { console.debug('secondary health failed', e2); return false; }
         }
     }
 
@@ -92,14 +92,14 @@
             `;
             results.appendChild(pagination);
             // Eventos
-            pagination.querySelector('#prev-page').onclick = function(){ if (currentPage > 1) { currentPage--; showPage(currentPage); } };
-            pagination.querySelector('#next-page').onclick = function(){ if (currentPage < totalPages) { currentPage++; showPage(currentPage); } };
+            pagination.querySelector('#prev-page').onclick = function () { if (currentPage > 1) { currentPage--; showPage(currentPage); } };
+            pagination.querySelector('#next-page').onclick = function () { if (currentPage < totalPages) { currentPage++; showPage(currentPage); } };
         }
         showPage(currentPage);
     }
 
     function renderSorcerers(list) {
-        renderPaginated(list, function(s){
+        renderPaginated(list, function (s) {
             const lines = [
                 `Grado: <strong>${s.grado}</strong>`,
                 `Años de experiencia: <strong>${s.anios_experiencia ?? 0}</strong>`
@@ -113,7 +113,7 @@
 
     function renderTechniques(payload) {
         const data = Array.isArray(payload) ? payload : (payload && payload.data ? payload.data : []);
-        renderPaginated(data, function(t){
+        renderPaginated(data, function (t) {
             const lines = [
                 `Tipo: <strong>${t.tipo}</strong> | Nivel: <strong>${t.nivel_dominio}</strong> | Efectividad: <strong>${t.efectividad_inicial}</strong>`,
                 `Hechicero: <strong>${t.hechicero ?? '-'}</strong>`
@@ -127,12 +127,11 @@
 
     function renderCurses(payload) {
         const data = payload && payload.data ? payload.data : [];
-        renderPaginated(data, function(c){
-            const ubi = c.location ? (c.location.nombre + (c.location.region ? ` (${c.location.region})` : '')) : '-';
+        renderPaginated(data, function (c) {
+            const ubi = c.ubicacion || '-';
             const lines = [
                 `Grado: <strong>${c.grado}</strong> | Tipo: <strong>${c.tipo}</strong> | Estado: <strong>${c.estado}</strong>`,
-                `Ubicación: <strong>${ubi}</strong>`,
-                `Hechicero asignado: <strong>${c.assigned_sorcerer ? c.assigned_sorcerer.nombre : '-'}</strong>`
+                `Ubicación: <strong>${ubi}</strong>`
             ];
             const item = makeItem(c.nombre, lines);
             item.dataset.entity = 'curses';
@@ -192,9 +191,9 @@
                 document.body.appendChild(toast);
                 setTimeout(() => { if (toast && toast.parentNode) toast.parentNode.removeChild(toast); }, 2500);
             }
-        } catch (_) { }
+        } catch (e) { console.debug('flash retrieval failed', e); }
         // Inicializa base si viene definida en la página
-        if (!window.API_BASE) { try { window.API_BASE = API_BASE; } catch (_) { } }
+        if (!window.API_BASE) { try { window.API_BASE = API_BASE; } catch (e) { console.debug('assign API_BASE failed', e); } }
 
         const btnSor = document.getElementById('sorcerers');
         const btnTec = document.getElementById('techniques');
@@ -208,12 +207,13 @@
         try {
             const params = new URLSearchParams(window.location.search);
             const view = params.get('entity');
-            if (view === 'sorcerer') loadSorcerers().catch(() => { });
-            else if (view === 'technique') loadTechniques().catch(() => { });
-            else if (view === 'curses') loadCurses().catch(() => { });
-            else loadSorcerers().catch(() => { });
-        } catch (_) {
-            loadSorcerers().catch(() => { });
+            if (view === 'sorcerer') loadSorcerers().catch((e) => { console.debug('loadSorcerers init failed', e); });
+            else if (view === 'technique') loadTechniques().catch((e) => { console.debug('loadTechniques init failed', e); });
+            else if (view === 'curses') loadCurses().catch((e) => { console.debug('loadCurses init failed', e); });
+            else loadSorcerers().catch((e) => { console.debug('default loadSorcerers init failed', e); });
+        } catch (e) {
+            console.debug('initialization failed', e);
+            loadSorcerers().catch((e2) => { console.debug('fallback loadSorcerers failed', e2); });
         }
     });
 })();

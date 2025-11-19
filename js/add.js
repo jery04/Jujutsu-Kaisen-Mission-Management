@@ -25,7 +25,7 @@
         });
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
-            prefillDatalists().catch(() => { /* silencioso: no bloquear el uso si falla */ });
+            prefillDatalists().catch(() => { /* no locations now; only sorcerers list if exists */ });
         }
     }
 
@@ -122,19 +122,8 @@
 
         if (entityType === 'hechicero') {
             // Sorcerer: convertimos el texto del select a los enums esperados por el backend
-            const gradoMap = {
-                'grado medio': 'grado_medio',
-                'grado alto': 'grado_alto',
-                'grado especial': 'grado_especial'
-            };
-            const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
-            payload = {
-                nombre: raw.nombre,
-                grado,
-                anios_experiencia,
-                tecnica: raw.tecnica || null
-            };
+            payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
             // Technique: requiere que exista un hechicero con ese nombre
@@ -149,16 +138,8 @@
             };
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
-            // Curse: la ubicacion debe existir en BD (por nombre), y el hechicero es opcional
-            payload = {
-                nombre: raw.nombre,
-                grado: raw.grado,
-                tipo: raw.tipo,
-                ubicacion: raw.ubicacion,
-                fecha: raw.fecha,
-                estado: raw.estado,
-                hechicero: raw.hechicero || null
-            };
+            // Curse: ubicacion libre (texto), sin relaciones
+            payload = { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
             endpoint += '/curses';
         } else {
             clearResult();
@@ -223,27 +204,10 @@
         }
     });
 
-    // Precarga datalists (ubicaciones y hechiceros)
+    // Precarga datalists (solo hechiceros)
     async function prefillDatalists() {
-        const dlUbic = document.getElementById('dl_ubicaciones');
         const dlHech = document.getElementById('dl_hechiceros');
-        if (!dlUbic || !dlHech) return;
-
-        // Evitar duplicar opciones si ya fueron cargadas
-        if (dlUbic.children.length === 0) {
-            try {
-                const r = await fetch(`${API_BASE}/locations`);
-                const data = await r.json();
-                if (r.ok && data && Array.isArray(data.data)) {
-                    data.data.forEach(loc => {
-                        const opt = document.createElement('option');
-                        opt.value = loc.nombre;
-                        opt.label = loc.region ? `${loc.nombre} (${loc.region})` : loc.nombre;
-                        dlUbic.appendChild(opt);
-                    });
-                }
-            } catch (_) { /* no-op */ }
-        }
+        if (!dlHech) return;
 
         if (dlHech.children.length === 0) {
             try {

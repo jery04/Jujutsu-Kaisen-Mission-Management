@@ -68,8 +68,7 @@
                 setText('m_nombre', data.nombre);
                 setText('m_grado', data.grado);
                 setText('m_tipo', data.tipo);
-                const locName = data.location ? data.location.nombre : '';
-                setText('m_ubicacion', locName);
+                setText('m_ubicacion', data.ubicacion);
                 if (data.fecha_aparicion) {
                     try {
                         const dt = new Date(data.fecha_aparicion);
@@ -77,9 +76,7 @@
                         setText('m_fecha', str);
                     } catch { setText('m_fecha', data.fecha_aparicion); }
                 } else { setText('m_fecha', ''); }
-                const estadoMap = { en_proceso_exorcismo: 'en proceso de exorcismo' };
-                setText('m_estado', estadoMap[data.estado] || data.estado);
-                setText('m_hechicero', data.assigned_sorcerer ? data.assigned_sorcerer.nombre : '');
+                setText('m_estado', data.estado);
             }
         } catch (err) {
             console.error(err);

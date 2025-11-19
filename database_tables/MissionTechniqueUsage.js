@@ -4,11 +4,10 @@ module.exports = new EntitySchema({
   name: 'MissionTechniqueUsage',
   tableName: 'mission_technique_usage',
   columns: {
-    id: { type: 'bigint', primary: true, generated: true },
-    efectividad_valor: { type: 'tinyint', unsigned: true },
-    descripcion: { type: 'text', nullable: true },
-    dano_estimado: { type: 'int', nullable: true },
-    created_at: { type: 'timestamp', createDate: true }
+    mission_id: { type: 'int', primary: true },
+    technique_id: { type: 'int', primary: true },
+    sorcerer_id: { type: 'int', primary: true },
+    efectividad: { type: 'int', unsigned: true }
   },
   relations: {
     mission: {
@@ -33,12 +32,7 @@ module.exports = new EntitySchema({
       onDelete: 'CASCADE'
     }
   },
-  uniques: [
-    { columns: ['mission', 'technique', 'sorcerer'] }
-  ],
   indices: [
-    { columns: ['mission'] },
-    { columns: ['sorcerer'] },
-    { columns: ['efectividad_valor'] }
+    { columns: ['efectividad'] }
   ]
 });
