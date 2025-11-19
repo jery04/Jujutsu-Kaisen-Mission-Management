@@ -199,21 +199,43 @@
         const btnSor = document.getElementById('sorcerers');
         const btnTec = document.getElementById('techniques');
         const btnCur = document.getElementById('curses');
+        const entitySelect = document.getElementById('entity-select');
 
-        if (btnSor) btnSor.addEventListener('click', loadSorcerers);
+        if (btnSor) btnSor.addEventListener('click', loadSorcerers); // compat si aún existen
         if (btnTec) btnTec.addEventListener('click', loadTechniques);
         if (btnCur) btnCur.addEventListener('click', loadCurses);
+        if (entitySelect) {
+            entitySelect.addEventListener('change', function(){
+                switch(entitySelect.value){
+                    case 'sorcerer':
+                        loadSorcerers();
+                        break;
+                    case 'technique':
+                        loadTechniques();
+                        break;
+                    case 'curses':
+                        loadCurses();
+                        break;
+                }
+            });
+        }
 
         // Carga inicial según parámetro ?entity= (sorcerer|technique|curses); por defecto hechiceros
         try {
             const params = new URLSearchParams(window.location.search);
             const view = params.get('entity');
-            if (view === 'sorcerer') loadSorcerers().catch(() => { });
-            else if (view === 'technique') loadTechniques().catch(() => { });
-            else if (view === 'curses') loadCurses().catch(() => { });
-            else loadSorcerers().catch(() => { });
+            let initial = 'sorcerer';
+            if (view === 'sorcerer') { initial = 'sorcerer'; loadSorcerers().catch(() => { }); }
+            else if (view === 'technique') { initial = 'technique'; loadTechniques().catch(() => { }); }
+            else if (view === 'curses') { initial = 'curses'; loadCurses().catch(() => { }); }
+            else { loadSorcerers().catch(() => { }); }
+            if (entitySelect) {
+                // Ajusta el valor del select (si existe opción seleccionable)
+                entitySelect.value = initial;
+            }
         } catch (_) {
             loadSorcerers().catch(() => { });
+            if (entitySelect) entitySelect.value = 'sorcerer';
         }
     });
 })();

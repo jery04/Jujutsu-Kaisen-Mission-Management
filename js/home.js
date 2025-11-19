@@ -12,16 +12,23 @@ window.addEventListener('keydown', function(e) {
 
 (function () {
     const form = document.getElementById('loginForm');
+    const submitBtn = form?.querySelector('button[type="submit"]');
 
-    form.addEventListener('submit', function (e) {
+    form?.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (submitBtn) submitBtn.disabled = true;
         // Marca un traspaso de animación para index.html
         try { sessionStorage.setItem('flowFromHome', '1'); } catch(_) {}
         document.body.classList.add('leaving');
         const DURATION = 300;
 
         setTimeout(() => {
-            window.location.href = 'index.html';
+            // Navegación robusta hacia la página de inicio
+            try {
+                window.location.assign('/index.html');
+            } catch (_) {
+                window.location.href = '/index.html';
+            }
         }, DURATION);
     });
 
