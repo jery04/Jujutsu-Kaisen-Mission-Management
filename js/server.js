@@ -47,9 +47,13 @@ app.use(express.json({ limit: '1mb' }));
 // Basic rate limiting (configurable)
 const rlMax = Number(process.env.RATE_LIMIT_MAX || 100);
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: rlMax, standardHeaders: true, legacyHeaders: false }));
-// Servir frontend estático (index.html, css, js, html/*)
+// Servir frontend estático (css, js, html/*) sin index automático
 const staticRoot = path.join(__dirname, '..');
-app.use(express.static(staticRoot));
+app.use(express.static(staticRoot, { index: false }));
+// Hacer que la ruta raíz entregue home.html
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(staticRoot, 'home.html'));
+});
 // Logger básico de peticiones
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
