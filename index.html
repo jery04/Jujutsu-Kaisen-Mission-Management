@@ -5,27 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio | Jujutsu Kaisen</title>
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/index.css">
     <link rel="stylesheet" href="./css/signup.css">
-    <script>
-        // Asegura el estado inicial antes del primer repintado
-        document.documentElement.classList.add('page-enter');
-    </script>
-    <style>
-        /* Aparición suave al cargar la página */
-        body {
-            transition: opacity 380ms ease, transform 450ms cubic-bezier(.22,.61,.36,1);
-            will-change: opacity, transform;
-        }
-        html.page-enter body {
-            opacity: 0;
-            transform: translateY(10px) scale(.995);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            body { transition: none !important; transform: none !important; }
-            html.page-enter body { opacity: 1; transform: none; }
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -34,18 +15,15 @@
     </header>
     
     <main id="main-content">
-        <section class="btn-list" aria-label="Lista de botones">
-            <button id="open-signup" class="btn">
-                <span class="btn-content">
-                    <img src="/img/registrar.png" alt="icono" class="btn-icon">
-                    <span class="btn-text">
-                        <h1>Añadir Personal</h1>
-                        <p>Incorporación de miembros al equipo operativo y administrativo, preparados para coordinar tareas esenciales dentro del sistema</p>
-                    </span>
-                </span>
-                <img src="/img/part1.png" alt="Jujutsu Kaisen" class="btn-illustration">
-            </button>
+        <section class="user-center" aria-label="Usuario y sesión">
+            <div class="user-badge" id="user-badge" aria-live="polite">
+                <div class="avatar" id="user-avatar" aria-hidden="true">U</div>
+                <span class="username" id="user-name">Usuario</span>
+            </div>
+            <button id="btn-logout" class="logout-btn" type="button" title="Cerrar sesión">Cerrar sesión</button>
+        </section>
 
+        <section class="btn-list" aria-label="Lista de botones">
             <button id="open-add" class="btn">
                 <span class="btn-content">
                     <img src="/img/historias.png" alt="icono" class="btn-icon">
@@ -54,7 +32,7 @@
                         <p>Instanciación de entidades como hechiceros, técnicas malditas y maldiciones, con sus respectivos campos</p>
                     </span>
                 </span>
-                <img src="/img/part2.png" alt="Jujutsu Kaisen" class="btn-illustration">
+                <img src="/img/part1.png" alt="Jujutsu Kaisen" class="btn-illustration">
             </button>
 
             <button id="open-query" class ="btn">
@@ -63,6 +41,17 @@
                     <span class="btn-text">
                         <h1>Consultar</h1>
                         <p>Visualización, modificación y administración integral de las entidades registradas</p>
+                    </span>
+                </span>
+                <img src="/img/part2.png" alt="Jujutsu Kaisen" class="btn-illustration">
+            </button>
+            
+            <button id="open-add" class="btn">
+                <span class="btn-content">
+                    <img src="" alt="icono" class="btn-icon">
+                    <span class="btn-text">
+                        <h1>Boton 3</h1>
+                        <p>Descripción o subtítulo</p>
                     </span>
                 </span>
                 <img src="/img/part3.png" alt="Jujutsu Kaisen" class="btn-illustration">
@@ -81,24 +70,6 @@
         </section>
     </main>
 
-    <script>
-        window.API_BASE = window.location.origin;
-    </script>
     <script src="./js/index.js"></script>
-    <script>
-        // Retira el estado inicial y deja que la transición haga el resto
-        (function(){
-            var reveal = function(){
-                requestAnimationFrame(function(){
-                    document.documentElement.classList.remove('page-enter');
-                });
-            };
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', reveal, { once: true });
-            } else {
-                reveal();
-            }
-        })();
-    </script>
 </body>
 </html>

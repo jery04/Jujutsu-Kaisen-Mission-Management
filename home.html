@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenida | Jujutsu Kaisen</title>
+
+    <link rel="stylesheet" href="css/home.css">
+
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#181818">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+</head>
+
+<body>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <section class="intro-panel" role="region" aria-label="Bienvenida a Jujutsu Kaisen Mission Management">
+        <div class="panel-inner">
+            <div class="panel-left">
+                <img src="img/intro.png" alt="Ilustración de Jujutsu Kaisen" loading="eager" decoding="async" />
+                <!-- Leyenda automática sobre la imagen -->
+                <div class="media-caption" role="status" aria-live="polite">
+                    <div class="caption-bubble" id="carouselCaption">Texto...</div>
+                </div>
+            </div>
+
+            <div class="panel-right">
+                <h1>¡Bienvenido!</h1>
+                <h2>Sumérgete en el mundo de Jujutsu Kaisen. Explora a los personajes, descubre poderes y mucho más.</h2>
+
+                <form id="loginForm" action="index.html" method="get" novalidate>
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" name="username" required>
+
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required>
+
+                    <div class="login-actions">
+                        <button type="submit" class="btn">Iniciar sección</button>
+                        <button type="button" class="admin-btn" title="Administrador">
+                            <img src="/img/admn.png" alt="Administrador" class="admin-img">
+                        </button>
+                        <span class="login-link">
+                            ¿Aún sin registro? 
+                            <a id="signupLink" href="signup.html" style="color: var(--accent-2); text-decoration: underline;">
+                                ¡Haz clic aquí!
+                            </a>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal para contraseña de administrador -->
+    <div id="adminModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="adminModalTitle">Ingrese la contraseña de administrador</h3>
+            <form id="adminModalForm">
+                <label for="admin-password" class="visually-hidden">Contraseña de administrador</label>
+                <input type="password" id="admin-password" name="admin-password" placeholder="Contraseña" autocomplete="current-password" required>
+                <div class="modal-actions">
+                    <button type="submit" id="admin-continue-btn" class="btn">Continuar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Registro de usuario -->
+    <div id="registerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="registerModalTitle">Registro</h3>
+            <form id="registerForm">
+                <label for="reg-username" class="visually-hidden">Nombre de usuario</label>
+                <input type="text" id="reg-username" name="username" placeholder="Nombre de usuario" autocomplete="username" required>
+
+                <label for="reg-password" class="visually-hidden">Contraseña</label>
+                <input type="password" id="reg-password" name="password" placeholder="Contraseña" autocomplete="new-password" required>
+
+                <div class="modal-actions">
+                    <button type="submit" id="register-btn" class="btn">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/home.js"></script>
+</body>
+</html>

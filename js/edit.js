@@ -52,7 +52,7 @@
         return e;
     }
 
-    // Prefill datalists same as add.js
+    // Prefill datalists same as register.js
     async function prefillDatalists() {
         // Ya no hay locations; solo podemos sugerir hechiceros si el datalist existe
         const dlHech = document.getElementById('dl_hechiceros');

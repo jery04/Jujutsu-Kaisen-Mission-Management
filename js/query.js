@@ -198,22 +198,44 @@
         const btnSor = document.getElementById('sorcerers');
         const btnTec = document.getElementById('techniques');
         const btnCur = document.getElementById('curses');
+        const entitySelect = document.getElementById('entity-select');
 
-        if (btnSor) btnSor.addEventListener('click', loadSorcerers);
+        if (btnSor) btnSor.addEventListener('click', loadSorcerers); // compat si aún existen
         if (btnTec) btnTec.addEventListener('click', loadTechniques);
         if (btnCur) btnCur.addEventListener('click', loadCurses);
+        if (entitySelect) {
+            entitySelect.addEventListener('change', function(){
+                switch(entitySelect.value){
+                    case 'sorcerer':
+                        loadSorcerers();
+                        break;
+                    case 'technique':
+                        loadTechniques();
+                        break;
+                    case 'curses':
+                        loadCurses();
+                        break;
+                }
+            });
+        }
 
         // Carga inicial según parámetro ?entity= (sorcerer|technique|curses); por defecto hechiceros
         try {
             const params = new URLSearchParams(window.location.search);
             const view = params.get('entity');
-            if (view === 'sorcerer') loadSorcerers().catch((e) => { console.debug('loadSorcerers init failed', e); });
-            else if (view === 'technique') loadTechniques().catch((e) => { console.debug('loadTechniques init failed', e); });
-            else if (view === 'curses') loadCurses().catch((e) => { console.debug('loadCurses init failed', e); });
-            else loadSorcerers().catch((e) => { console.debug('default loadSorcerers init failed', e); });
+            let initial = 'sorcerer';
+            if (view === 'sorcerer') { initial = 'sorcerer'; loadSorcerers().catch((e) => { console.debug('loadSorcerers init failed', e); }); }
+            else if (view === 'technique') { initial = 'technique'; loadTechniques().catch((e) => { console.debug('loadTechniques init failed', e); }); }
+            else if (view === 'curses') { initial = 'curses'; loadCurses().catch((e) => { console.debug('loadCurses init failed', e); }); }
+            else { loadSorcerers().catch((e) => { console.debug('default loadSorcerers init failed', e); }); }
+            if (entitySelect) {
+                // Ajusta el valor del select (si existe opción seleccionable)
+                entitySelect.value = initial;
+            }
         } catch (e) {
             console.debug('initialization failed', e);
             loadSorcerers().catch((e2) => { console.debug('fallback loadSorcerers failed', e2); });
+            if (entitySelect) entitySelect.value = 'sorcerer';
         }
     });
 })();

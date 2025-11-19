@@ -97,7 +97,7 @@
     // Envío del formulario activo
     if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
-        console.log('[add.js] submit clicked');
+        console.log('[register.js] submit clicked');
 
         const backendOk = await checkBackendHealth();
         if (!backendOk) {
@@ -156,7 +156,7 @@
         if (submitBtn) submitBtn.disabled = true;
 
         try {
-            console.log('[add.js] sending to endpoint:', endpoint, 'payload:', payload);
+            console.log('[register.js] sending to endpoint:', endpoint, 'payload:', payload);
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -167,7 +167,7 @@
             let result;
             try { result = await response.json(); } catch (_) { result = {}; }
 
-            console.log('[add.js] response status:', response.status, 'body:', result);
+            console.log('[register.js] response status:', response.status, 'body:', result);
             if (!response.ok) {
                 const serverMsg = result && (result.message || result.details);
                 // Mensajes más claros para casos comunes

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - Jujutsu Kaisen Mission Management</title>
+    <title>Registro | Jujutsu Kaisen</title>
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/add.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/register.css">
 
 </head>
 <body>
@@ -23,15 +23,15 @@
     <div class="form-field" style="max-width:720px; margin:0 auto 12px;">
         <label for="entitySelect">Selecciona qué crear</label>
         <select id="entitySelect">
-        <option value="hechicero">Crear hechicero</option>
-        <option value="tecnica">Crear técnica maldita</option>
-        <option value="maldicion">Crear maldición</option>
+            <option value="hechicero">Crear hechicero</option>
+            <option value="tecnica">Crear técnica maldita</option>
+            <option value="maldicion">Crear maldición</option>
         </select>
     </div>
     <div class="container">
         <h2>Registra una Entidad</h2>
 
-    <!-- Un solo formulario visible a la vez -->
+        <!-- Un solo formulario visible a la vez -->
         <form id="registroForm">
             <!-- Hechicero -->
             <fieldset data-for="hechicero">
@@ -40,6 +40,7 @@
 
                 <label for="h_grado">Grado dentro de la jerarquía</label>
                 <select id="h_grado" name="grado" required>
+                    <option value="" selected disabled>-- Selecciona grado --</option>
                     <option value="estudiante">Estudiante</option>
                     <option value="aprendiz">Aprendiz</option>
                     <option value="grado medio">Grado medio</option>
@@ -68,15 +69,13 @@
 
                 <label for="t_tipo">Tipo</label>
                 <select id="t_tipo" name="tipo">
+                    <option value="" selected disabled>-- Selecciona tipo --</option>
                     <option value="amplificacion">Técnica de amplificación</option>
                     <option value="dominio">Dominio</option>
                     <option value="restriccion">Restricción</option>
                     <option value="soporte">Soporte</option>
                 </select>
-
-                <label for="t_hechicero">Hechicero que la utiliza</label>
-                <input id="t_hechicero" name="hechicero" type="text">
-
+                
                 <div class="row">
                     <div class="col">
                         <label for="t_nivel">Nivel de dominio</label>
@@ -85,6 +84,7 @@
                     <div class="col">
                         <label for="t_efectividad">Efectividad en combate</label>
                         <select id="t_efectividad" name="efectividad">
+                            <option value="" selected disabled>-- Selecciona efectividad --</option>
                             <option value="alta">Alta</option>
                             <option value="media">Media</option>
                             <option value="baja">Baja</option>
@@ -92,8 +92,11 @@
                     </div>
                 </div>
 
-                <label for="t_condiciones">Condiciones / limitaciones</label>
-                <textarea id="t_condiciones" name="condiciones" rows="3"></textarea>
+                <label for="t_descripcion">Descripción</label>
+                <textarea id="t_descripcion" name="descripcion" rows="3" placeholder="Describe brevemente la técnica" required></textarea>
+
+                <label for="t_condiciones">Condiciones</label>
+                <textarea id="t_condiciones" name="condiciones" rows="3" placeholder="Notas"></textarea>
 
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
@@ -110,6 +113,7 @@
 
                 <label for="m_grado">Grado</label>
                 <select id="m_grado" name="grado">
+                    <option value="" selected disabled>-- Selecciona grado --</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
@@ -119,6 +123,7 @@
 
                 <label for="m_tipo">Tipo</label>
                 <select id="m_tipo" name="tipo">
+                    <option value="" selected disabled>-- Selecciona tipo --</option>
                     <option value="maligna">Maligna</option>
                     <option value="semi-maldicion">Semi-maldición</option>
                     <option value="residual">Residual</option>
@@ -137,6 +142,7 @@
                     <div class="col">
                         <label for="m_estado">Estado actual</label>
                         <select id="m_estado" name="estado">
+                            <option value="" selected disabled>-- Selecciona estado --</option>
                             <option value="activa">Activa</option>
                             <option value="en proceso de exorcismo">En proceso de exorcismo</option>
                             <option value="exorcizada">Exorcizada</option>
@@ -157,7 +163,7 @@
             </fieldset>
 
             <div class="actions">
-                <button type="button" class="btn-back" id="goBackBtn" title="Volver a la página anterior">Volver</button>
+                <button type="button" class="btn-back" id="goBackBtn" title="Volver a la página principal">Volver</button>
                 <button type="button" class="btn-back" id="resetBtn">Limpiar</button>
                 <button type="submit" class="btn-register">Registrar</button>
             </div>
@@ -170,6 +176,11 @@
         // Asegura que el frontend hable con el mismo host:puerto desde el que se sirve la página
         window.API_BASE = window.location.origin;
     </script>
-    <script src="/js/add.js"></script>
+    <script src="/js/register.js"></script>
+    <script>
+        document.getElementById('goBackBtn').addEventListener('click', function() {
+            window.location.href = '/index.html';
+        });
+    </script>
 </body>
 </html>

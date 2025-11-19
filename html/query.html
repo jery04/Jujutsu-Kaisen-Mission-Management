@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta | Jujutsu Kaisen</title>
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="/css/query.css">
 
 </head>
@@ -29,9 +29,12 @@
                         <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/search.svg" alt="Buscar" class="search-icon">
                     </button>
                 </form>
-                <button id="sorcerers" class="btn-action">Hechiceros</button>
-                <button id="techniques" class="btn-action">Técnicas</button>
-                <button id="curses" class="btn-action">Maldiciones</button>
+                <select id="entity-select" class="entity-select" aria-label="Tipo de entidad">
+                    <option value="" disabled selected>Selecciona entidad...</option>
+                    <option value="sorcerer">Hechiceros</option>
+                    <option value="technique">Técnicas</option>
+                    <option value="curses">Maldiciones</option>
+                </select>
             </div>
             <div id="results" class="results-container">
                 <!-- Los resultados de la consulta se mostrarán aquí -->
