@@ -136,6 +136,7 @@
                 hechicero: raw.hechicero,
                 nivel_dominio: raw.nivel ? Number(raw.nivel) : 0,
                 efectividad_inicial: raw.efectividad || 'media',
+                descripcion: raw.descripcion || null,
                 condiciones: raw.condiciones || null,
                 activa: 1
             };

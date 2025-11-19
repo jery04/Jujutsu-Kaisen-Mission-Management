@@ -8,7 +8,7 @@ module.exports = {
     const techRepo = getRepository(db, 'Technique');
     const dup = await techRepo.getOne({ nombre });
     if (dup) { const err = new Error('Técnica ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    const saved = await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones: condiciones || null });
+    const saved = await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones_de_uso: condiciones || null });
     // Vincular al usuario si viene en el contexto
     if (saved && userId) {
       try {
@@ -22,13 +22,13 @@ module.exports = {
     const techRepo = getRepository(db, 'Technique');
     const list = await techRepo.getAll();
     // Mantener compatibilidad de formato con el frontend actual
-    return list.map(t => ({ id: t.id, nombre: t.nombre, tipo: t.tipo, nivel_dominio: 0, efectividad_inicial: 'media', activa: 1, hechicero: null }));
+    return list.map(t => ({ id: t.id, nombre: t.nombre, tipo: t.tipo, descripcion: t.descripcion, condiciones: t.condiciones_de_uso, nivel_dominio: 0, efectividad_inicial: 'media', activa: 1, hechicero: null }));
   },
   async getById(db, id) {
     const repo = getRepository(db, 'Technique');
     const ent = await repo.getById(id);
     if (!ent) { const err = new Error('Técnica no encontrada'); err.status = 404; throw err; }
-    return { id: ent.id, nombre: ent.nombre, tipo: ent.tipo, nivel_dominio: 0, efectividad_inicial: 'media', condiciones: ent.condiciones, activa: 1, hechicero: null };
+    return { id: ent.id, nombre: ent.nombre, tipo: ent.tipo, descripcion: ent.descripcion, condiciones: ent.condiciones_de_uso, nivel_dominio: 0, efectividad_inicial: 'media', activa: 1, hechicero: null };
   },
   async update(db, id, payload) {
     const repo = getRepository(db, 'Technique');
@@ -37,7 +37,7 @@ module.exports = {
     if (typeof nombre === 'string') partial.nombre = nombre;
     if (typeof tipo === 'string') partial.tipo = tipo;
     if (typeof descripcion === 'string' || descripcion === null) partial.descripcion = descripcion || null;
-    if (typeof condiciones === 'string' || condiciones === null) partial.condiciones = condiciones || null;
+    if (typeof condiciones === 'string' || condiciones === null) partial.condiciones_de_uso = condiciones || null;
     return await repo.update(id, partial);
   },
   async remove(db, id) {
