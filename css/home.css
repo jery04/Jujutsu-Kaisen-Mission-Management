@@ -1,4 +1,5 @@
 /* Estilos para el botón de administrador en intro.html */
+/* .admin-btn */
 .admin-btn {
     width: 80px;
     height: 48px;
@@ -14,22 +15,26 @@
     cursor: pointer;
 }
 
+/* .admin-btn:hover */
 .admin-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 28px rgba(224,36,94,.5);
     filter: saturate(115%);
 }
 
+/* .admin-btn:active */
 .admin-btn:active {
     transform: translateY(0);
 }
 
 /* Estilos para la imagen dentro del botón de administrador */
+/* .admin-img */
 .admin-img {
     max-width: 32px;
     max-height: 32px;
 }
 /* Estilos movidos desde intro.html */
+/* :root */
 :root {
     --bg: #181818;
     --panel: rgba(255, 255, 255, 0.06);
@@ -42,11 +47,13 @@
     --shadow: 0 10px 30px rgba(0,0,0,.45);
 }
 
+/* html, body */
 html, body {
     height: 100%;
     margin: 0;
 }
 
+/* body */
 body {
     background: var(--bg);
     color: var(--text);
@@ -56,6 +63,7 @@ body {
 }
 
 /* -------- Modal admin -------- */
+/* .modal-overlay */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -67,10 +75,12 @@ body {
     padding: 16px;
 }
 
+/* .modal-overlay.is-open */
 .modal-overlay.is-open {
     display: flex;
 }
 
+/* .modal */
 .modal {
     width: 100%;
     max-width: 420px;
@@ -83,11 +93,13 @@ body {
     backdrop-filter: blur(3px);
 }
 
+/* .modal h3 */
 .modal h3 {
     margin: 0 0 12px 0;
     font-size: 1.1rem;
 }
 
+/* .modal input[type="password"], .modal input[type="text"] */
 .modal input[type="password"],
 .modal input[type="text"] {
     width: 100%;
@@ -102,12 +114,14 @@ body {
     box-sizing: border-box;
 }
 
+/* .modal .modal-actions */
 .modal .modal-actions {
     display: flex;
     justify-content: flex-end;
     margin-top: 14px;
 }
 
+/* .visually-hidden */
 .visually-hidden {
     position: absolute !important;
     height: 1px; width: 1px;
@@ -116,6 +130,7 @@ body {
     white-space: nowrap;
 }
 
+/* .bg-glow */
 .bg-glow {
     position: fixed;
     inset: 0;
@@ -128,11 +143,13 @@ body {
     animation: pulse 14s ease-in-out infinite;
 }
 
+/* @keyframes pulse */
 @keyframes pulse {
     0%, 100% { transform: scale(1); opacity: .9; }
     50% { transform: scale(1.03); opacity: 1; }
 }
 
+/* .intro-panel */
 .intro-panel {
     position: fixed;
     left: 50%;
@@ -149,6 +166,7 @@ body {
     box-shadow: var(--shadow);
 }
 
+/* .panel-inner */
 .panel-inner {
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -158,6 +176,7 @@ body {
     min-height: 100%;
 }
 
+/* .panel-left */
 .panel-left {
     position: relative;
     border-radius: calc(var(--radius) - 6px);
@@ -167,6 +186,7 @@ body {
     min-height: 520px;
 }
 
+/* .panel-left img */
 .panel-left img {
     position: absolute;
     inset: 0;
@@ -176,20 +196,21 @@ body {
     object-position: center;
     filter: contrast(105%) saturate(110%);
 }
-
 /* ---- Caption y flechas sobre la imagen (estilo del mockup) ---- */
+/* .media-caption */
 .media-caption {
     position: absolute;
     left: 16px;
     right: 16px;
-    bottom: 35px; /* subido para que se vean los 4 bordes */
+    bottom: 35px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    pointer-events: none; /* evita bloquear el arrastre de la tarjeta */
+    pointer-events: none;
 }
 
+/* .caption-bubble */
 .caption-bubble {
     flex: 1 1 auto;
     min-height: 48px;
@@ -212,6 +233,7 @@ body {
 
 /* se eliminaron los botones de navegación */
 
+/* .panel-right */
 .panel-right {
     display: flex;
     flex-direction: column;
@@ -220,6 +242,7 @@ body {
     padding: 8px 4px 8px 2px;
 }
 
+/* h1 */
 h1 {
     margin: 0;
     font-size: clamp(28px, 4vw, 42px);
@@ -228,6 +251,7 @@ h1 {
     text-shadow: 0 2px 20px rgba(0,0,0,.35);
 }
 
+/* h2 */
 h2 {
     margin: 0;
     font-weight: 500;
@@ -235,6 +259,7 @@ h2 {
     font-size: clamp(16px, 2.2vw, 20px);
 }
 
+/* .features */
 .features {
     margin: 6px 0 6px;
     display: grid;
@@ -244,6 +269,7 @@ h2 {
     list-style: none;
 }
 
+/* .features li::before */
 .features li::before {
     content: "";
     display: inline-block;
@@ -255,19 +281,23 @@ h2 {
     box-shadow: 0 0 10px rgba(0, 209, 255, .6);
 }
 
+/* .features a */
 .features a {
     color: var(--text);
     text-decoration: none;
 }
 
+/* .features a:hover */
 .features a:hover {
     text-decoration: underline;
 }
 
+/* .actions */
 .actions {
     margin-top: 6px;
 }
 
+/* .btn */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -284,35 +314,45 @@ h2 {
     transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
 
+/* .btn:hover */
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 28px rgba(224,36,94,.5);
     filter: saturate(115%);
 }
 
+/* .btn:active */
 .btn:active {
     transform: translateY(0);
 }
 
+/* @media (max-width: 940px) */
 @media (max-width: 940px) {
+    /* .intro-panel */
     .intro-panel {
         height: clamp(460px, 68vh, 720px);
     }
+    /* .panel-inner */
     .panel-inner {
         grid-template-columns: 1fr;
         gap: 16px;
         padding: 18px 16px 16px 16px;
     }
+    /* .panel-left */
     .panel-left {
         min-height: 320px;
     }
+    /* .media-caption */
     .media-caption { left: 12px; right: 12px; bottom: 18px; }
+    /* .caption-bubble */
     .caption-bubble { min-height: 44px; padding: 8px 12px; }
+    /* .features */
     .features {
         grid-template-columns: 1fr;
     }
 }
 
+/* .intro-panel::before */
 .intro-panel::before {
     content: "";
     position: absolute;
@@ -325,6 +365,7 @@ h2 {
     filter: blur(.2px);
 }
 
+/* #loginForm */
 #loginForm {
     margin: 18px 0 10px;
     display: flex;
@@ -332,11 +373,13 @@ h2 {
     gap: 12px;
 }
 
+/* #loginForm label */
 #loginForm label {
     font-weight: 500;
     color: var(--muted);
 }
 
+/* #loginForm input[type="text"], #loginForm input[type="password"] */
 #loginForm input[type="text"],
 #loginForm input[type="password"] {
     height: 48px;
@@ -353,6 +396,7 @@ h2 {
     box-sizing: border-box;
 }
 
+/* #loginForm .login-actions */
 #loginForm .login-actions {
     display: flex;
     align-items: center;
@@ -360,19 +404,21 @@ h2 {
     margin-top: 8px;
 }
 
+/* #loginForm .login-link */
 #loginForm .login-link {
     text-align: left;
     color: var(--muted);
     font-size: 1rem;
 }
 
+/* #loginForm .btn */
 #loginForm .btn {
     height: 48px;
     width: 180px;
     justify-content: center;
     border-radius: 15px;
 }
-
+    /* #loginForm .btn-square */
     #loginForm .btn-square {
         width: 48px;
         min-width: 48px;
@@ -386,31 +432,38 @@ h2 {
         box-shadow: none;
         border: 1px solid var(--panel-stroke);
     }
+    /* #loginForm .btn-square img */
     #loginForm .btn-square img {
         display: block;
         max-width: 32px;
         max-height: 32px;
     }
 
+/* .leaving .intro-panel */
 .leaving .intro-panel {
-    animation: slideOutDown 500ms cubic-bezier(.22,.61,.36,1) forwards;
+    animation: slideOutDown 300ms cubic-bezier(.22,.61,.36,1) forwards;
 }
 
+/* .leaving .bg-glow */
 .leaving .bg-glow {
-    animation: fadeOut 450ms ease forwards;
+    animation: fadeOut 300ms ease forwards;
 }
 
+/* @keyframes slideOutDown */
 @keyframes slideOutDown {
     0% { transform: translate(-50%, 0); opacity: 1; }
     100% { transform: translate(-50%, 110%); opacity: 0; }
 }
 
+/* @keyframes fadeOut */
 @keyframes fadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
 }
 
+/* @media (prefers-reduced-motion: reduce) */
 @media (prefers-reduced-motion: reduce) {
+    /* .leaving .intro-panel, .leaving .bg-glow */
     .leaving .intro-panel,
     .leaving .bg-glow {
         animation: none !important;

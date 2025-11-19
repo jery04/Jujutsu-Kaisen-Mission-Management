@@ -1,4 +1,5 @@
 /* Grupo de botones y buscador en la consulta */
+/* .query-btn-group */
 .query-btn-group {
     display: flex;
     align-items: center;
@@ -6,6 +7,7 @@
     gap: 0.5rem;
 }
 
+/* .search-form */
 .search-form {
     position: relative;
     display: flex;
@@ -13,6 +15,7 @@
     margin-right: 0.5rem;
 }
 
+/* .search-input */
 .search-input {
     padding: 0.4em 2.6em 0.4em 0.8em;
     border-radius: 24px;
@@ -22,6 +25,7 @@
     font-size: 1rem;
 }
 
+/* .search-btn */
 .search-btn {
     position: absolute;
     right: 5px;
@@ -38,28 +42,34 @@
     cursor: pointer;
 }
 
+/* .search-icon */
 .search-icon {
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1);
 }
+/* html */
 html{
     text-align: center;
 }
 
 /* Reduce the default margins so the heading and paragraph sit closer */
+/* .title h2 */
 .title h2 {
-    margin-bottom: 6px; /* small separation below the title */
+    margin-bottom: 6px;
 }
+/* .title p */
 .title p {
-    margin: 0; /* remove top margin to tuck under the h2 */
+    margin: 0;
 }
 
+/* .query-section .btn-group */
 .query-section .btn-group{
-    margin-top: 20px; /* spacing above the button group */
+    margin-top: 20px;
 }
 
 /* Stacked variant: place buttons one below the other and center them */
+/* .query-section .btn-group.stacked */
 .query-section .btn-group.stacked {
     display: flex;
     flex-direction: column;
@@ -67,6 +77,7 @@ html{
     gap: 10px;
 }
 
+/* .query-section .btn-group .btn-action */
 .query-section .btn-group .btn-action {
     display: inline-flex; 
     align-items:center; 
@@ -84,6 +95,7 @@ html{
 }
 
 /* Paginación */
+/* .pagination-controls */
 .pagination-controls {
     display: flex;
     justify-content: center;
@@ -91,21 +103,25 @@ html{
     gap: 12px;
     margin-top: 18px;
 }
+/* .pagination-controls button[disabled] */
 .pagination-controls button[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+/* .btn-action:hover */
 .btn-action:hover {
     transform: scale(1.02);
     box-shadow: 0 5px 15px rgba(0,0,0, 4.75);
 }
 
+/* .btn-action:active */
 .btn-action:active {
     transform: scale(1);
 }
 
 /* Universal pointer cursor for all button-like controls */
+/* button, input[type="button"], input[type="submit"], input[type="reset"], [role="button"] */
 button,
 input[type="button"],
 input[type="submit"],
@@ -115,82 +131,86 @@ input[type="reset"],
 }
 
 /* Results list stacked with spacing */
+/* .results-container */
 .results-container {
     margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px; /* requested spacing between items */
+    gap: 10px;
     align-items: stretch;
-    padding: 0 20%; /* slight horizontal padding */
+    padding: 0 20%;
 }
 
 /* Each result as a boxed row */
+/* .query-item */
 .query-item {
     display: flex;
     align-items: center;
-    justify-content: space-between; /* h3 left, actions right */
+    justify-content: space-between;
     gap: 12px;
     padding: 12px 16px;
-    border: 1px solid #d4d4d8; /* subtle border */
-    border-radius: 20px;       /* rounded corners */
+    border: 1px solid #d4d4d8;
+    border-radius: 20px;
     background: #fff;
     box-shadow: 0 2px 3px rgba(0,0,0,0.2);
-    /* Added opacity & subtle scale transition for removal animation */
-    transition: transform .25s ease, opacity .35s ease; /* smooth hover + fade */
+    transition: transform .25s ease, opacity .35s ease;
 }
-
 /* Estado al eliminar: se desvanece y reduce ligeramente */
+/* .query-item.fade-out */
 .query-item.fade-out {
     opacity: 0;
     transform: scale(0.96);
 }
 
+/* .query-item:hover */
 .query-item:hover {
     transform: scale(1.02);
 }
 
 /* On click/press, reset scale to 1 for a pressed effect,
    except when the click is on an internal action button */
+/* .query-item:active:not(:has(.icon-btn:active)) */
 .query-item:active:not(:has(.icon-btn:active)) {
     transform: scale(1);
 }
 
+/* .query-item h3 */
 .query-item h3 {
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
     color: #111827;
 }
-
 /* Right-side action container */
+/* .btn-detail */
 .btn-detail {
     display: inline-flex;
     align-items: center;
     gap: 10px;
 }
-
 /* Icon-only buttons: no shape or default styles */
+/* .icon-btn */
 .icon-btn {
     background: transparent;
     border: none;
     padding: 0;
     margin: 0;
-    line-height: 0; /* remove extra inline spacing */
+    line-height: 0;
     transition: transform .25s ease, filter .2s ease;
 }
-
+/* .icon-btn .icon */
 .icon-btn .icon {
     width: 40px;
     height: 40px;
     display: block;
     transition: transform .25s ease, filter .2s ease;
 }
-
+/* .icon-btn:hover .icon */
 .icon-btn:hover .icon {
     filter: brightness(1.2);
     transform: scale(1.1);
 }
-
+/* .icon-btn:active .icon */
 .icon-btn:active .icon {
     transform: scale(1);
 }

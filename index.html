@@ -7,43 +7,6 @@
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="./css/signup.css">
-    <script>
-        // Asegura el estado inicial antes del primer repintado
-        (function(){
-            try {
-                var comingFromHome = sessionStorage.getItem('flowFromHome') === '1';
-                // Solo animar si venimos de home; en otros casos, sin animación
-                if (comingFromHome) {
-                    document.documentElement.classList.add('flow-enter');
-                }
-            } catch (_) {
-                // Sin animación en caso de error de sessionStorage
-            }
-        })();
-    </script>
-    <style>
-        /* Aparición suave al cargar la página */
-        body {
-            transition: opacity 380ms ease, transform 450ms cubic-bezier(.22,.61,.36,1);
-            will-change: opacity, transform;
-        }
-        /* Entrada normal (acceso directo) */
-        html.page-enter body {
-            opacity: 0;
-            transform: translateY(10px) scale(.995);
-        }
-        /* Continuación de flujo desde home (panel se fue hacia abajo, este cae desde arriba) */
-        html.flow-enter body {
-            opacity: 0;
-            transform: translateY(-64px) scale(.995);
-            /* Duración alineada con la salida de home */
-            transition: opacity 420ms ease, transform 520ms cubic-bezier(.22,.61,.36,1);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            body { transition: none !important; transform: none !important; }
-            html.page-enter body, html.flow-enter body { opacity: 1; transform: none; }
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -104,6 +67,19 @@
     </script>
     <script src="./js/index.js"></script>
     <script>
+        // Asegura el estado inicial antes del primer repintado
+        (function(){
+            try {
+                var comingFromHome = sessionStorage.getItem('flowFromHome') === '1';
+                // Solo animar si venimos de home; en otros casos, sin animación
+                if (comingFromHome) {
+                    document.documentElement.classList.add('flow-enter');
+                }
+            } catch (_) {
+                // Sin animación en caso de error de sessionStorage
+            }
+        })();
+
         // Retira el estado inicial y deja que la transición haga el resto
         (function(){
             var reveal = function(){

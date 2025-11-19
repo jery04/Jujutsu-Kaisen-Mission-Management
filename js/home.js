@@ -18,7 +18,7 @@ window.addEventListener('keydown', function(e) {
         // Marca un traspaso de animación para index.html
         try { sessionStorage.setItem('flowFromHome', '1'); } catch(_) {}
         document.body.classList.add('leaving');
-        const DURATION = 520;
+        const DURATION = 300;
 
         setTimeout(() => {
             window.location.href = 'index.html';
