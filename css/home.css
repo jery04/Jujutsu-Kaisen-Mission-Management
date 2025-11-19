@@ -88,7 +88,8 @@ body {
     font-size: 1.1rem;
 }
 
-.modal input[type="password"] {
+.modal input[type="password"],
+.modal input[type="text"] {
     width: 100%;
     height: 46px;
     padding: 0 12px;

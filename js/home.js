@@ -66,6 +66,50 @@ window.addEventListener('keydown', function(e) {
         closeAdminModal();
     });
 
+    // Lógica del modal de registro (abrir desde "¡Haz clic aquí!")
+    const signupLink = document.getElementById('signupLink');
+    const registerOverlay = document.getElementById('registerModal');
+    const registerForm = document.getElementById('registerForm');
+    const regUserInput = document.getElementById('reg-username');
+
+    function openRegisterModal() {
+        registerOverlay.classList.add('is-open');
+        registerOverlay.setAttribute('aria-hidden', 'false');
+        setTimeout(() => regUserInput?.focus(), 50);
+    }
+
+    function closeRegisterModal() {
+        registerOverlay.classList.remove('is-open');
+        registerOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    signupLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        openRegisterModal();
+    });
+
+    // Cerrar si se hace click fuera del cuadro (registro)
+    registerOverlay?.addEventListener('click', (ev) => {
+        if (ev.target === registerOverlay) {
+            closeRegisterModal();
+        }
+    });
+
+    // Cerrar con ESC para ambos modales
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (modalOverlay?.classList.contains('is-open')) closeAdminModal();
+            if (registerOverlay?.classList.contains('is-open')) closeRegisterModal();
+        }
+    });
+
+    // Envío del registro (por ahora solo cierra el modal)
+    registerForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // Aquí podrías enviar datos a tu backend
+        closeRegisterModal();
+    });
+
     // --- Mini carrusel para el panel izquierdo ---
     const captions = [
         'Explora misiones, combates y maldiciones desde una sola interfaz.',

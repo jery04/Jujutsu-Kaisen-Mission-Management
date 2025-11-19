@@ -43,7 +43,7 @@
                         </button>
                         <span class="login-link">
                             ¿Aún sin registro? 
-                            <a href="signup.html" style="color: var(--accent-2); text-decoration: underline;">
+                            <a id="signupLink" href="signup.html" style="color: var(--accent-2); text-decoration: underline;">
                                 ¡Haz clic aquí!
                             </a>
                         </span>
@@ -62,6 +62,24 @@
                 <input type="password" id="admin-password" name="admin-password" placeholder="Contraseña" autocomplete="current-password" required>
                 <div class="modal-actions">
                     <button type="submit" id="admin-continue-btn" class="btn">Continuar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Registro de usuario -->
+    <div id="registerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="registerModalTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="registerModalTitle">Registro</h3>
+            <form id="registerForm">
+                <label for="reg-username" class="visually-hidden">Nombre de usuario</label>
+                <input type="text" id="reg-username" name="username" placeholder="Nombre de usuario" autocomplete="username" required>
+
+                <label for="reg-password" class="visually-hidden">Contraseña</label>
+                <input type="password" id="reg-password" name="password" placeholder="Contraseña" autocomplete="new-password" required>
+
+                <div class="modal-actions">
+                    <button type="submit" id="register-btn" class="btn">Registrar</button>
                 </div>
             </form>
         </div>
