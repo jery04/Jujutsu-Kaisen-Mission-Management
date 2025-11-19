@@ -8,6 +8,7 @@ module.exports = function registerRoutes(app, db) {
     const curseController = require('../controllers/curseController')(db);
     // Removed administrators per new schema
     const missionController = require('../controllers/missionController')(db);
+    const userController = require('../controllers/userController')(db);
     // Validation
     const { validateBody } = require('../middleware/validate');
     const schemas = require('../validation/schemas');
@@ -44,4 +45,8 @@ module.exports = function registerRoutes(app, db) {
     // Missions
     app.get('/missions/sorcerer/:id', missionController.getBySorcerer);
     app.get('/missions/success-range', missionController.successRange);
+
+    // Auth (Usuarios)
+    app.post('/auth/register', validateBody(schemas.userRegister), userController.register);
+    app.post('/auth/login', validateBody(schemas.userLogin), userController.login);
 };

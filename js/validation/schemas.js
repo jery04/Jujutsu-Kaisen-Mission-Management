@@ -49,6 +49,13 @@ const missionCreate = z.object({
     curse_id: intId
 });
 
+// Usuario schemas
+const userRegister = z.object({
+    username: nonEmpty('Usuario es requerido').max(120),
+    password: nonEmpty('Contraseña es requerida').max(255)
+});
+const userLogin = userRegister;
+
 module.exports = {
     sorcererCreate,
     sorcererUpdate,
@@ -57,4 +64,6 @@ module.exports = {
     curseCreate,
     curseUpdate,
     missionCreate
+    , userRegister
+    , userLogin
 };

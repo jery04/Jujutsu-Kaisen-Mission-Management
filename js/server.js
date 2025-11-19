@@ -22,6 +22,7 @@ const TransferSorcerer = require('../database_tables/TransferSorcerer');
 const PrincipalAssignment = require('../database_tables/PrincipalAssignment');
 const SorcererDeathCause = require('../database_tables/SorcererDeathCause');
 const SorcererSubordination = require('../database_tables/SorcererSubordination');
+const Usuario = require('../database_tables/Usuario');
 
 // Express
 const app = express();
@@ -95,7 +96,8 @@ if (process.env.NODE_ENV === 'test') {
       TransferSorcerer,
       PrincipalAssignment,
       SorcererDeathCause,
-      SorcererSubordination
+      SorcererSubordination,
+      Usuario
     ],
     synchronize: true // Habilitar sincronización automática para desarrollo
   }).then(async (dbConn) => {
