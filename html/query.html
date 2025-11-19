@@ -14,7 +14,7 @@
         <h1>Jujutsu Kaisen</h1>
         <p>Explora el universo de Jujutsu Kaisen con una plataforma que transforma la gestión de misiones y maldiciones en una experiencia estratégica y dinámica</p>
     </header>
-    
+
     <main>
         <div class="title">
             <h2>Consulta de Entidades</h2>
@@ -38,36 +38,12 @@
             </div>
             <div id="results" class="results-container">
                 <!-- Los resultados de la consulta se mostrarán aquí -->
-                <div class = "query-item">
-                    <h3>Entidad de Ejemplo</h3>
 
-                    <div class = "btn-detail">
-                        <button class="icon-btn btn-edit" aria-label="Editar">
-                            <img src="/img/editar.png" alt="Editar" class="icon">
-                        </button>
-                        <button class="icon-btn btn-delete" aria-label="Eliminar">
-                            <img src="/img/remove.png" alt="Eliminar" class="icon">
-                        </button>
-                    </div>
-                </div>
-
-                <div class = "query-item">
-                    <h3>Entidad de Ejemplo</h3>
-
-                    <div class = "btn-detail">
-                        <button class="icon-btn btn-edit" aria-label="Editar">
-                            <img src="/img/editar.png" alt="Editar" class="icon">
-                        </button>
-                        <button class="icon-btn btn-delete" aria-label="Eliminar">
-                            <img src="/img/remove.png" alt="Eliminar" class="icon">
-                        </button>
-                    </div>
-                </div>
             </div>
             <!-- Botones de exportación y volver (apilados verticalmente) -->
             <div class="btn-group stacked">
                 <button id="export-pdf" class="btn-action">exportar consulta como PDF</button>
-                <button id="go-back" class="btn-action">Volver</button>
+                <a id="go-back" class="btn-action" href="/index.html">Volver</a>
             </div>
 
         </section>
@@ -117,9 +93,13 @@
                         });
                     return;
                 }
-                // Volver
+                // Volver (delegado)
                 var backBtn = event.target.closest('#go-back');
-                if (backBtn) { window.location.href = '/index.html'; return; }
+                if (backBtn) {
+                    var target = backBtn.getAttribute('href') || '/index.html';
+                    window.location.href = target;
+                    return;
+                }
                 // Navegar a detalle con entity & id
                 var queryItem = event.target.closest('.query-item');
                 if (queryItem) {
@@ -133,5 +113,19 @@
         });
     </script>
     <script src="/js/query.js"></script>
+    <script>
+    // Listener directo adicional para robustez cuando Express sirve los archivos
+    document.addEventListener('DOMContentLoaded', function(){
+        var directBack = document.getElementById('go-back');
+        if(directBack){
+            directBack.addEventListener('click', function(e){
+                e.preventDefault();
+                var primary = directBack.getAttribute('href') || '/index.html';
+                // Intento simple primero
+                window.location.href = primary;
+            });
+        }
+    });
+    </script>
 </body>
 </html>
