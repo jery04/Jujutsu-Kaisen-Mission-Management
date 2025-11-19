@@ -1,0 +1,380 @@
+/* Estilos para el botón de administrador en intro.html */
+.admin-btn {
+    width: 80px;
+    height: 48px;
+    padding: 0;
+    border-radius: 15px;
+    justify-content: center;
+    align-items: center;
+    display: inline-flex;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), #b31249 60%);
+    box-shadow: 0 8px 22px rgba(224, 36, 94, .35);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    cursor: pointer;
+}
+
+.admin-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px rgba(224,36,94,.5);
+    filter: saturate(115%);
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+}
+
+/* Estilos para la imagen dentro del botón de administrador */
+.admin-img {
+    max-width: 32px;
+    max-height: 32px;
+}
+/* Estilos movidos desde intro.html */
+:root {
+    --bg: #181818;
+    --panel: rgba(255, 255, 255, 0.06);
+    --panel-stroke: rgba(255, 255, 255, 0.12);
+    --text: #f5f7fb;
+    --muted: #c8cbd4;
+    --accent: #e0245e;
+    --accent-2: #00d1ff;
+    --radius: 18px;
+    --shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    line-height: 1.5;
+    overflow: hidden;
+}
+
+/* -------- Modal admin -------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+}
+
+.modal-overlay.is-open {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--panel-stroke);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px 18px 16px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(3px);
+}
+
+.modal h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+}
+
+.modal input[type="password"] {
+    width: 100%;
+    height: 46px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid var(--panel-stroke);
+    background: rgba(255, 255, 255, .04);
+    color: var(--text);
+    outline: none;
+    margin-top: 6px;
+    box-sizing: border-box;
+}
+
+.modal .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.visually-hidden {
+    position: absolute !important;
+    height: 1px; width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+}
+
+.bg-glow {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(1200px 600px at 80% 20%, rgba(224, 36, 94, .25), transparent 60%),
+        radial-gradient(900px 500px at 10% 80%, rgba(0, 209, 255, .25), transparent 60%),
+        radial-gradient(800px 800px at 50% 50%, rgba(255,255,255,.06), transparent 60%);
+    filter: saturate(110%);
+    pointer-events: none;
+    animation: pulse 14s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: .9; }
+    50% { transform: scale(1.03); opacity: 1; }
+}
+
+.intro-panel {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: min(900px, 52vw);
+    height: clamp(520px, 70vh, 800px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border: 1px solid var(--panel-stroke);
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: var(--shadow);
+}
+
+.panel-inner {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 28px;
+    align-items: stretch;
+    padding: 26px 22px 22px 22px;
+    min-height: 100%;
+}
+
+.panel-left {
+    position: relative;
+    border-radius: calc(var(--radius) - 6px);
+    overflow: hidden;
+    border: 1px solid var(--panel-stroke);
+    background: var(--panel);
+    min-height: 520px;
+}
+
+.panel-left img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: contrast(105%) saturate(110%);
+}
+
+.panel-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 4px 8px 2px;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: 0.4px;
+    line-height: 1.1;
+    text-shadow: 0 2px 20px rgba(0,0,0,.35);
+}
+
+h2 {
+    margin: 0;
+    font-weight: 500;
+    color: var(--muted);
+    font-size: clamp(16px, 2.2vw, 20px);
+}
+
+.features {
+    margin: 6px 0 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 8px 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.features li::before {
+    content: "";
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--accent-2), var(--accent));
+    box-shadow: 0 0 10px rgba(0, 209, 255, .6);
+}
+
+.features a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.features a:hover {
+    text-decoration: underline;
+}
+
+.actions {
+    margin-top: 6px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, var(--accent), #b31249 60%);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(224, 36, 94, .35);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 28px rgba(224,36,94,.5);
+    filter: saturate(115%);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 940px) {
+    .intro-panel {
+        height: clamp(460px, 68vh, 720px);
+    }
+    .panel-inner {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 18px 16px 16px 16px;
+    }
+    .panel-left {
+        min-height: 320px;
+    }
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+
+.intro-panel::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-2), var(--accent), transparent);
+    opacity: .9;
+    filter: blur(.2px);
+}
+
+#loginForm {
+    margin: 18px 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#loginForm label {
+    font-weight: 500;
+    color: var(--muted);
+}
+
+#loginForm input[type="text"],
+#loginForm input[type="password"] {
+    height: 48px;
+    padding: 0 12px;
+    border-radius: 15px;
+    border: 1px solid var(--panel-stroke);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color .2s;
+    margin-bottom: 2px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#loginForm .login-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+#loginForm .login-link {
+    text-align: left;
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+#loginForm .btn {
+    height: 48px;
+    width: 180px;
+    justify-content: center;
+    border-radius: 15px;
+}
+
+    #loginForm .btn-square {
+        width: 48px;
+        min-width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--panel);
+        box-shadow: none;
+        border: 1px solid var(--panel-stroke);
+    }
+    #loginForm .btn-square img {
+        display: block;
+        max-width: 32px;
+        max-height: 32px;
+    }
+
+.leaving .intro-panel {
+    animation: slideOutDown 500ms cubic-bezier(.22,.61,.36,1) forwards;
+}
+
+.leaving .bg-glow {
+    animation: fadeOut 450ms ease forwards;
+}
+
+@keyframes slideOutDown {
+    0% { transform: translate(-50%, 0); opacity: 1; }
+    100% { transform: translate(-50%, 110%); opacity: 0; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .leaving .intro-panel,
+    .leaving .bg-glow {
+        animation: none !important;
+    }
+}
