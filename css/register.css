@@ -52,6 +52,20 @@ input[type="text"], input[type="number"], input[type="datetime-local"], select, 
     transition: box-shadow .2s ease, border-color .2s ease;
 }
 
+/* Sombra específica para el selector principal de entidad (igual a .container) */
+#entitySelect {
+    background: #fff;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.12); /* sombra suave inicial */
+}
+
+/* Hover y active iguales a los inputs */
+#entitySelect:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18); /* sombra más pronunciada al hover */
+}
+#entitySelect:active {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.16); /* ligeramente menos que hover para sensación de presión */
+}
+
 input[type="text"]:hover, input[type="number"]:hover, input[type="datetime-local"]:hover, select:hover, textarea:hover {
     box-shadow: 0 0 8px 2px rgba(0,0,0,0.06);
 }
