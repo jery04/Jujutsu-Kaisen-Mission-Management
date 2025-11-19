@@ -12,7 +12,9 @@ const sorcererCreate = z.object({
     anios_experiencia: z.coerce.number().int().min(0).default(0),
     estado_operativo: z.enum(['activo', 'lesionado', 'en_recuperacion', 'dado_de_baja', 'inactivo_temporalmente']).default('activo'),
     causa_muerte: z.string().trim().max(255).optional().nullable(),
-    fecha_fallecimiento: z.string().trim().optional().nullable()
+    fecha_fallecimiento: z.string().trim().optional().nullable(),
+    // Nombre de la técnica principal a vincular (opcional)
+    tecnica: z.string().trim().min(1).optional()
 });
 
 const sorcererUpdate = sorcererCreate.partial();

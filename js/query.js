@@ -102,7 +102,8 @@
     renderPaginated(list, function (s) {
       const lines = [
         `Grado: <strong>${s.grado}</strong>`,
-        `Años de experiencia: <strong>${s.anios_experiencia ?? 0}</strong>`
+        `Años de experiencia: <strong>${s.anios_experiencia ?? 0}</strong>`,
+        `Técnica principal: <strong>${s.tecnica_principal || '-'}</strong>`
       ];
       const item = makeItem(s.nombre, lines);
       item.dataset.entity = 'sorcerer';
@@ -236,6 +237,22 @@
       console.debug('initialization failed', e);
       loadSorcerers().catch((e2) => { console.debug('fallback loadSorcerers failed', e2); });
       if (entitySelect) entitySelect.value = 'sorcerer';
+    }
+
+    // Delegación para abrir detalle al hacer click en un item
+    if (results) {
+      results.addEventListener('click', function (ev) {
+        const targetBtn = ev.target.closest('.btn-edit, .btn-delete');
+        if (targetBtn) return; // dejar botones para futura funcionalidad
+        const item = ev.target.closest('.query-item');
+        if (!item) return;
+        const entity = item.dataset.entity;
+        const id = item.dataset.id;
+        if (entity && id) {
+          // Navega a página de detalle con parámetros
+          window.location.href = `/html/show.html?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+        }
+      });
     }
   });
 })();

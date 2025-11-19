@@ -123,7 +123,7 @@
         if (entityType === 'hechicero') {
             // Sorcerer: convertimos el texto del select a los enums esperados por el backend
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
-            payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia };
+            payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
             // Technique: requiere que exista un hechicero con ese nombre

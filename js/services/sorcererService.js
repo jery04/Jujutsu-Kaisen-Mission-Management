@@ -3,10 +3,12 @@ const { getRepository } = require('../repositories');
 module.exports = {
   async create(db, payload) {
     const sorcererRepo = getRepository(db, 'Sorcerer');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
+    const techniqueRepo = getRepository(db, 'Technique');
+    const linkRepo = getRepository(db, 'SorcererTechnique');
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
-    return await sorcererRepo.add({
+    const saved = await sorcererRepo.add({
       nombre,
       grado,
       anios_experiencia: anios_experiencia != null ? Number(anios_experiencia) : 0,
@@ -14,6 +16,22 @@ module.exports = {
       causa_muerte: causa_muerte || null,
       fecha_fallecimiento: fecha_fallecimiento ? new Date(fecha_fallecimiento) : null
     });
+    // Si se envía una técnica principal por nombre, crear el vínculo en sorcerer_technique
+    if (saved && tecnica && String(tecnica).trim()) {
+      const nombreTec = String(tecnica).trim();
+      const tech = await techniqueRepo.findOne({ where: { nombre: nombreTec } });
+      if (!tech) {
+        const err = new Error('Técnica no encontrada para asignar como principal');
+        err.status = 400;
+        throw err;
+      }
+      // Asegurar unicidad de principal y luego establecer la nueva
+      try { await linkRepo.clearPrincipal(saved.id); } catch (_) { /* defensivo */ }
+      await linkRepo.setPrincipal(saved.id, tech.id, 0);
+      // Incluir referencia ligera en respuesta para conveniencia
+      return { ...saved, tecnica_principal: nombreTec };
+    }
+    return saved;
   },
   async getByName(db, nombre) {
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
@@ -24,13 +42,11 @@ module.exports = {
   },
   async list(db) {
     const repo = getRepository(db, 'Sorcerer');
-    return await repo.getAll();
+    return await repo.listWithPrincipal();
   },
   async getById(db, id) {
     const repo = getRepository(db, 'Sorcerer');
-    const ent = await repo.getById(id);
-    if (!ent) { const err = new Error('Hechicero no encontrado'); err.status = 404; throw err; }
-    return ent;
+    return await repo.getWithPrincipalById(id);
   },
   async update(db, id, payload) {
     const repo = getRepository(db, 'Sorcerer');
