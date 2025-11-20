@@ -8,6 +8,21 @@ module.exports = {
     const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
+    // Validaciones previas: la técnica principal es obligatoria y debe existir
+    if (!tecnica || !String(tecnica).trim()) {
+      const err = new Error('tecnica principal requerida');
+      err.status = 400;
+      throw err;
+    }
+    const nombreTec = String(tecnica).trim();
+    const tech = await techniqueRepo.findOne({ where: { nombre: nombreTec } });
+    if (!tech) {
+      const err = new Error('Técnica no encontrada para asignar como principal');
+      err.status = 400;
+      throw err;
+    }
+
+    // Crear el hechicero solo después de validar que todos los campos y FK existen
     const saved = await sorcererRepo.add({
       nombre,
       grado,
@@ -17,16 +32,8 @@ module.exports = {
       fecha_fallecimiento: fecha_fallecimiento ? new Date(fecha_fallecimiento) : null
     });
     let result = saved;
-    // Si se envía una técnica principal por nombre, crear el vínculo en sorcerer_technique
-    if (saved && tecnica && String(tecnica).trim()) {
-      const nombreTec = String(tecnica).trim();
-      const tech = await techniqueRepo.findOne({ where: { nombre: nombreTec } });
-      if (!tech) {
-        const err = new Error('Técnica no encontrada para asignar como principal');
-        err.status = 400;
-        throw err;
-      }
-      // Asegurar unicidad de principal y luego establecer la nueva
+    // Asegurar unicidad de principal y luego establecer la nueva
+    if (saved) {
       try { await linkRepo.clearPrincipal(saved.id); } catch (_) { /* defensivo */ }
       await linkRepo.setPrincipal(saved.id, tech.id, 0);
       // Incluir referencia ligera en respuesta para conveniencia

@@ -59,10 +59,9 @@
             } else if (fsKey === 'tecnica') {
                 setText('t_nombre', data.nombre);
                 setText('t_tipo', data.tipo);
-                // GET /technique/:id devuelve hechicero como nombre en nuestro backend
-                setText('t_hechicero', data.hechicero);
-                setText('t_nivel', data.nivel_dominio);
-                setText('t_efectividad', data.efectividad_inicial);
+                // La plantilla `show.html` ahora muestra `t_descripcion` y `t_condiciones`.
+                // Si el backend usa otro campo para la descripción, pruebe `descripcion` o `detalle`.
+                setText('t_descripcion', data.descripcion || data.detalle || '');
                 setText('t_condiciones', data.condiciones);
             } else if (fsKey === 'maldicion') {
                 setText('m_nombre', data.nombre);
