@@ -253,58 +253,5 @@
         }
       });
     }
-
-    // Exportar resultados visibles como PDF
-    const exportBtn = document.getElementById('export-pdf');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', function () {
-        try {
-          const container = document.getElementById('results');
-          if (!container) { alert('No hay resultados para exportar.'); return; }
-          const items = Array.from(container.querySelectorAll('.query-item')).filter(it => !it.classList.contains('pagination-controls'));
-          if (!items.length) { alert('No hay resultados para exportar.'); return; }
-
-          function ensureJsPDF(cb) {
-            if (window.jsPDF) return cb(window.jsPDF);
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-            script.onload = function () {
-              cb(window.jspdf.jsPDF);
-            };
-            document.body.appendChild(script);
-          }
-
-          // Construir estructura textual de cada item
-          ensureJsPDF(function (JsPDFCtor) {
-            const doc = new JsPDFCtor();
-            let y = 20;
-            items.forEach((item, idx) => {
-              const title = item.querySelector('h3') ? item.querySelector('h3').textContent : '';
-              doc.setFontSize(14);
-              doc.text(title, 15, y);
-              y += 8;
-              const p = item.querySelector('p');
-              if (p) {
-                // Extraer texto plano de los divs internos
-                Array.from(p.querySelectorAll('div')).forEach(div => {
-                  doc.setFontSize(11);
-                  doc.text(div.textContent, 18, y);
-                  y += 6;
-                });
-              }
-              y += 8;
-              if (y > 270 && idx < items.length - 1) {
-                doc.addPage();
-                y = 20;
-              }
-            });
-            doc.save('resultados.pdf');
-          });
-        } catch (err) {
-          console.error('Export PDF error', err);
-          alert('Ocurrió un error al exportar: ' + err.message);
-        }
-      });
-    }
   });
 })();
