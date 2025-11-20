@@ -42,8 +42,25 @@
             </div>
             <!-- Botones de exportación y volver (apilados verticalmente) -->
             <div class="btn-group stacked">
-                <button id="export-pdf" class="btn-action">exportar consulta como PDF</button>
+                <button id="export-pdf" class="btn-action">Exportar consulta</button>
                 <a id="go-back" class="btn-action" href="/index.html">Volver</a>
+            </div>
+
+            <!-- Modal simple para elegir formato de exportación -->
+            <div id="export-modal" class="export-modal" aria-hidden="true">
+                <div role="dialog" aria-modal="true" class="export-dialog">
+                    <h3 class="export-title">Elegir formato de exportación</h3>
+                    <p class="export-desc">Selecciona el formato en que deseas exportar los resultados.</p>
+                    <div class="export-options">
+                        <button data-format="pdf" class="btn-action export-option">PDF (imprimir)</button>
+                        <button data-format="latex" class="btn-action export-option">LaTeX (.tex)</button>
+                        <button data-format="docx" class="btn-action export-option">DOCX (.docx)</button>
+                        <button data-format="csv" class="btn-action export-option">CSV (.csv)</button>
+                    </div>
+                    <div class="export-actions">
+                        <button id="export-cancel" class="btn-action export-cancel">Cancelar</button>
+                    </div>
+                </div>
             </div>
 
         </section>
@@ -51,6 +68,7 @@
     <!-- inline scripts migrated to /js/query.js -->
     <script src="/js/utils/auth.js"></script>
     <script src="/js/query.js"></script>
+    <script src="/js/exporters.js"></script>
     <script src="/js/pdf.js"></script>
     <!-- inline scripts migrated to /js/query.js -->
 </body>
