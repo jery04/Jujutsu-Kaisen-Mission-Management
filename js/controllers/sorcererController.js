@@ -39,7 +39,8 @@ module.exports = (db) => ({
     },
     update: async (req, res) => {
         try {
-            const saved = await service.update(db, req.params.id, req.body);
+            const userId = req.headers['x-user-id'];
+            const saved = await service.update(db, req.params.id, req.body, userId);
             res.json(saved);
         } catch (error) {
             console.error('Error actualizando Hechicero:', error);
@@ -52,7 +53,8 @@ module.exports = (db) => ({
     },
     remove: async (req, res) => {
         try {
-            const out = await service.remove(db, req.params.id);
+            const userId = req.headers['x-user-id'];
+            const out = await service.remove(db, req.params.id, userId);
             res.json(out);
         } catch (error) {
             console.error('Error eliminando Hechicero:', error);

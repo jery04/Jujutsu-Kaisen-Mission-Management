@@ -107,6 +107,8 @@
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
+    // Use centralized helper `window.getCurrentUserId` when available
+
     async function loadExisting() {
         if (!entity || !id) return; // no editing context
         const apiEntity = entity; // original entity code from query page
@@ -255,7 +257,10 @@
         }
 
         try {
-            const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+            const headers = { 'Content-Type': 'application/json' };
+            if (currentUser) headers['x-user-id'] = currentUser;
+            const resp = await fetch(url, { method, headers, body: JSON.stringify(payload) });
             let body; try { body = await resp.json(); } catch { body = {}; }
             if (!resp.ok) {
                 throw new Error(body && (body.message || body.details) || ('Error ' + resp.status));

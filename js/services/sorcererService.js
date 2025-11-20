@@ -63,7 +63,7 @@ module.exports = {
     const repo = getRepository(db, 'Sorcerer');
     return await repo.getWithPrincipalById(id);
   },
-  async update(db, id, payload) {
+  async update(db, id, payload, userId) {
     const repo = getRepository(db, 'Sorcerer');
     const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
     const partial = {};
@@ -75,10 +75,33 @@ module.exports = {
     if (fecha_fallecimiento !== undefined) {
       partial.fecha_fallecimiento = fecha_fallecimiento ? new Date(fecha_fallecimiento) : null;
     }
+    // Verificar que el usuario que intenta actualizar es el que creó la entidad
+    if (!userId) {
+      const err = new Error('Usuario no autenticado'); err.status = 401; throw err;
+    }
+    try {
+      const userLinkRepo = getRepository(db, 'UserSorcerer');
+      const link = await userLinkRepo.getOne({ sorcerer_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
+    } catch (e) {
+      if (e.status) throw e; // rethrow our own errors
+      // si ocurre un error inesperado al consultar, rechazar con 500
+      const err = new Error('Error verificando permisos'); err.status = 500; throw err;
+    }
+
     return await repo.update(id, partial);
   },
-  async remove(db, id) {
+  async remove(db, id, userId) {
     const repo = getRepository(db, 'Sorcerer');
+    // Verificar permiso del usuario
+    if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
+    try {
+      const userLinkRepo = getRepository(db, 'UserSorcerer');
+      const link = await userLinkRepo.getOne({ sorcerer_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
+    } catch (e) {
+      if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err;
+    }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };
   }

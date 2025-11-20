@@ -9,6 +9,7 @@ module.exports = function registerRoutes(app, db) {
     // Removed administrators per new schema
     const missionController = require('../controllers/missionController')(db);
     const userController = require('../controllers/userController')(db);
+    const ownershipController = require('../controllers/ownershipController')(db);
     // Validation
     const { validateBody } = require('../middleware/validate');
     const schemas = require('../validation/schemas');
@@ -49,4 +50,6 @@ module.exports = function registerRoutes(app, db) {
     // Auth (Usuarios)
     app.post('/auth/register', validateBody(schemas.userRegister), userController.register);
     app.post('/auth/login', validateBody(schemas.userLogin), userController.login);
+    // Ownership check (frontend uses this to show immediate feedback)
+    app.get('/ownership/check', ownershipController.check);
 };

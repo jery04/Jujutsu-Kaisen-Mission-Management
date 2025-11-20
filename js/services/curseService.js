@@ -36,7 +36,7 @@ module.exports = {
     if (!ent) { const err = new Error('Maldición no encontrada'); err.status = 404; throw err; }
     return ent;
   },
-  async update(db, id, payload) {
+  async update(db, id, payload, userId) {
     const repo = getRepository(db, 'Curse');
     let { nombre, grado, tipo, ubicacion, fecha, estado } = payload || {};
     const partial = {};
@@ -46,10 +46,24 @@ module.exports = {
     if (fecha) { const newDate = new Date(fecha); if (!isNaN(newDate.getTime())) partial.fecha_aparicion = newDate; }
     if (estado != null) partial.estado = estado;
     if (typeof ubicacion === 'string' && ubicacion.trim()) partial.ubicacion = ubicacion;
+    // Verificar permiso de edición: solo el creador
+    if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
+    try {
+      const linkRepo = getRepository(db, 'UserCurse');
+      const link = await linkRepo.getOne({ curse_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
+    } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+
     return await repo.update(id, partial);
   },
-  async remove(db, id) {
+  async remove(db, id, userId) {
     const repo = getRepository(db, 'Curse');
+    if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
+    try {
+      const linkRepo = getRepository(db, 'UserCurse');
+      const link = await linkRepo.getOne({ curse_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
+    } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };
   }

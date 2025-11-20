@@ -32,7 +32,7 @@ module.exports = {
     if (!ent) { const err = new Error('Técnica no encontrada'); err.status = 404; throw err; }
     return { id: ent.id, nombre: ent.nombre, tipo: ent.tipo, descripcion: ent.descripcion, condiciones: ent.condiciones_de_uso, nivel_dominio: 0, efectividad_inicial: 'media', activa: 1, hechicero: null };
   },
-  async update(db, id, payload) {
+  async update(db, id, payload, userId) {
     const repo = getRepository(db, 'Technique');
     const { nombre, tipo, descripcion } = payload || {};
     const partial = {};
@@ -41,10 +41,24 @@ module.exports = {
     if (typeof descripcion === 'string' || descripcion === null) partial.descripcion = descripcion || null;
     const condicionesUpd = (payload && (payload.condiciones ?? payload.condiciones_de_uso)) ?? undefined;
     if (typeof condicionesUpd === 'string' || condicionesUpd === null) partial.condiciones_de_uso = condicionesUpd || null;
+    // Verificar permiso: solo el creador puede editar
+    if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
+    try {
+      const linkRepo = getRepository(db, 'UserTechnique');
+      const link = await linkRepo.getOne({ technique_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
+    } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+
     return await repo.update(id, partial);
   },
-  async remove(db, id) {
+  async remove(db, id, userId) {
     const repo = getRepository(db, 'Technique');
+    if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
+    try {
+      const linkRepo = getRepository(db, 'UserTechnique');
+      const link = await linkRepo.getOne({ technique_id: Number(id), user_id: userId });
+      if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
+    } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };
   }

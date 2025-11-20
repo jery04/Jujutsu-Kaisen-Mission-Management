@@ -180,6 +180,39 @@
         const btnDelete = ev.target.closest('.btn-delete');
         const btnEdit = ev.target.closest('.btn-edit');
 
+        // Use centralized helper `window.getCurrentUserId` when available
+
+        // simple modal para mostrar aviso de permiso denegado
+        function showForbiddenModal(msg) {
+          try {
+            let modal = document.getElementById('forbid-modal');
+            if (!modal) {
+              modal = document.createElement('div');
+              modal.id = 'forbid-modal';
+              modal.style.position = 'fixed';
+              modal.style.left = '0';
+              modal.style.top = '0';
+              modal.style.width = '100%';
+              modal.style.height = '100%';
+              modal.style.display = 'flex';
+              modal.style.alignItems = 'center';
+              modal.style.justifyContent = 'center';
+              modal.style.background = 'rgba(0,0,0,0.45)';
+              modal.innerHTML = `
+                <div style="background:#fff;padding:18px;border-radius:8px;max-width:520px;width:92%;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
+                  <h3 style="margin:0 0 8px 0;">Acción no permitida</h3>
+                  <div id="forbid-modal-msg" style="margin-bottom:12px;color:#333"></div>
+                  <div style="text-align:right"><button id="forbid-close" style="padding:8px 12px;border-radius:6px;background:#2d7ef7;color:#fff;border:0;cursor:pointer">Cerrar</button></div>
+                </div>`;
+              document.body.appendChild(modal);
+              modal.querySelector('#forbid-close').addEventListener('click', function () { if (modal && modal.parentNode) modal.parentNode.removeChild(modal); });
+            }
+            const msgEl = modal.querySelector('#forbid-modal-msg');
+            if (msgEl) msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
+            modal.style.display = 'flex';
+          } catch (e) { alert(msg || 'No tienes permisos para realizar esta acción.'); }
+        }
+
         // Borrar: petición DELETE + animación de salida
 
     // robust go-back handler para el enlace con id 'go-back'
@@ -203,6 +236,24 @@
           const id = item.dataset.id;
           if (!entity || !id) return;
 
+          // verificar propiedad antes de permitir borrar
+            let currentUser = null;
+            try {
+              currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+            const body = await resp.json().catch(() => ({}));
+            if (!body || body.canEdit !== true) {
+              const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
+              showForbiddenModal(msg);
+              return;
+            }
+          } catch (e) {
+            // en caso de error de red, informar y bloquear para evitar borrados accidentales
+            alert('Error verificando permisos: ' + (e && e.message ? e.message : e));
+            return;
+          }
+
           const title = item.querySelector('h3') ? item.querySelector('h3').textContent : '';
           const ok = confirm(`¿Eliminar "${title}"? Esta acción no se puede deshacer.`);
           if (!ok) return;
@@ -215,7 +266,7 @@
           };
           const base = routeMap[entity] || (`/${entity}/`);
           try {
-            const res = await fetch(API_BASE + base + encodeURIComponent(id), { method: 'DELETE' });
+            const res = await fetch(API_BASE + base + encodeURIComponent(id), { method: 'DELETE', headers: { 'x-user-id': currentUser || '' } });
             if (!res.ok) {
               const body = await res.json().catch(() => ({}));
               const msg = body && body.message ? body.message : `Error ${res.status}`;
@@ -231,16 +282,31 @@
           return;
         }
 
-        // Editar: ir a la página de edición
+        // Editar: verificar permisos y luego ir a la página de edición
         if (btnEdit) {
           ev.stopPropagation();
           const item = btnEdit.closest('.query-item');
           if (!item) return;
           const entity = item.dataset.entity;
           const id = item.dataset.id;
-          if (entity && id) {
-            window.location.href = `/html/edit.html?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+          if (!entity || !id) return;
+
+            try {
+            const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+            const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+            const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+            const body = await resp.json().catch(() => ({}));
+            if (!body || body.canEdit !== true) {
+              const msg = body && body.message ? body.message : 'No puedes editar este elemento.';
+              showForbiddenModal(msg);
+              return;
+            }
+          } catch (e) {
+            alert('Error verificando permisos: ' + (e && e.message ? e.message : e));
+            return;
           }
+
+          window.location.href = `/html/edit.html?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
           return;
         }
 

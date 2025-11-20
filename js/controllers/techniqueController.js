@@ -22,11 +22,11 @@ module.exports = (db) => ({
         catch (error) { console.error('Error obteniendo Técnica:', error); const status = error.status || 500; res.status(status).json({ message: status === 500 ? 'Error obteniendo técnica' : error.message, details: error.message }); }
     },
     update: async (req, res) => {
-        try { const saved = await service.update(db, req.params.id, req.body); res.json(saved); }
+        try { const userId = req.headers['x-user-id']; const saved = await service.update(db, req.params.id, req.body, userId); res.json(saved); }
         catch (error) { console.error('Error actualizando Técnica:', error); if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) return res.status(409).json({ message: 'Técnica ya existe' }); const status = error.status || 500; res.status(status).json({ message: status === 500 ? 'Error actualizando técnica' : error.message, details: error.message }); }
     },
     remove: async (req, res) => {
-        try { const out = await service.remove(db, req.params.id); res.json(out); }
+        try { const userId = req.headers['x-user-id']; const out = await service.remove(db, req.params.id, userId); res.json(out); }
         catch (error) { console.error('Error eliminando Técnica:', error); if (error && (error.code === 'ER_ROW_IS_REFERENCED_2' || /foreign key/i.test(error.message || ''))) return res.status(409).json({ ok: false, message: 'No se puede eliminar: la técnica está referenciada por otras entidades.' }); const status = error.status || 500; res.status(status).json({ ok: false, message: status === 500 ? 'Error eliminando técnica' : error.message, details: error.message }); }
     }
 });
