@@ -181,6 +181,20 @@
         const btnEdit = ev.target.closest('.btn-edit');
 
         // Borrar: petición DELETE + animación de salida
+
+    // robust go-back handler para el enlace con id 'go-back'
+    try {
+      const directBack = document.getElementById('go-back');
+      if (directBack) {
+        directBack.addEventListener('click', function (e) {
+          e.preventDefault();
+          const primary = directBack.getAttribute('href') || '/index.html';
+          window.location.href = primary;
+        });
+      }
+    } catch (e) {
+      // noop
+    }
         if (btnDelete) {
           ev.stopPropagation();
           const item = btnDelete.closest('.query-item');

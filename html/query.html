@@ -48,85 +48,9 @@
 
         </section>
     </main>
-    <script>
-        // Delegación para editar/eliminar y volver (listados generados dinámicamente)
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('click', function (event) {
-                // Editar
-                var editBtn = event.target.closest('.btn-edit');
-                if (editBtn) {
-                    var item = editBtn.closest('.query-item');
-                    if (!item) { window.location.href = '/html/edit.html'; return; }
-                    var entity = item.getAttribute('data-entity');
-                    var id = item.getAttribute('data-id');
-                    if (!entity || !id) { window.location.href = '/html/edit.html'; return; }
-                    var url = '/html/edit.html?entity=' + encodeURIComponent(entity) + '&id=' + encodeURIComponent(id);
-                    window.location.href = url;
-                    return;
-                }
-                // Eliminar: llama a la API y luego retira del DOM
-                var deleteBtn = event.target.closest('.btn-delete');
-                if (deleteBtn) {
-                    var item = deleteBtn.closest('.query-item');
-                    if (!item) return;
-                    var entity = item.getAttribute('data-entity'); // 'sorcerer' | 'technique' | 'curses'
-                    var id = item.getAttribute('data-id');
-                    if (!entity || !id) { alert('No se pudo determinar la entidad a eliminar.'); return; }
-                    if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
-                    var base = (window.API_BASE || (window.location && window.location.origin) || 'http://127.0.0.1:3000');
-                    fetch(base + '/' + entity + '/' + id, { method: 'DELETE' })
-                        .then(function(resp){ return resp.json().then(function(j){ return { ok: resp.ok, status: resp.status, body: j }; }); })
-                        .then(function(res){
-                            if (!res.ok) {
-                                var msg = (res.body && res.body.message) ? res.body.message : ('Error ' + res.status);
-                                throw new Error(msg);
-                            }
-                            // Animación de remoción
-                            item.classList.add('fade-out');
-                            var safeTimeout = setTimeout(function(){ if (item && item.isConnected) item.remove(); }, 600);
-                            item.addEventListener('transitionend', function handler(e){
-                                if (e.propertyName === 'opacity') { clearTimeout(safeTimeout); item.remove(); }
-                            }, { once: true });
-                        })
-                        .catch(function(err){
-                            alert('No se pudo eliminar: ' + err.message);
-                        });
-                    return;
-                }
-                // Volver (delegado)
-                var backBtn = event.target.closest('#go-back');
-                if (backBtn) {
-                    var target = backBtn.getAttribute('href') || '/index.html';
-                    window.location.href = target;
-                    return;
-                }
-                // Navegar a detalle con entity & id
-                var queryItem = event.target.closest('.query-item');
-                if (queryItem) {
-                    var ent = queryItem.getAttribute('data-entity');
-                    var id = queryItem.getAttribute('data-id');
-                    var url = '/html/show.html';
-                    if (ent && id) { url += '?entity=' + encodeURIComponent(ent) + '&id=' + encodeURIComponent(id); }
-                    window.location.href = url;
-                }
-            });
-        });
-    </script>
+    <!-- inline scripts migrated to /js/query.js -->
     <script src="/js/query.js"></script>
     <script src="/js/pdf.js"></script>
-    <script>
-    // Listener directo adicional para robustez cuando Express sirve los archivos
-    document.addEventListener('DOMContentLoaded', function(){
-        var directBack = document.getElementById('go-back');
-        if(directBack){
-            directBack.addEventListener('click', function(e){
-                e.preventDefault();
-                var primary = directBack.getAttribute('href') || '/index.html';
-                // Intento simple primero
-                window.location.href = primary;
-            });
-        }
-    });
-    </script>
+    <!-- inline scripts migrated to /js/query.js -->
 </body>
 </html>

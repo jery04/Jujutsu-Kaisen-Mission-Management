@@ -2,6 +2,11 @@
 (function () {
     'use strict';
 
+    // Asegura que window.API_BASE apunte al origen actual si no está definido (migrado desde register.html)
+    if (!window.API_BASE) {
+        try { window.API_BASE = window.location.origin; } catch (e) { /* noop */ }
+    }
+
     // Punto único para la URL del backend; si existe window.API_BASE, se usa.
     const API_BASE = window.API_BASE || 'http://localhost:3000';
 
