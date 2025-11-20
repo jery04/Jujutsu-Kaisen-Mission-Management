@@ -236,18 +236,23 @@
           const id = item.dataset.id;
           if (!entity || !id) return;
 
-          // verificar propiedad antes de permitir borrar
+          // verificar propiedad antes de permitir borrar (se puede omitir si es admin)
             let currentUser = null;
             try {
-              currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
-              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
-              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
-            const body = await resp.json().catch(() => ({}));
-            if (!body || body.canEdit !== true) {
-              const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
-              showForbiddenModal(msg);
-              return;
-            }
+              const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+              if (isAdmin) {
+                currentUser = 'admin';
+              } else {
+                currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+                const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+                const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+                const body = await resp.json().catch(() => ({}));
+                if (!body || body.canEdit !== true) {
+                  const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
+                  showForbiddenModal(msg);
+                  return;
+                }
+              }
           } catch (e) {
             // en caso de error de red, informar y bloquear para evitar borrados accidentales
             alert('Error verificando permisos: ' + (e && e.message ? e.message : e));
@@ -292,14 +297,17 @@
           if (!entity || !id) return;
 
             try {
-            const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
-            const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
-            const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
-            const body = await resp.json().catch(() => ({}));
-            if (!body || body.canEdit !== true) {
-              const msg = body && body.message ? body.message : 'No puedes editar este elemento.';
-              showForbiddenModal(msg);
-              return;
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            if (!isAdmin) {
+              const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+              const body = await resp.json().catch(() => ({}));
+              if (!body || body.canEdit !== true) {
+                const msg = body && body.message ? body.message : 'No puedes editar este elemento.';
+                showForbiddenModal(msg);
+                return;
+              }
             }
           } catch (e) {
             alert('Error verificando permisos: ' + (e && e.message ? e.message : e));

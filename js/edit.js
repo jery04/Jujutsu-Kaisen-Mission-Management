@@ -257,7 +257,8 @@
         }
 
         try {
-            const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            const currentUser = isAdmin ? 'admin' : ((window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null);
             const headers = { 'Content-Type': 'application/json' };
             if (currentUser) headers['x-user-id'] = currentUser;
             const resp = await fetch(url, { method, headers, body: JSON.stringify(payload) });

@@ -12,6 +12,9 @@ module.exports = (db) => ({
       if (!entity || !id) return res.status(400).json({ canEdit: false, message: 'Parámetros inválidos' });
       if (!userId) return res.status(200).json({ canEdit: false, message: 'Usuario no autenticado' });
 
+      // Admin bypass: si el header indica 'admin' conceder acceso
+      if (String(userId) === 'admin') return res.status(200).json({ canEdit: true, message: 'Acceso administrador' });
+
       // Map entity type to linking repository and lookup criteria
       const map = {
         sorcerer: { repo: 'UserSorcerer', key: 'sorcerer_id' },

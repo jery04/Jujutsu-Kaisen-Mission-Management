@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       try {
-        const keys = ['username','userName','currentUserName','nombre','name','token','auth','accessToken'];
+        const keys = ['username','userName','currentUserName','nombre','name','token','auth','accessToken','isAdmin'];
         keys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} try { sessionStorage.removeItem(k); } catch(_) {} });
       } catch(_) {}
       window.location.href = 'home.html';
