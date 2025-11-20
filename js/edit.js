@@ -128,18 +128,49 @@
             const fsKey = normalizeEntity(apiEntity);
             showFor(fsKey);
             if (fsKey === 'hechicero') {
-                form.nombre.value = record.nombre || '';
-                form.grado.value = record.grado || 'estudiante';
+                const nombreInput = document.getElementById('h_nombre');
+                const gradoSelect = document.getElementById('h_grado');
+                const estadoSelect = document.getElementById('h_estado_operativo');
+                if (nombreInput) nombreInput.value = record.nombre || '';
+                if (gradoSelect) {
+                    // Mapeo inverso para mostrar el valor correcto en el select
+                    const gradoMapInv = {
+                        'grado_medio': 'grado medio',
+                        'grado_alto': 'grado alto',
+                        'grado_especial': 'grado especial',
+                        'estudiante': 'estudiante',
+                        'aprendiz': 'aprendiz'
+                    };
+                    gradoSelect.value = gradoMapInv[record.grado] || record.grado || 'estudiante';
+                }
                 form.experiencia.value = record.anios_experiencia != null ? record.anios_experiencia : '';
                 try { if (record.tecnica_principal && record.tecnica_principal.nombre) { form.tecnica.value = record.tecnica_principal.nombre; } } catch (e) { console.debug('read tecnica_principal failed', e); }
+                // nuevos campos: estado_operativo, causa_muerte, fecha_fallecimiento
+                if (estadoSelect) estadoSelect.value = record.estado_operativo || record.estado || 'activo';
+                try { form.causa_muerte.value = record.causa_muerte || ''; } catch (e) { console.debug('set causa_muerte failed', e); }
+                try {
+                    // fecha_fallecimiento puede venir como date o string
+                    const ff = record.fecha_fallecimiento || record.fecha_fallecimiento === null ? record.fecha_fallecimiento : (record.fechaFallecimiento || null);
+                    if (ff) {
+                        const d = new Date(ff);
+                        if (!isNaN(d.getTime())) {
+                            form.fecha_fallecimiento.value = d.toISOString().split('T')[0];
+                        }
+                    } else {
+                        form.fecha_fallecimiento.value = '';
+                    }
+                } catch (e) { console.debug('set fecha_fallecimiento failed', e); }
             } else if (fsKey === 'tecnica') {
-                // Only map fields that exist in the current edit form: nombre, tipo, descripcion, condiciones
-                if (form.nombre) form.nombre.value = record.nombre || '';
-                if (form.tipo) form.tipo.value = record.tipo || 'amplificacion';
+                // Map fields using their specific ids
+                const nombreInput = document.getElementById('t_nombre');
+                const tipoSelect = document.getElementById('t_tipo');
+                if (nombreInput) nombreInput.value = record.nombre || '';
+                if (tipoSelect) tipoSelect.value = record.tipo || 'amplificacion';
                 if (form.descripcion) form.descripcion.value = record.descripcion || '';
                 if (form.condiciones) form.condiciones.value = record.condiciones || record.condiciones_de_uso || '';
             } else if (fsKey === 'maldicion') {
-                form.nombre.value = record.nombre || '';
+                const nombreInput = document.getElementById('m_nombre');
+                if (nombreInput) nombreInput.value = record.nombre || '';
                 form.grado.value = record.grado || '1';
                 form.tipo.value = record.tipo || 'maligna';
                 form.ubicacion.value = record.ubicacion || '';
@@ -177,12 +208,14 @@
         if (fsKey === 'hechicero') {
             const gradoMap = { 'grado medio': 'grado_medio', 'grado alto': 'grado_alto', 'grado especial': 'grado_especial' };
             const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
-            return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null };
+                return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
         } else if (fsKey === 'tecnica') {
-            // Only send the fields that exist in the current form: nombre, tipo, descripcion, condiciones_de_uso
-            const descripcion = raw.descripcion !== undefined ? raw.descripcion : null;
-            const condiciones = raw.condiciones !== undefined ? raw.condiciones : null;
-            return { nombre: raw.nombre, tipo: raw.tipo, descripcion: descripcion, condiciones_de_uso: condiciones };
+            // Enviar los campos como string, nunca null
+            const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
+            const tipo = typeof raw.tipo === 'string' ? raw.tipo : '';
+            const descripcion = typeof raw.descripcion === 'string' ? raw.descripcion : '';
+            const condiciones_de_uso = typeof raw.condiciones === 'string' ? raw.condiciones : '';
+            return { nombre, tipo, descripcion, condiciones_de_uso };
         } else if (fsKey === 'maldicion') {
             return { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
         }

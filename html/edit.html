@@ -45,6 +45,21 @@
                 <label for="h_experiencia">Años de experiencia</label>
                 <input id="h_experiencia" name="experiencia" type="number" min="0">
 
+                <label for="h_estado_operativo">Estado operativo</label>
+                <select id="h_estado_operativo" name="estado_operativo">
+                    <option value="activo">Activo</option>
+                    <option value="lesionado">Lesionado</option>
+                    <option value="en_recuperacion">En recuperación</option>
+                    <option value="dado_de_baja">Dado de baja</option>
+                    <option value="inactivo_temporalmente">Inactivo temporalmente</option>
+                </select>
+
+                <label for="h_causa_muerte">Causa de muerte (si aplica)</label>
+                <input id="h_causa_muerte" name="causa_muerte" type="text">
+
+                <label for="h_fecha_fallecimiento">Fecha de fallecimiento (si aplica)</label>
+                <input id="h_fecha_fallecimiento" name="fecha_fallecimiento" type="date">
+
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
                     <p>
@@ -65,6 +80,9 @@
                     <option value="restriccion">Restricción</option>
                     <option value="soporte">Soporte</option>
                 </select>
+
+                <label for="t_descripcion">Descripción</label>
+                <textarea id="t_descripcion" name="descripcion" rows="3"></textarea>
 
                 <label for="t_condiciones">Condiciones</label>
                 <textarea id="t_condiciones" name="condiciones" rows="3"></textarea>
