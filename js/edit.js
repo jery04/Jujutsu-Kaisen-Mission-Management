@@ -141,7 +141,8 @@
             const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
             return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null };
         } else if (fsKey === 'tecnica') {
-            return { nombre: raw.nombre, tipo: raw.tipo, hechicero: raw.hechicero, nivel_dominio: raw.nivel ? Number(raw.nivel) : 0, efectividad_inicial: raw.efectividad || 'media', condiciones: raw.condiciones || null, activa: 1 };
+            // Usar el nombre de campo que espera la API: 'condiciones_de_uso'
+            return { nombre: raw.nombre, tipo: raw.tipo, hechicero: raw.hechicero, nivel_dominio: raw.nivel ? Number(raw.nivel) : 0, efectividad_inicial: raw.efectividad || 'media', condiciones_de_uso: raw.condiciones || null, activa: 1 };
         } else if (fsKey === 'maldicion') {
             return { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
         }

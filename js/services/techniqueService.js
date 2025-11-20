@@ -2,7 +2,9 @@ const { getRepository } = require('../repositories');
 
 module.exports = {
   async create(db, payload, userId) {
-    const { nombre, tipo, descripcion, condiciones } = payload || {};
+    const { nombre, tipo, descripcion } = payload || {};
+    // Aceptar ambos nombres de campo: 'condiciones' (frontend) o 'condiciones_de_uso' (schema/db)
+    const condiciones = (payload && (payload.condiciones ?? payload.condiciones_de_uso)) ?? null;
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!tipo) throw Object.assign(new Error('tipo requerido'), { status: 400 });
     const techRepo = getRepository(db, 'Technique');
@@ -32,12 +34,13 @@ module.exports = {
   },
   async update(db, id, payload) {
     const repo = getRepository(db, 'Technique');
-    const { nombre, tipo, descripcion, condiciones } = payload || {};
+    const { nombre, tipo, descripcion } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
     if (typeof tipo === 'string') partial.tipo = tipo;
     if (typeof descripcion === 'string' || descripcion === null) partial.descripcion = descripcion || null;
-    if (typeof condiciones === 'string' || condiciones === null) partial.condiciones_de_uso = condiciones || null;
+    const condicionesUpd = (payload && (payload.condiciones ?? payload.condiciones_de_uso)) ?? undefined;
+    if (typeof condicionesUpd === 'string' || condicionesUpd === null) partial.condiciones_de_uso = condicionesUpd || null;
     return await repo.update(id, partial);
   },
   async remove(db, id) {

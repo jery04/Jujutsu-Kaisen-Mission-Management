@@ -130,15 +130,12 @@
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
+            // Enviamos el nombre de campo igual que el esquema/backend: 'condiciones_de_uso'
             payload = {
                 nombre: raw.nombre,
                 tipo: raw.tipo,
-                hechicero: raw.hechicero,
-                nivel_dominio: raw.nivel ? Number(raw.nivel) : 0,
-                efectividad_inicial: raw.efectividad || 'media',
                 descripcion: raw.descripcion || null,
-                condiciones: raw.condiciones || null,
-                activa: 1
+                condiciones_de_uso: raw.condiciones || null,
             };
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
