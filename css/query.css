@@ -11,7 +11,7 @@
 .entity-select {
     position: relative;
     /* Ajuste de padding para dejar espacio al icono izquierdo */
-    padding: 8px 42px 8px 44px;
+    padding: 10px 44px;
     border-radius: 12px;
     border: 2px solid #222;
     /* Multi‑background: icono izquierda, flecha derecha, y gradiente base */
@@ -28,6 +28,7 @@
     outline: none;
     appearance: none;
     min-width: 170px;
+
 }
 
 .entity-select:hover {
@@ -371,6 +372,26 @@ input[type="reset"],
     border-radius: 8px;
     font-weight: 700;
     box-shadow: none;
+}
+
+/* Botones de exportar y volver en fila horizontal */
+.btn-group.horizontal {
+    display: flex;
+    gap: .8em;
+    justify-content: center;
+    margin-top: 1em;
+}
+
+/* Iconos y etiquetas para los botones */
+.export-icon, .back-icon {
+    height: 2em;
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+
+.export-label, .back-label {
+    font-size: 1.2em;
+    vertical-align: middle;
 }
 
 /* Make modal responsive for small screens */

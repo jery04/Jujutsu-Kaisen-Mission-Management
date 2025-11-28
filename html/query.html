@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta | Jujutsu Kaisen</title>
+    <title>Consultas | Jujutsu Kaisen</title>
     <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
     <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="/css/query.css">
@@ -42,8 +42,16 @@
             </div>
             <!-- Botones de exportación y volver (apilados verticalmente) -->
             <div class="btn-group stacked">
-                <button id="export-pdf" class="btn-action">Exportar consulta</button>
-                <a id="go-back" class="btn-action" href="/index.html">Volver</a>
+                <div class="btn-group horizontal">
+                    <button id="export-pdf" class="btn-action">
+                        <img src="/img/exportar.png" alt="Exportar" class="export-icon">
+                        <span class="export-label">Exportar consulta</span>
+                    </button>
+                    <a id="go-back" class="btn-action" href="/index.html">
+                        <img src="/img/back.png" alt="Volver" class="back-icon">
+                        <span class="back-label">Volver</span>
+                    </a>
+                </div>
             </div>
 
             <!-- Modal simple para elegir formato de exportación -->

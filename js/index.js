@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('btn-logout');
   const userNameEl = document.getElementById('user-name');
   const userAvatarEl = document.getElementById('user-avatar');
+  const queryplusBtn = document.getElementById('open-queryplus');
+
 
 
   if (signupBtn) {
@@ -51,6 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
     addBtn.addEventListener('click', () => {
       // Navigate to the add page (relative to index.html)
       window.location.href = 'html/register.html';
+    });
+  }
+
+  if (queryplusBtn) {
+    queryplusBtn.addEventListener('click', () => {
+      // Navigate to the add page (relative to index.html)
+      window.location.href = 'html/queryplus.html';
     });
   }
 
