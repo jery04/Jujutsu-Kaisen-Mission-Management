@@ -310,7 +310,9 @@
           const routeMap = {
             sorcerer: '/sorcerer/',
             technique: '/technique/',
-            curses: '/curses/'
+            curses: '/curses/',
+            resource: '/resources/',
+            recursos: '/resources/'
           };
           const base = routeMap[entity] || (`/${entity}/`);
           try {
