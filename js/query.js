@@ -335,11 +335,16 @@
           ev.stopPropagation();
           const item = btnEdit.closest('.query-item');
           if (!item) return;
-          const entity = item.dataset.entity;
+          let entity = item.dataset.entity;
           const id = item.dataset.id;
           if (!entity || !id) return;
 
-            try {
+          // Normalizar el nombre de la entidad para recursos
+          if (entity === 'resource' || entity === 'recursos') {
+            entity = 'recurso';
+          }
+
+          try {
             const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
             if (!isAdmin) {
               const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;

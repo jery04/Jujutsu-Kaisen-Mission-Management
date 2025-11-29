@@ -18,15 +18,21 @@
     const endpointMap = {
         sorcerer: '/sorcerer',
         technique: '/technique',
-        curses: '/curses'
+        curses: '/curses',
+        resource: '/resources'
     };
 
     function showFor(value) {
         fieldsets.forEach(fs => {
             const active = (fs.getAttribute('data-for') === value);
-            fs.style.display = active ? '' : 'none';
-            // Deshabilitar los fieldsets no activos para evitar validación en campos ocultos
-            fs.disabled = !active;
+            // Para recurso, mostrar solo el fieldset de recurso
+            if (value === 'recurso') {
+                fs.style.display = active ? 'block' : 'none';
+                fs.disabled = !active;
+            } else {
+                fs.style.display = active ? '' : 'none';
+                fs.disabled = !active;
+            }
         });
         if (value === 'maldicion') { prefillDatalists().catch((e) => { console.debug('prefill datalists (maldicion) failed', e); }); }
     }
@@ -111,7 +117,9 @@
 
     async function loadExisting() {
         if (!entity || !id) return; // no editing context
-        const apiEntity = entity; // original entity code from query page
+        // Normalizar entity para recursos
+        let apiEntity = entity;
+        if (apiEntity === 'recurso') apiEntity = 'resource';
         const base = endpointMap[apiEntity];
         if (!base) { return; }
         try {
@@ -127,9 +135,14 @@
                 return;
             }
             // Preload form fields depending on type
-            const fsKey = normalizeEntity(apiEntity);
+            // Mantener fsKey como 'recurso' si la entidad original era 'recurso'
+            const fsKey = entity === 'recurso' ? 'recurso' : normalizeEntity(apiEntity);
             showFor(fsKey);
-            if (fsKey === 'hechicero') {
+            if (fsKey === 'recurso') {
+                // Cargar el nombre del recurso en el input correspondiente
+                const nombreInput = document.getElementById('r_nombre');
+                if (nombreInput) nombreInput.value = record.nombre || '';
+            } else if (fsKey === 'hechicero') {
                 const nombreInput = document.getElementById('h_nombre');
                 const gradoSelect = document.getElementById('h_grado');
                 const estadoSelect = document.getElementById('h_estado_operativo');
@@ -222,7 +235,10 @@
         if (!activeFs) return null;
         const inputs = Array.from(activeFs.querySelectorAll('input, select, textarea'));
         const raw = {}; inputs.forEach(i => { if (i.name) raw[i.name] = i.value; });
-        if (fsKey === 'hechicero') {
+        if (fsKey === 'recurso') {
+            // Solo nombre para recurso
+            return { nombre: raw.nombre };
+        } else if (fsKey === 'hechicero') {
             const gradoMap = { 'grado medio': 'grado_medio', 'grado alto': 'grado_alto', 'grado especial': 'grado_especial' };
             const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
                 return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
@@ -260,8 +276,10 @@
             }
             return;
         }
-        const apiEntity = entity || 'sorcerer';
-        const fsKey = normalizeEntity(apiEntity);
+        // Normalizar entity para recursos
+        let apiEntity = entity || 'sorcerer';
+        if (apiEntity === 'recurso') apiEntity = 'resource';
+        const fsKey = entity === 'recurso' ? 'recurso' : normalizeEntity(apiEntity);
         const payload = buildUpdatePayload(fsKey);
         if (!payload) { return; }
         const baseEndpoint = endpointMap[apiEntity];
