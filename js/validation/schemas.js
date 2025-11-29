@@ -52,11 +52,18 @@ const missionCreate = z.object({
 });
 
 // Usuario schemas
+
 const userRegister = z.object({
     username: nonEmpty('Usuario es requerido').max(120),
     password: nonEmpty('Contraseña es requerida').max(255)
 });
 const userLogin = userRegister;
+
+// Resource schema
+const resourceCreate = z.object({
+    nombre: nonEmpty('Nombre es requerido').max(150)
+});
+const resourceUpdate = resourceCreate.partial();
 
 module.exports = {
     sorcererCreate,
@@ -65,7 +72,9 @@ module.exports = {
     techniqueUpdate,
     curseCreate,
     curseUpdate,
-    missionCreate
-    , userRegister
-    , userLogin
+    missionCreate,
+    userRegister,
+    userLogin,
+    resourceCreate,
+    resourceUpdate
 };

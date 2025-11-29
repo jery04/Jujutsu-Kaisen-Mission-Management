@@ -146,6 +146,12 @@
         } else if (entityType === 'maldicion') {
             payload = { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
             endpoint += '/curses';
+        } else if (entityType === 'recurso') {
+            // Construye el payload para Resource (solo nombre)
+            payload = {
+                nombre: raw.nombre
+            };
+            endpoint += '/resources';
         } else {
             clearResult();
             resultEl.innerHTML = 'Entidad no soportada';

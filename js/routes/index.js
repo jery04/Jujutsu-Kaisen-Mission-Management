@@ -10,6 +10,7 @@ module.exports = function registerRoutes(app, db) {
     const missionController = require('../controllers/missionController')(db);
     const userController = require('../controllers/userController')(db);
     const ownershipController = require('../controllers/ownershipController')(db);
+    const resourceController = require('../controllers/resourceController')(db);
     // Validation
     const { validateBody } = require('../middleware/validate');
     const schemas = require('../validation/schemas');
@@ -40,6 +41,13 @@ module.exports = function registerRoutes(app, db) {
     app.post('/curses', validateBody(schemas.curseCreate), curseController.create);
     app.put('/curses/:id', validateBody(schemas.curseUpdate), curseController.update);
     app.delete('/curses/:id', curseController.remove);
+
+    // Resources
+    app.get('/resources', resourceController.getAllResources);
+    app.get('/resources/:id', resourceController.getResourceById);
+    app.post('/resources', validateBody(schemas.resourceCreate), resourceController.createResource);
+    app.put('/resources/:id', validateBody(schemas.resourceUpdate), resourceController.updateResource);
+    app.delete('/resources/:id', resourceController.deleteResource);
 
     // No admin endpoints
 
