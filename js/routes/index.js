@@ -46,8 +46,8 @@ module.exports = function registerRoutes(app, db) {
     // Resources
     app.get('/resources', resourceController.getAllResources);
     app.get('/resources/:id', resourceController.getResourceById);
-    app.post('/resources', authMiddleware, validateBody(schemas.resourceCreate), resourceController.createResource);
-    app.put('/resources/:id', authMiddleware, validateBody(schemas.resourceUpdate), resourceController.updateResource);
+    app.post('/resources', validateBody(schemas.resourceCreate), resourceController.createResource);
+    app.put('/resources/:id', validateBody(schemas.resourceUpdate), resourceController.updateResource);
     app.delete('/resources/:id', resourceController.deleteResource);
 
     // No admin endpoints

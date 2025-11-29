@@ -5,10 +5,17 @@ module.exports = function(db) {
   return {
     async createResource(req, res, next) {
       try {
-        // Suponiendo que el id del usuario está en req.user.id (ajusta si tu middleware lo pone en otro lugar)
-        const userId = req.headers['x-usuario'] || req.user?.id;
+        // Si no hay usuario, busca el primer usuario válido
+        let userId = req.user?.id || req.headers['x-usuario'];
         if (!userId) {
-          return res.status(401).json({ message: 'Usuario no autenticado' });
+          // Buscar el primer usuario en la base de datos
+          const UsuarioRepo = require('../repositories/BaseRepository');
+          const usuarioRepo = new UsuarioRepo(db, 'Usuario');
+          const firstUser = await usuarioRepo.getAll({ take: 1 });
+          userId = firstUser && firstUser.length > 0 ? firstUser[0].nombre_usuario : null;
+        }
+        if (!userId) {
+          return res.status(400).json({ message: 'No existe ningún usuario en el sistema para asignar como creador.' });
         }
         const resourceData = { ...req.body, createdBy: userId };
         const resource = await ResourceService.createResource(resourceData);
@@ -38,12 +45,8 @@ module.exports = function(db) {
     },
     async updateResource(req, res, next) {
       try {
-        // Unificar: usar el mismo header que en createResource
-        const userId = req.headers['x-usuario'] || req.user?.id;
-        if (!userId) {
-          return res.status(401).json({ message: 'Usuario no autenticado' });
-        }
-        const updated = await ResourceService.updateResource(req.params.id, req.body, userId);
+        // Permitir actualización sin autenticación de usuario
+        const updated = await ResourceService.updateResource(req.params.id, req.body);
         if (!updated) {
           return res.status(404).json({ message: 'Resource not found' });
         }

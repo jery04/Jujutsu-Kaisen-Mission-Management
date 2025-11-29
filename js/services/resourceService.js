@@ -19,16 +19,10 @@ module.exports = function(db) {
       return await resourceRepository.getById(id);
     },
     async updateResource(id, data, userId) {
-      if (!userId) {
-        const err = new Error('Usuario no autenticado'); err.status = 401; throw err;
-      }
+      // Permitir actualización sin autenticación de usuario
       const resource = await resourceRepository.getById(id);
       if (!resource) {
         const err = new Error('Recurso no encontrado'); err.status = 404; throw err;
-      }
-      // Admin bypass
-      if (String(userId) !== 'admin' && resource.createdBy !== userId) {
-        const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err;
       }
       return await resourceRepository.update(id, data);
     },
