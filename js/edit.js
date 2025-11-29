@@ -1,3 +1,15 @@
+    // Verifica si el usuario actual es administrador
+    function isAdmin() {
+        // El admin se marca con isAdmin = '1' en localStorage/sessionStorage
+        const isAdminFlag = localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1';
+        if (isAdminFlag) {
+            console.debug('Usuario detectado como ADMIN por flag isAdmin');
+            return true;
+        } else {
+            console.debug('Usuario NO es admin. Falta flag isAdmin en storage.');
+        }
+        return false;
+    }
 (function () {
     'use strict';
     const API_BASE = window.API_BASE || window.location.origin;
@@ -280,6 +292,18 @@
         let apiEntity = entity || 'sorcerer';
         if (apiEntity === 'recurso') apiEntity = 'resource';
         const fsKey = entity === 'recurso' ? 'recurso' : normalizeEntity(apiEntity);
+
+        // Solo permitir edición de hechicero, maldición y técnica si es admin
+        if (["hechicero", "maldicion", "tecnica"].includes(fsKey) && !isAdmin()) {
+            if (resultEl) {
+                resultEl.style.display = 'block';
+                resultEl.style.backgroundColor = '#f8d7da';
+                resultEl.style.color = '#721c24';
+                resultEl.innerHTML = 'Solo el administrador puede editar esta entidad.';
+            }
+            return;
+        }
+
         const payload = buildUpdatePayload(fsKey);
         if (!payload) { return; }
         const baseEndpoint = endpointMap[apiEntity];
@@ -298,9 +322,13 @@
 
         try {
             const headers = { 'Content-Type': 'application/json' };
-            // Solo enviar el usuario si existe, sin validación ni lógica extra
-            const user = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
-            if (user) headers['x-user-id'] = user;
+            // Si el usuario es admin, enviar 'admin' como x-user-id
+            let user = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
+            if (isAdmin()) {
+                headers['x-user-id'] = 'admin';
+            } else if (user) {
+                headers['x-user-id'] = user;
+            }
             const resp = await fetch(url, { method, headers, body: JSON.stringify(payload) });
             let body; try { body = await resp.json(); } catch { body = {}; }
             if (!resp.ok) {

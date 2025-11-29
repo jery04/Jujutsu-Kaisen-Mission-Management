@@ -15,13 +15,15 @@ module.exports = {
     const fechaDate = new Date(fecha);
     const dup = await curseRepo.findOne({ where: { nombre, fecha_aparicion: fechaDate } });
     if (dup) { const err = new Error('Maldición ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    const saved = await curseRepo.add({ nombre, grado, tipo, fecha_aparicion: fechaDate, ubicacion, estado_actual: estado || '' });
-    if (saved && userId) {
-      try {
-        const linkRepo = getRepository(db, 'UserCurse');
-        await linkRepo.add({ user_id: userId, curse_id: saved.id });
-      } catch (e) { console.warn('[curseService] No se pudo vincular maldición a usuario:', e.message); }
-    }
+    const saved = await curseRepo.add({
+      nombre,
+      grado,
+      tipo,
+      fecha_aparicion: fechaDate,
+      ubicacion,
+      estado_actual: estado || '',
+      createBy: userId
+    });
     return saved;
   },
   async list(db, estado) {
@@ -51,11 +53,15 @@ module.exports = {
     // Verificar permiso de edición: solo el creador (admin bypass)
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     if (String(userId) !== 'admin') {
-      try {
-        const linkRepo = getRepository(db, 'UserCurse');
-        const link = await linkRepo.getOne({ curse_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
-      } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+      const curse = await repo.getById(id);
+      if (!curse) { const err = new Error('Maldición no encontrada'); err.status = 404; throw err; }
+      const creador = (curse.createBy || '').toString().trim().toLowerCase();
+      const actual = (userId || '').toString().trim().toLowerCase();
+      if (creador !== actual) {
+        const err = new Error('No autorizado: solo el creador puede editar');
+        err.status = 403;
+        throw err;
+      }
     }
 
     return await repo.update(id, partial);
@@ -64,11 +70,15 @@ module.exports = {
     const repo = getRepository(db, 'Curse');
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     if (String(userId) !== 'admin') {
-      try {
-        const linkRepo = getRepository(db, 'UserCurse');
-        const link = await linkRepo.getOne({ curse_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
-      } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+      const curse = await repo.getById(id);
+      if (!curse) { const err = new Error('Maldición no encontrada'); err.status = 404; throw err; }
+      const creador = (curse.createBy || '').toString().trim().toLowerCase();
+      const actual = (userId || '').toString().trim().toLowerCase();
+      if (creador !== actual) {
+        const err = new Error('No autorizado: solo el creador puede eliminar');
+        err.status = 403;
+        throw err;
+      }
     }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };

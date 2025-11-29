@@ -23,8 +23,6 @@ const PrincipalAssignment = require('../database_tables/PrincipalAssignment');
 const SorcererDeathCause = require('../database_tables/SorcererDeathCause');
 const SorcererSubordination = require('../database_tables/SorcererSubordination');
 const Usuario = require('../database_tables/Usuario');
-// Tablas de vínculo usuario-entidad
-const UserCurse = require('../database_tables/UserCurse');
 // ...existing code...
 
 // Express
@@ -109,7 +107,6 @@ if (process.env.NODE_ENV === 'test') {
       SorcererDeathCause,
       SorcererSubordination,
       Usuario,
-      UserCurse,
       // ...existing code...
     ],
     synchronize: true // Habilitar sincronización automática para desarrollo
