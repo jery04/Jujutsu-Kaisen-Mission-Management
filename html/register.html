@@ -26,6 +26,7 @@
             <option value="hechicero">Crear hechicero</option>
             <option value="tecnica">Crear técnica maldita</option>
             <option value="maldicion">Crear maldición</option>
+            <option value="recurso">Crear recurso</option>
         </select>
     </div>
     <div class="container">
@@ -58,6 +59,19 @@
                     <span style="color:#d00000; font-weight:700;">Info:</span>
                     <p>
                         Un hechicero es un combatiente especializado en exorcizar maldiciones, clasificado por grado y experiencia. Participa en misiones, usa técnicas malditas, registra resultados y colabora con personal de soporte para coordinar operaciones, optimizar recursos y enfrentar amenazas sobrenaturales.
+                    </p>
+                </div>
+            </fieldset>
+
+            <!-- Recurso -->
+            <fieldset data-for="recurso" style="display:none">
+                <label for="r_nombre">Nombre</label>
+                <input id="r_nombre" name="nombre" type="text" required>
+
+                <div class="info-box">
+                    <span style="color:#d00000; font-weight:700;">Info:</span>
+                    <p>
+                        Un recurso es cualquier elemento, objeto o herramienta que puede ser utilizado por los hechiceros en misiones para mejorar sus capacidades, facilitar el cumplimiento de objetivos o apoyar la gestión operativa. Registrar recursos permite optimizar su asignación y disponibilidad en el sistema.
                     </p>
                 </div>
             </fieldset>
