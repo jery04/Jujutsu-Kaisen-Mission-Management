@@ -15,6 +15,8 @@ module.exports = new EntitySchema({
     // Causa de muerte como string + fecha de muerte
     causa_muerte: { type: 'varchar', length: 255, nullable: true },
     fecha_fallecimiento: { type: 'date', nullable: true },
+    // Usuario que creó el hechicero
+    createBy: { type: 'varchar', length: 120, nullable: false }
     // Nota: se eliminaron campos no especificados por el usuario
   },
   relations: {},

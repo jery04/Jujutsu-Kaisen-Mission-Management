@@ -24,7 +24,6 @@ const SorcererDeathCause = require('../database_tables/SorcererDeathCause');
 const SorcererSubordination = require('../database_tables/SorcererSubordination');
 const Usuario = require('../database_tables/Usuario');
 // Tablas de vínculo usuario-entidad
-const UserSorcerer = require('../database_tables/UserSorcerer');
 const UserCurse = require('../database_tables/UserCurse');
 // ...existing code...
 
@@ -110,7 +109,6 @@ if (process.env.NODE_ENV === 'test') {
       SorcererDeathCause,
       SorcererSubordination,
       Usuario,
-      UserSorcerer,
       UserCurse,
       // ...existing code...
     ],
