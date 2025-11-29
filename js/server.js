@@ -117,10 +117,27 @@ if (process.env.NODE_ENV === 'test') {
     synchronize: true // Habilitar sincronización automática para desarrollo
   }).then(async (dbConn) => {
     console.log('Conectado a la base de datos jujutsu_misiones_db');
-    // Registrar rutas desacopladas (N-capas)
+    // Registrar rutas desacopladas (N-capas) y preparar Socket.IO
     try {
+      // Crear servidor HTTP y Socket.IO
+      const http = require('http');
+      const httpServer = http.createServer(app);
+      const { Server } = require('socket.io');
+      const io = new Server(httpServer, { cors: { origin: '*' } });
+      app.set('io', io);
+
+      // Rutas
       const registerRoutes = require('./routes/index');
       registerRoutes(app, dbConn);
+
+      // Suscribirse a eventos del bus y reenviar por Socket.IO
+      const events = require('./utils/events');
+      events.on('mission:created', (payload) => io.emit('mission:created', payload));
+      events.on('mission:closed', (payload) => io.emit('mission:closed', payload));
+      events.on('mission:started', (payload) => io.emit('mission:started', payload));
+
+      // Reemplazar listen para usar httpServer
+      app._httpServer = httpServer;
     } catch (e) {
       console.error('Error registrando rutas:', e);
       process.exit(1);
@@ -140,7 +157,7 @@ if (process.env.NODE_ENV === 'test') {
 
     const tryListen = (port) => {
       attempt += 1;
-      const server = app.listen(port, () => {
+      const server = (app._httpServer || app).listen(port, () => {
         console.log(`Servidor escuchando en http://localhost:${port}`);
       });
       server.on('error', (err) => {

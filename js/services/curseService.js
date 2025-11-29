@@ -22,6 +22,13 @@ module.exports = {
         await linkRepo.add({ user_id: userId, curse_id: saved.id });
       } catch (e) { console.warn('[curseService] No se pudo vincular maldición a usuario:', e.message); }
     }
+    // Auto-generación de misión vinculada a la maldición
+    try {
+      const missionService = require('./missionService');
+      await missionService.createForCurse(db, saved);
+    } catch (e) {
+      console.warn('[curseService] No se pudo autogenerar misión para la maldición:', e.message);
+    }
     return saved;
   },
   async list(db, estado) {

@@ -1,3 +1,29 @@
+## Eventos en tiempo real
+
+- `mission:created`: Emitido al autogenerar una misión por nueva maldición.
+- `mission:started`: Emitido al iniciar una misión (estado `en_ejecucion`).
+- `mission:closed`: Emitido al cerrar una misión con resultado (éxito/fracaso).
+
+## Endpoints relevantes
+
+- `POST /curses`: Crea una maldición (`{ nombre, grado, tipo, ubicacion, fecha_aparicion, estado_actual }`) y autogenera misión.
+- `POST /missions/:id/start`: Inicia misión (estado `en_ejecucion`).
+- `POST /missions/:id/close`: Cierra misión (`{ resultado: 'exito' | 'fracaso', descripcion_evento?, danos_colaterales? }`).
+- `GET /missions/sorcerer/:id`: Lista misiones donde participó el hechicero.
+- `GET /missions/success-range?from=ISO&to=ISO`: Misiones completadas con éxito en rango.
+
+## Arquitectura N-capas
+
+- Rutas (`js/routes/index.js`) → Controladores (`js/controllers/*`) → Servicios (`js/services/*`) → Repositorios (`js/repositories/*`) → ORM (`database_tables/*`).
+
+## Asignación de equipos y ranking
+
+- `missionService.assignTeam`: Selecciona hechiceros activos y los ordena por grado y años de experiencia.
+- `missionService.createForCurse`: Define urgencia, crea misión y registra participantes (principal + equipo).
+
+## Estados de misión
+
+- `pendiente`, `en_ejecucion`, `completada_exito`, `completada_fracaso`, `cancelada`.
 # Jujutsu Misiones - Node.js API (EntitySchema)
 
 Contenido generado automáticamente.
