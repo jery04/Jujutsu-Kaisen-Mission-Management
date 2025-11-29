@@ -144,7 +144,20 @@
             };
             endpoint += '/technique';
         } else if (entityType === 'maldicion') {
-            payload = { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
+            let fechaIso = raw.fecha;
+            if (fechaIso) {
+                // Si viene de input datetime-local, conviértelo a ISO completo
+                const d = new Date(fechaIso);
+                if (!isNaN(d.getTime())) fechaIso = d.toISOString();
+            }
+            payload = {
+                nombre: raw.nombre,
+                grado: raw.grado,
+                tipo: raw.tipo,
+                ubicacion: raw.ubicacion,
+                fecha_aparicion: fechaIso,
+                estado_actual: raw.estado
+            };
             endpoint += '/curses';
         } else if (entityType === 'recurso') {
             // Construye el payload para Resource (solo nombre)
@@ -237,5 +250,4 @@
             } catch (_) { /* no-op */ }
         }
     }
-
 })();
