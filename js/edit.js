@@ -1,4 +1,4 @@
-    // Verifica si el usuario actual es administrador
+// Verifica si el usuario actual es administrador
     function isAdmin() {
         // El admin se marca con isAdmin = '1' en localStorage/sessionStorage
         const isAdminFlag = localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1';
@@ -293,15 +293,13 @@
         if (apiEntity === 'recurso') apiEntity = 'resource';
         const fsKey = entity === 'recurso' ? 'recurso' : normalizeEntity(apiEntity);
 
-        // Solo permitir edición de hechicero, maldición y técnica si es admin
-        if (["hechicero", "maldicion", "tecnica"].includes(fsKey) && !isAdmin()) {
-            if (resultEl) {
-                resultEl.style.display = 'block';
-                resultEl.style.backgroundColor = '#f8d7da';
-                resultEl.style.color = '#721c24';
-                resultEl.innerHTML = 'Solo el administrador puede editar esta entidad.';
+        // Solo permitir edición de hechicero, maldición y técnica si es admin o el creador
+        if (["hechicero", "maldicion", "tecnica"].includes(fsKey)) {
+            let currentUser = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
+            let createdBy = window._recordCreatedBy || null;
+            if (!isAdmin() && (!createdBy || createdBy !== currentUser)) {
+                // Muestra el mensaje de error y bloquea la edición
             }
-            return;
         }
 
         const payload = buildUpdatePayload(fsKey);
