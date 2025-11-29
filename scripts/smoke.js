@@ -48,8 +48,8 @@ async function get(path) {
             grado: '2',
             tipo: 'maligna',
             ubicacion: 'Shibuya',
-            fecha: new Date().toISOString(),
-            estado: 'activa'
+            fecha_aparicion: new Date().toISOString(),
+            estado_actual: 'activa'
         });
         console.log('Curse:', curse);
 
