@@ -185,7 +185,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    ...(userId ? { 'x-usuario': userId } : {})
+                        ...(userId ? { 'x-user-id': userId } : {})
                 },
                 body: JSON.stringify(payload),
             });

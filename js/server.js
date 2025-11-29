@@ -26,7 +26,7 @@ const Usuario = require('../database_tables/Usuario');
 // Tablas de vínculo usuario-entidad
 const UserSorcerer = require('../database_tables/UserSorcerer');
 const UserCurse = require('../database_tables/UserCurse');
-const UserTechnique = require('../database_tables/UserTechnique');
+// ...existing code...
 
 // Express
 const app = express();
@@ -112,7 +112,7 @@ if (process.env.NODE_ENV === 'test') {
       Usuario,
       UserSorcerer,
       UserCurse,
-      UserTechnique
+      // ...existing code...
     ],
     synchronize: true // Habilitar sincronización automática para desarrollo
   }).then(async (dbConn) => {

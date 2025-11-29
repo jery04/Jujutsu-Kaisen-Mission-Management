@@ -298,16 +298,9 @@
 
         try {
             const headers = { 'Content-Type': 'application/json' };
-            // Forzar envío de usuario desde localStorage/sessionStorage
-            const userKeys = ['username','userName','currentUserName','nombre','name'];
-            let user = null;
-            for (const k of userKeys) {
-                user = localStorage.getItem(k) || sessionStorage.getItem(k);
-                if (user && typeof user === 'string' && user.trim()) {
-                    headers['x-usuario'] = user.trim();
-                    break;
-                }
-            }
+            // Solo enviar el usuario si existe, sin validación ni lógica extra
+            const user = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
+            if (user) headers['x-user-id'] = user;
             const resp = await fetch(url, { method, headers, body: JSON.stringify(payload) });
             let body; try { body = await resp.json(); } catch { body = {}; }
             if (!resp.ok) {

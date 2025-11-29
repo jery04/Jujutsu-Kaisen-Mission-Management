@@ -24,10 +24,19 @@ module.exports = (db) => ({
         }
         return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
       }
+      if (entity === 'technique') {
+        // Verifica ownership por campo createBy en Technique
+        const repo = getRepository(db, 'Technique');
+        const technique = await repo.getById(id);
+        if (technique && String(technique.createBy) === String(userId)) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+        }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
       // Map entity type to linking repository and lookup criteria
       const map = {
         sorcerer: { repo: 'UserSorcerer', key: 'sorcerer_id' },
-        technique: { repo: 'UserTechnique', key: 'technique_id' },
+        // ...existing code...
         curses: { repo: 'UserCurse', key: 'curse_id' }
       };
 
