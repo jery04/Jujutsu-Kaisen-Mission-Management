@@ -15,6 +15,15 @@ module.exports = (db) => ({
       // Admin bypass: si el header indica 'admin' conceder acceso
       if (String(userId) === 'admin') return res.status(200).json({ canEdit: true, message: 'Acceso administrador' });
 
+      if (entity === 'resource') {
+        // Verifica ownership por campo createdBy en Resource
+        const repo = getRepository(db, 'Resource');
+        const resource = await repo.getById(id);
+        if (resource && String(resource.createdBy) === String(userId)) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+        }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
       // Map entity type to linking repository and lookup criteria
       const map = {
         sorcerer: { repo: 'UserSorcerer', key: 'sorcerer_id' },

@@ -11,6 +11,7 @@ module.exports = function registerRoutes(app, db) {
     const userController = require('../controllers/userController')(db);
     const ownershipController = require('../controllers/ownershipController')(db);
     const resourceController = require('../controllers/resourceController')(db);
+    const authMiddleware = require('../middleware/authMiddleware')();
     // Validation
     const { validateBody } = require('../middleware/validate');
     const schemas = require('../validation/schemas');
@@ -45,7 +46,7 @@ module.exports = function registerRoutes(app, db) {
     // Resources
     app.get('/resources', resourceController.getAllResources);
     app.get('/resources/:id', resourceController.getResourceById);
-    app.post('/resources', validateBody(schemas.resourceCreate), resourceController.createResource);
+    app.post('/resources', authMiddleware, validateBody(schemas.resourceCreate), resourceController.createResource);
     app.put('/resources/:id', validateBody(schemas.resourceUpdate), resourceController.updateResource);
     app.delete('/resources/:id', resourceController.deleteResource);
 

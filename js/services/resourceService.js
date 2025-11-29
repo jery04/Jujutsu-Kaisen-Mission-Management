@@ -6,6 +6,10 @@ module.exports = function(db) {
   const resourceRepository = new BaseRepository(db, 'Resource');
   return {
     async createResource(data) {
+      // Asegura que createdBy esté presente en los datos
+      if (!data.createdBy) {
+        throw new Error('El id del usuario creador es obligatorio');
+      }
       return await resourceRepository.add(data);
     },
     async getAllResources() {

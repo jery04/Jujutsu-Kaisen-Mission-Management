@@ -5,7 +5,13 @@ module.exports = function(db) {
   return {
     async createResource(req, res, next) {
       try {
-        const resource = await ResourceService.createResource(req.body);
+        // Suponiendo que el id del usuario está en req.user.id (ajusta si tu middleware lo pone en otro lugar)
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: 'Usuario no autenticado' });
+        }
+        const resourceData = { ...req.body, createdBy: userId };
+        const resource = await ResourceService.createResource(resourceData);
         res.status(201).json(resource);
       } catch (error) {
         next(error);
