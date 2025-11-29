@@ -109,7 +109,8 @@
                         setText('m_fecha', str);
                     } catch { setText('m_fecha', ent.fecha_aparicion); }
                 } else { setText('m_fecha', ''); }
-                setText('m_estado', ent && ent.estado);
+                // Mostrar estado_actual si existe, si no mostrar estado
+                setText('m_estado', ent && (ent.estado ?? ent.estado_actual));
             }
         } catch (err) {
             console.error(err);

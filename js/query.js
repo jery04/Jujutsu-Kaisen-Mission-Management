@@ -98,7 +98,15 @@
   }
 
   function renderCurses(payload) {
-    const data = Array.isArray(payload) ? payload : (payload && payload.data ? payload.data : []);
+    // Acepta array plano o {data: [...]} o {ok, data: [...]} o {count, data: [...]} o solo array
+    let data = [];
+    if (Array.isArray(payload)) {
+      data = payload;
+    } else if (payload && Array.isArray(payload.data)) {
+      data = payload.data;
+    } else if (payload && Array.isArray(payload.ok ? payload.data : payload.count ? payload.data : [])) {
+      data = payload.data;
+    }
     renderPaginated(data, function (c) {
       const lines = [
         `Grado: <strong>${c.grado || '-'}</strong> | Tipo: <strong>${c.tipo || '-'}</strong>`,

@@ -2,7 +2,9 @@ const { getRepository } = require('../repositories');
 
 module.exports = {
   async create(db, payload, userId) {
-    let { nombre, grado, tipo, ubicacion, fecha, estado } = payload || {};
+    let { nombre, grado, tipo, ubicacion, fecha_aparicion, estado_actual } = payload || {};
+    const fecha = fecha_aparicion;
+    const estado = estado_actual;
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
     if (!tipo) throw Object.assign(new Error('tipo requerido'), { status: 400 });
@@ -13,7 +15,7 @@ module.exports = {
     const fechaDate = new Date(fecha);
     const dup = await curseRepo.findOne({ where: { nombre, fecha_aparicion: fechaDate } });
     if (dup) { const err = new Error('Maldición ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    const saved = await curseRepo.add({ nombre, grado, tipo, fecha_aparicion: fechaDate, ubicacion, estado: estado || '' });
+    const saved = await curseRepo.add({ nombre, grado, tipo, fecha_aparicion: fechaDate, ubicacion, estado_actual: estado || '' });
     if (saved && userId) {
       try {
         const linkRepo = getRepository(db, 'UserCurse');
@@ -25,7 +27,7 @@ module.exports = {
   async list(db, estado) {
     const repo = getRepository(db, 'Curse');
     const options = {
-      where: estado ? { estado } : undefined,
+      where: estado ? { estado_actual: estado } : undefined,
       order: { grado: 'ASC', fecha_aparicion: 'DESC' }
     };
     return await repo.getAll(options);
@@ -38,13 +40,13 @@ module.exports = {
   },
   async update(db, id, payload, userId) {
     const repo = getRepository(db, 'Curse');
-    let { nombre, grado, tipo, ubicacion, fecha, estado } = payload || {};
+    let { nombre, grado, tipo, ubicacion, fecha_aparicion, estado_actual } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
     if (typeof grado === 'string') partial.grado = grado;
     if (typeof tipo === 'string') partial.tipo = tipo;
-    if (fecha) { const newDate = new Date(fecha); if (!isNaN(newDate.getTime())) partial.fecha_aparicion = newDate; }
-    if (estado != null) partial.estado = estado;
+    if (fecha_aparicion) { const newDate = new Date(fecha_aparicion); if (!isNaN(newDate.getTime())) partial.fecha_aparicion = newDate; }
+    if (estado_actual != null) partial.estado_actual = estado_actual;
     if (typeof ubicacion === 'string' && ubicacion.trim()) partial.ubicacion = ubicacion;
     // Verificar permiso de edición: solo el creador (admin bypass)
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }

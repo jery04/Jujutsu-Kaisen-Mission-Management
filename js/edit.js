@@ -173,14 +173,29 @@
             } else if (fsKey === 'maldicion') {
                 const nombreInput = document.getElementById('m_nombre');
                 if (nombreInput) nombreInput.value = record.nombre || '';
-                form.grado.value = record.grado || '1';
-                form.tipo.value = record.tipo || 'maligna';
-                form.ubicacion.value = record.ubicacion || '';
-                if (record.fecha_aparicion) {
-                    // convert to local datetime-local value
-                    form.fecha.value = formatLocalDateTime(record.fecha_aparicion);
+                    // Precargar el select de grado correctamente
+                    const gradoSelect = document.getElementById('m_grado');
+                    if (gradoSelect) {
+                        // Si el valor existe en las opciones, lo selecciona; si no, lo deja vacío
+                        const found = Array.from(gradoSelect.options).find(opt => opt.value === record.grado);
+                        gradoSelect.value = found ? record.grado : '';
+                    }
+                    const tipoSelect = document.getElementById('m_tipo');
+                    if (tipoSelect) tipoSelect.value = record.tipo || 'maligna';
+                    const ubicacionInput = document.getElementById('m_ubicacion');
+                    if (ubicacionInput) ubicacionInput.value = record.ubicacion || '';
+                    if (record.fecha_aparicion) {
+                        // convert to local datetime-local value
+                        form.fecha.value = formatLocalDateTime(record.fecha_aparicion);
+                    }
+                const estadoSelect = document.getElementById('m_estado');
+                // El campo en la base de datos es 'estado_actual', pero puede venir como 'estado' por compatibilidad
+                if (estadoSelect) {
+                    // Si el valor existe en las opciones, lo selecciona; si no, lo deja vacío
+                    const estadoValue = record.estado_actual || record.estado || '';
+                    const foundEstado = Array.from(estadoSelect.options).find(opt => opt.value === estadoValue);
+                    estadoSelect.value = foundEstado ? estadoValue : '';
                 }
-                form.estado.value = record.estado || '';
                 prefillDatalists().catch((e) => { console.debug('prefill datalists in loadExisting failed', e); });
             }
             // Mark editing mode
@@ -219,7 +234,14 @@
             const condiciones_de_uso = typeof raw.condiciones === 'string' ? raw.condiciones : '';
             return { nombre, tipo, descripcion, condiciones_de_uso };
         } else if (fsKey === 'maldicion') {
-            return { nombre: raw.nombre, grado: raw.grado, tipo: raw.tipo, ubicacion: raw.ubicacion, fecha: raw.fecha, estado: raw.estado };
+            return {
+                nombre: raw.nombre,
+                grado: raw.grado,
+                tipo: raw.tipo,
+                ubicacion: raw.ubicacion,
+                fecha_aparicion: raw.fecha,
+                estado_actual: raw.estado
+            };
         }
         return null;
     }

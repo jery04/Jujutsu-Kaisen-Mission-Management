@@ -14,8 +14,15 @@ module.exports = (db) => ({
         }
     },
     list: async (req, res) => {
-        try { const estado = req.query.estado || 'activa'; const data = await service.list(db, estado); res.json({ ok: true, count: data.length, data }); }
-        catch (err) { console.error(err); res.status(500).json({ ok: false, message: 'Error obteniendo maldiciones' }); }
+        try {
+            // Si no se especifica estado, devuelve todas
+            const estado = req.query.estado;
+            const data = await service.list(db, estado);
+            res.json(Array.isArray(data) ? data : { ok: true, count: data.length, data });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ ok: false, message: 'Error obteniendo maldiciones' });
+        }
     },
     getById: async (req, res) => {
         try { const ent = await service.getById(db, req.params.id); res.json(ent); }
