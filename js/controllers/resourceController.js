@@ -6,7 +6,7 @@ module.exports = function(db) {
     async createResource(req, res, next) {
       try {
         // Suponiendo que el id del usuario está en req.user.id (ajusta si tu middleware lo pone en otro lugar)
-        const userId = req.user?.id;
+        const userId = req.headers['x-usuario'] || req.user?.id;
         if (!userId) {
           return res.status(401).json({ message: 'Usuario no autenticado' });
         }
@@ -38,7 +38,12 @@ module.exports = function(db) {
     },
     async updateResource(req, res, next) {
       try {
-        const updated = await ResourceService.updateResource(req.params.id, req.body);
+        // Unificar: usar el mismo header que en createResource
+        const userId = req.headers['x-usuario'] || req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: 'Usuario no autenticado' });
+        }
+        const updated = await ResourceService.updateResource(req.params.id, req.body, userId);
         if (!updated) {
           return res.status(404).json({ message: 'Resource not found' });
         }

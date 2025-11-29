@@ -236,7 +236,7 @@
         const inputs = Array.from(activeFs.querySelectorAll('input, select, textarea'));
         const raw = {}; inputs.forEach(i => { if (i.name) raw[i.name] = i.value; });
         if (fsKey === 'recurso') {
-            // Solo nombre para recurso
+            // Solo nombre para recurso, createdBy se pone automáticamente en el backend
             return { nombre: raw.nombre };
         } else if (fsKey === 'hechicero') {
             const gradoMap = { 'grado medio': 'grado_medio', 'grado alto': 'grado_alto', 'grado especial': 'grado_especial' };
@@ -297,10 +297,17 @@
         }
 
         try {
-            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
-            const currentUser = isAdmin ? 'admin' : ((window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null);
             const headers = { 'Content-Type': 'application/json' };
-            if (currentUser) headers['x-user-id'] = currentUser;
+            // Forzar envío de usuario desde localStorage/sessionStorage
+            const userKeys = ['username','userName','currentUserName','nombre','name'];
+            let user = null;
+            for (const k of userKeys) {
+                user = localStorage.getItem(k) || sessionStorage.getItem(k);
+                if (user && typeof user === 'string' && user.trim()) {
+                    headers['x-usuario'] = user.trim();
+                    break;
+                }
+            }
             const resp = await fetch(url, { method, headers, body: JSON.stringify(payload) });
             let body; try { body = await resp.json(); } catch { body = {}; }
             if (!resp.ok) {
