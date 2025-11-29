@@ -119,6 +119,27 @@
     }, 'maldiciones');
   }
 
+  function renderResources(payload) {
+    // Acepta array plano o {data: [...]} o {ok, data: [...]} o {count, data: [...]} o solo array
+    let data = [];
+    if (Array.isArray(payload)) {
+      data = payload;
+    } else if (payload && Array.isArray(payload.data)) {
+      data = payload.data;
+    } else if (payload && Array.isArray(payload.ok ? payload.data : payload.count ? payload.data : [])) {
+      data = payload.data;
+    }
+    renderPaginated(data, function (r) {
+      const lines = [
+        `ID: <strong>${r.id || '-'}</strong>`
+      ];
+      const item = makeItem(r.nombre || '-', lines);
+      item.dataset.entity = 'resource';
+      if (r.id != null) item.dataset.id = String(r.id);
+      results.appendChild(item);
+    }, 'recursos');
+  }
+
   // helper de carga simple: captura errores y muestra mensaje
   async function loadList(path, renderer) {
     clearResults();
@@ -135,6 +156,7 @@
   function loadSorcerers() { return loadList('/sorcerer', renderSorcerers); }
   function loadTechniques() { return loadList('/technique', renderTechniques); }
   function loadCurses() { return loadList('/curses', renderCurses); }
+  function loadResources() { return loadList('/resources', renderResources); }
 
   document.addEventListener('DOMContentLoaded', function () {
     // flash corto (si existe)
@@ -167,6 +189,7 @@
     if (entitySelect) entitySelect.addEventListener('change', function () {
       if (entitySelect.value === 'technique') loadTechniques();
       else if (entitySelect.value === 'curses') loadCurses();
+      else if (entitySelect.value === 'recursos' || entitySelect.value === 'resource') loadResources();
       else loadSorcerers();
     });
 
@@ -176,8 +199,9 @@
       const view = params.get('entity');
       if (view === 'technique') loadTechniques();
       else if (view === 'curses') loadCurses();
+      else if (view === 'recursos' || view === 'resource') loadResources();
       else loadSorcerers();
-      if (entitySelect && (view === 'technique' || view === 'curses' || view === 'sorcerer')) entitySelect.value = view;
+      if (entitySelect && (view === 'technique' || view === 'curses' || view === 'sorcerer' || view === 'recursos' || view === 'resource')) entitySelect.value = view;
     } catch (e) {
       loadSorcerers();
     }
@@ -223,19 +247,30 @@
 
         // Borrar: petición DELETE + animación de salida
 
-    // robust go-back handler para el enlace con id 'go-back'
-    try {
-      const directBack = document.getElementById('go-back');
-      if (directBack) {
-        directBack.addEventListener('click', function (e) {
-          e.preventDefault();
-          const primary = directBack.getAttribute('href') || '/index.html';
-          window.location.href = primary;
-        });
-      }
-    } catch (e) {
-      // noop
-    }
+        // robust go-back handler para el enlace con id 'go-back'
+        try {
+          const directBack = document.getElementById('go-back');
+          if (directBack) {
+            directBack.addEventListener('click', function (e) {
+              e.preventDefault();
+              const primary = directBack.getAttribute('href') || '/index.html';
+              window.location.href = primary;
+            });
+          }
+        } catch (e) {}
+
+        // ...existing code...
+        // Click en el item (fuera de botones) -> ver detalle
+        if (!btnDelete && !btnEdit) {
+          const item = ev.target.closest('.query-item');
+          if (!item) return;
+          const entity = item.dataset.entity;
+          const id = item.dataset.id;
+          if (entity && id) {
+            window.location.href = `/html/show.html?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+            return;
+          }
+        }
         if (btnDelete) {
           ev.stopPropagation();
           const item = btnDelete.closest('.query-item');

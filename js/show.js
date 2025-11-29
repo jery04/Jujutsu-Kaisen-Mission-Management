@@ -8,7 +8,7 @@
     const goBackBtn = document.getElementById('goBackBtn');
 
     const params = new URLSearchParams(window.location.search);
-    const entity = params.get('entity'); // 'sorcerer' | 'technique' | 'curses'
+    const entity = params.get('entity'); // 'sorcerer' | 'technique' | 'curses' | 'resources'
     const id = params.get('id');
 
     const endpointMap = { sorcerer: '/sorcerer', technique: '/technique', curses: '/curses' };
@@ -21,10 +21,13 @@
         });
     }
 
+    const recursoEndpoint = '/resources';
+
     function normalizeEntity(e) {
         if (e === 'sorcerer') return 'hechicero';
         if (e === 'technique') return 'tecnica';
         if (e === 'curses') return 'maldicion';
+        if (e === 'recursos' || e === 'resource') return 'recurso';
         return 'hechicero';
     }
 
@@ -39,9 +42,12 @@
             resultEl.textContent = 'No se especificó entidad o id.';
             return;
         }
-        const base = endpointMap[entity];
-        if (!base) { return; }
-        const fsKey = normalizeEntity(entity);
+        let base = endpointMap[entity];
+        let fsKey = normalizeEntity(entity);
+        if (entity === 'recursos' || entity === 'resource') {
+            base = recursoEndpoint;
+            fsKey = 'recurso';
+        }
         try {
             const r = await fetch(`${API_BASE}${base}/${encodeURIComponent(id)}`);
             const raw = await r.text();
@@ -111,7 +117,11 @@
                 } else { setText('m_fecha', ''); }
                 // Mostrar estado_actual si existe, si no mostrar estado
                 setText('m_estado', ent && (ent.estado ?? ent.estado_actual));
+            } else if (fsKey === 'recurso') {
+                setText('r_nombre', ent && ent.nombre);
             }
+                // Si tienes más campos, agrégalos aquí
+            
         } catch (err) {
             console.error(err);
             resultEl.style.display = 'block';
