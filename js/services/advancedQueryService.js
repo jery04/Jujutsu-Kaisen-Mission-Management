@@ -1,38 +1,22 @@
-const AdvancedQueryRepository = require('../repositories/AdvancedQueryRepository');
-const db = require('../../database'); // Ajusta la ruta según tu estructura
-
-class AdvancedQueryService {
-  constructor() {
-    this.advancedQueryRepository = new AdvancedQueryRepository(db);
+// Servicio ligero de consultas avanzadas (requiere inyección de db desde server.js)
+// Mantiene estilo N-capas: controlador -> servicio -> db.
+module.exports = {
+  async getCursesByState(db, estado) {
+    const [rows] = await db.query(`
+      SELECT c.nombre, c.ubicacion, c.grado
+      FROM Curse c
+      WHERE c.estado_actual = ?
+    `, [estado]);
+    return rows;
+  },
+  async getMissionsBySorcerer(db, sorcererId) {
+    const [rows] = await db.query(`
+      SELECT m.id, m.estado, m.ubicacion, m.fecha_inicio, m.fecha_fin
+      FROM Mission m
+      INNER JOIN MissionParticipant mp ON mp.mission_id = m.id
+      WHERE mp.sorcerer_id = ?
+      ORDER BY m.fecha_inicio DESC
+    `, [sorcererId]);
+    return rows;
   }
-
-  async getCursesByState(estado) {
-    return await this.advancedQueryRepository.getCursesByState(estado);
-  }
-
-  async getMissionsBySorcerer(sorcererId) {
-    return await this.advancedQueryRepository.getMissionsBySorcerer(sorcererId);
-  }
-
-  async getSuccessfulMissionsInRange(fechaInicio, fechaFin) {
-    return await this.advancedQueryRepository.getSuccessfulMissionsInRange(fechaInicio, fechaFin);
-  }
-
-  async getSorcererTechniqueEffectiveness() {
-    return await this.advancedQueryRepository.getSorcererTechniqueEffectiveness();
-  }
-
-  async getTopSorcerersByMissionLevelAndRegion(region) {
-    return await this.advancedQueryRepository.getTopSorcerersByMissionLevelAndRegion(region);
-  }
-
-  async getSorcererTeamPerformance() {
-    return await this.advancedQueryRepository.getSorcererTeamPerformance();
-  }
-
-  async getEffectivenessComparisonCriticalSpecial() {
-    return await this.advancedQueryRepository.getEffectivenessComparisonCriticalSpecial();
-  }
-}
-
-module.exports = new AdvancedQueryService();
+};
