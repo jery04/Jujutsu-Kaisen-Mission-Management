@@ -5,8 +5,16 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
 
             if (idx === 0) {
-                // Bloque para el botón 1: marcar para eliminar el div en la siguiente página
-                eliminarSelect();
+                // Bloque para el botón 1
+                try {
+                    sessionStorage.setItem('estadoOptions', JSON.stringify([
+                        'activa',
+                        'en proceso de exorcismo',
+                        'exorcizada'
+                    ]));
+                } catch (e) {
+                    console.warn('No se pudo guardar estadoOptions en sessionStorage', e);
+                }
             } else if (idx === 1) {
                 // Bloque para el botón 2
             } else if (idx === 2) {
@@ -22,14 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Después de ejecutar la lógica del botón (p. ej. establecer banderas), redirigimos
-            window.location.href = 'showqueryplus.html';
-
+            window.location.href = 'query.html';
         });
     });
-    
-
-    // Función para indicar a la siguiente página que elimine el div
-    function eliminarSelect() {
-        
-    }
 });

@@ -1,0 +1,232 @@
+/* Estilos específicos para el bloque #results y elementos internos */
+
+/* Results list stacked with spacing */
+.results-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    padding: 0 20%;
+}
+
+/* Each result as a boxed row */
+.query-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid #d4d4d8;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+    transition: transform .25s ease, opacity .35s ease;
+}
+
+/* Estado al eliminar: se desvanece y reduce ligeramente */
+.query-item.fade-out {
+    opacity: 0;
+    transform: scale(0.96);
+}
+
+.query-item:hover {
+    transform: scale(1.02);
+}
+
+/* On click/press, reset scale to 1 for a pressed effect,
+   except when the click is on an internal action button */
+.query-item:active:not(:has(.icon-btn:active)) {
+    transform: scale(1);
+}
+
+.query-item h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* Right-side action container */
+.btn-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Icon-only buttons: no shape or default styles */
+.icon-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    line-height: 0;
+    transition: transform .25s ease, filter .2s ease;
+}
+
+.icon-btn .icon {
+    width: 40px;
+    height: 40px;
+    display: block;
+    transition: transform .25s ease, filter .2s ease;
+}
+
+.icon-btn:hover .icon {
+    filter: brightness(1.2);
+    transform: scale(1.1);
+}
+
+.icon-btn:active .icon {
+    transform: scale(1);
+}
+
+/* Paginación relacionada con resultados */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.pagination-controls button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Botones y UI de exportación/volver (extraídos de query.css) */
+.query-section .btn-group.stacked {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.query-section .btn-group .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: #e4e4e7;
+    color: #222;
+    font-weight: 600;
+    border: 2px solid #222;
+    cursor: pointer;
+    box-shadow: -3px 3px 4px rgba(0, 0, 0, 0.3);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+/* Botones de exportar y volver en fila horizontal */
+.btn-group.horizontal {
+    display: flex;
+    gap: .8em;
+    justify-content: center;
+    margin-top: 1em;
+}
+
+/* Iconos y etiquetas para los botones */
+.export-icon, .back-icon {
+    height: 2em;
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+
+.export-label, .back-label {
+    font-size: 1.2em;
+    vertical-align: middle;
+}
+
+/* Modal export styles */
+/* Backdrop covering whole viewport; ensure highest z-index so header doesn't overlap */
+#export-modal.export-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    display: none; /* controlled by [aria-hidden] or JS */
+    background: rgba(3, 7, 18, 0.62);
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    z-index: 100000; /* above most UI */
+}
+
+/* when aria-hidden is false show the modal */
+#export-modal.export-modal[aria-hidden="false"] {
+    display: flex;
+}
+
+.export-dialog {
+    width: 100%;
+    max-width: 520px;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 18px 48px rgba(2,6,23,0.35), 0 6px 18px rgba(2,6,23,0.12);
+    border: 1px solid rgba(34, 34, 34, 0.06);
+    animation: modalEnter 220ms cubic-bezier(.2,.9,.3,1);
+}
+
+@keyframes modalEnter {
+    from { opacity: 0; transform: translateY(6px) scale(0.996); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.export-title {
+    margin: 0 0 6px 0;
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.export-desc {
+    margin: 0 0 14px 0;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.export-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.export-option {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(180deg,#fff 0%, #f3f4f6 100%);
+    border: 1px solid rgba(15,23,42,0.06);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+    font-weight: 700;
+    color: #0b1220;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.export-option:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(15,23,42,0.12);
+}
+
+.export-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.export-cancel {
+    background: transparent;
+    border: none;
+    color: #111827;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+/* Make modal responsive for small screens */
+@media (max-width: 420px) {
+    .export-options { grid-template-columns: 1fr; }
+    .export-dialog { padding: 16px; border-radius: 12px; }
+}
