@@ -6,6 +6,10 @@ module.exports = function(db) {
   const resourceRepository = new BaseRepository(db, 'Resource');
   return {
     async createResource(data) {
+      // Asegura que createdBy esté presente en los datos
+      if (!data.createdBy) {
+        throw new Error('El id del usuario creador es obligatorio');
+      }
       return await resourceRepository.add(data);
     },
     async getAllResources() {
@@ -14,7 +18,12 @@ module.exports = function(db) {
     async getResourceById(id) {
       return await resourceRepository.getById(id);
     },
-    async updateResource(id, data) {
+    async updateResource(id, data, userId) {
+      // Permitir actualización sin autenticación de usuario
+      const resource = await resourceRepository.getById(id);
+      if (!resource) {
+        const err = new Error('Recurso no encontrado'); err.status = 404; throw err;
+      }
       return await resourceRepository.update(id, data);
     },
     async deleteResource(id) {

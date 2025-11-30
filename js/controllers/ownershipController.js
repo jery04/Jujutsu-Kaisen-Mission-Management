@@ -15,23 +15,44 @@ module.exports = (db) => ({
       // Admin bypass: si el header indica 'admin' conceder acceso
       if (String(userId) === 'admin') return res.status(200).json({ canEdit: true, message: 'Acceso administrador' });
 
+      if (entity === 'resource') {
+        // Verifica ownership por campo createdBy en Resource
+        const repo = getRepository(db, 'Resource');
+        const resource = await repo.getById(id);
+        if (resource && String(resource.createdBy) === String(userId)) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+        }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
+      if (entity === 'technique') {
+        // Verifica ownership por campo createBy en Technique
+        const repo = getRepository(db, 'Technique');
+        const technique = await repo.getById(id);
+        if (technique && String(technique.createBy) === String(userId)) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+        }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
+        if (entity === 'sorcerer') {
+          // Verifica ownership por campo createBy en Sorcerer
+          const repo = getRepository(db, 'Sorcerer');
+          const sorcerer = await repo.getById(id);
+          if (sorcerer && String(sorcerer.createBy) === String(userId)) {
+            return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+          }
+          return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+        }
       // Map entity type to linking repository and lookup criteria
-      const map = {
-        sorcerer: { repo: 'UserSorcerer', key: 'sorcerer_id' },
-        technique: { repo: 'UserTechnique', key: 'technique_id' },
-        curses: { repo: 'UserCurse', key: 'curse_id' }
-      };
-
-      const info = map[entity];
-      if (!info) return res.status(200).json({ canEdit: false, message: 'Entidad no soportada' });
-
-      const repo = getRepository(db, info.repo);
-      const where = {};
-      where[info.key] = Number(id);
-      where.user_id = userId;
-      const link = await repo.getOne(where).catch(() => null);
-      if (link) return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
-      return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      if (entity === 'curses') {
+        const repo = getRepository(db, 'Curse');
+        const curse = await repo.getById(id);
+        const creador = (curse && curse.createBy) ? curse.createBy.toString().trim().toLowerCase() : '';
+        const actual = (userId || '').toString().trim().toLowerCase();
+        if (creador && creador === actual) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
+        }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
     } catch (e) {
       console.error('[ownershipController] Error verificando propiedad:', e && e.message ? e.message : e);
       return res.status(500).json({ canEdit: false, message: 'Error verificando permisos' });

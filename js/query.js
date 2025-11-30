@@ -158,6 +158,56 @@
   function loadCurses() { return loadList('/curses', renderCurses); }
   function loadResources() { return loadList('/resources', renderResources); }
 
+  // Buscar entidades por nombre (igual o substring, case-insensitive)
+  async function searchEntities(entity, query) {
+    if (!entity || !query) return;
+    const q = String(query).toLowerCase();
+    const routeMap = {
+      sorcerer: '/sorcerer',
+      technique: '/technique',
+      curses: '/curses',
+      resource: '/resources',
+      recursos: '/resources'
+    };
+    const rendererMap = {
+      sorcerer: renderSorcerers,
+      technique: renderTechniques,
+      curses: renderCurses,
+      resource: renderResources,
+      recursos: renderResources
+    };
+
+    const path = routeMap[entity] || ('/' + entity);
+    const renderer = rendererMap[entity] || renderSorcerers;
+
+    clearResults();
+    try {
+      const r = await fetch(API_BASE + path);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const dataRaw = await r.json();
+      // Normalizar a array como hacen los renderers
+      let data = [];
+      if (Array.isArray(dataRaw)) data = dataRaw;
+      else if (dataRaw && Array.isArray(dataRaw.data)) data = dataRaw.data;
+      else if (dataRaw && Array.isArray(dataRaw.ok ? dataRaw.data : dataRaw.count ? dataRaw.data : [])) data = dataRaw.data;
+
+      const filtered = data.filter(item => {
+        const name = (item && (item.nombre || item.name || item.nombre_completo || item.title)) ? String(item.nombre || item.name || item.nombre_completo || item.title).toLowerCase() : '';
+        return name && name.indexOf(q) !== -1;
+      });
+
+      if (!filtered || filtered.length === 0) {
+        if (results) results.innerHTML = `<div class="query-item"><h3>No se encontraron resultados</h3></div>`;
+        return;
+      }
+
+      // Usar el renderer con el array filtrado
+      renderer(filtered);
+    } catch (err) {
+      if (results) results.innerHTML = `<div class="query-item"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     // flash corto (si existe)
     try {
@@ -183,10 +233,53 @@
     const btnCur = document.getElementById('curses');
     const entitySelect = document.getElementById('entity-select');
 
+    // Si la página fue invocada con una lista específica de estados, adaptar
+    // el select existente `#entity-select` para mostrar solo esos estados.
+    try {
+      const estadoRaw = sessionStorage.getItem('estadoOptions');
+      if (estadoRaw) {
+        const allowed = JSON.parse(estadoRaw);
+        if (entitySelect) {
+          // Reemplazar las opciones del select ya existente
+          entitySelect.innerHTML = '';
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.disabled = true;
+          placeholder.selected = true;
+          placeholder.textContent = 'Selecciona estado...';
+          entitySelect.appendChild(placeholder);
+
+          (Array.isArray(allowed) ? allowed : []).forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            entitySelect.appendChild(opt);
+          });
+
+          // Marcar el select para que los handlers lo traten como selector de estados
+          entitySelect.setAttribute('aria-label', 'Estado');
+          entitySelect.dataset.mode = 'estado';
+        }
+
+        // Limpiar flag para que no persista en futuras visitas
+        sessionStorage.removeItem('estadoOptions');
+      }
+    } catch (e) { console.warn('No se pudo aplicar filtro de estados', e); }
+
     if (btnSor) btnSor.addEventListener('click', loadSorcerers);
     if (btnTec) btnTec.addEventListener('click', loadTechniques);
     if (btnCur) btnCur.addEventListener('click', loadCurses);
     if (entitySelect) entitySelect.addEventListener('change', function () {
+      // Si el select fue adaptado para estados, tratar la selección como filtro de maldiciones
+      if (entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
+        const val = entitySelect.value;
+        if (!val) return;
+        try {
+          loadList('/curses?estado=' + encodeURIComponent(val), renderCurses);
+        } catch (e) { console.warn('Error al cargar maldiciones por estado', e); }
+        return;
+      }
+
       if (entitySelect.value === 'technique') loadTechniques();
       else if (entitySelect.value === 'curses') loadCurses();
       else if (entitySelect.value === 'recursos' || entitySelect.value === 'resource') loadResources();
@@ -201,10 +294,85 @@
       else if (view === 'curses') loadCurses();
       else if (view === 'recursos' || view === 'resource') loadResources();
       else loadSorcerers();
-      if (entitySelect && (view === 'technique' || view === 'curses' || view === 'sorcerer' || view === 'recursos' || view === 'resource')) entitySelect.value = view;
+      if (entitySelect && (!entitySelect.dataset || entitySelect.dataset.mode !== 'estado') && (view === 'technique' || view === 'curses' || view === 'sorcerer' || view === 'recursos' || view === 'resource')) entitySelect.value = view;
     } catch (e) {
       loadSorcerers();
     }
+
+    // Manejador del formulario de búsqueda: obtiene la entidad seleccionada y busca por nombre
+    try {
+      const searchForm = document.getElementById('search-form');
+      const searchInput = document.getElementById('search-input');
+      if (searchForm && searchInput) {
+        searchForm.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          const raw = String(searchInput.value || '').trim();
+          const selected = (entitySelect && entitySelect.value) ? entitySelect.value : 'sorcerer';
+
+          // Si el select fue adaptado para estados, tratar diferente: buscamos entre MALDICIONES
+          if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
+            const estadoVal = entitySelect.value || '';
+            // Si no hay texto en el input y hay un estado seleccionado, cargar por estado
+            if (!raw) {
+              if (estadoVal) {
+                try {
+                  loadList('/curses?estado=' + encodeURIComponent(estadoVal), renderCurses);
+                } catch (e) { console.warn('Error al cargar maldiciones por estado', e); }
+                return;
+              }
+              // sin estado ni texto -> cargar todas las maldiciones
+              loadCurses();
+              return;
+            }
+
+            // Si hay texto, realizar búsqueda sobre los nombres de las maldiciones.
+            // Si además hay un estado seleccionado, aplicarlo en la petición para reducir resultados.
+            (async function () {
+              clearResults();
+              try {
+                const path = '/curses' + (estadoVal ? ('?estado=' + encodeURIComponent(estadoVal)) : '');
+                const r = await fetch(API_BASE + path);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const dataRaw = await r.json();
+                let data = [];
+                if (Array.isArray(dataRaw)) data = dataRaw;
+                else if (dataRaw && Array.isArray(dataRaw.data)) data = dataRaw.data;
+                else if (dataRaw && Array.isArray(dataRaw.ok ? dataRaw.data : dataRaw.count ? dataRaw.data : [])) data = dataRaw.data;
+
+                const q = String(raw).toLowerCase();
+                const filtered = data.filter(item => {
+                  const name = (item && (item.nombre || item.name || item.title)) ? String(item.nombre || item.name || item.title).toLowerCase() : '';
+                  return name && name.indexOf(q) !== -1;
+                });
+
+                if (!filtered || filtered.length === 0) {
+                  if (results) results.innerHTML = `<div class="query-item"><h3>No se encontraron resultados</h3></div>`;
+                  return;
+                }
+
+                renderCurses(filtered);
+              } catch (err) {
+                if (results) results.innerHTML = `<div class="query-item"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
+              }
+            }());
+
+            return;
+          }
+
+          // comportamiento por defecto para entidades (técnicas, recursos, hechiceros...)
+          if (!raw) {
+            // si el input está vacío, cargar la lista completa de la entidad
+            if (selected === 'technique') loadTechniques();
+            else if (selected === 'curses') loadCurses();
+            else if (selected === 'recursos' || selected === 'resource') loadResources();
+            else loadSorcerers();
+            return;
+          }
+          // ejecutar búsqueda
+          searchEntities(selected, raw);
+        });
+      }
+    } catch (e) { console.warn('Error al inicializar buscador', e); }
 
     // delegación para manejar botones de editar / borrar y apertura de detalle
     if (results) {
@@ -280,22 +448,22 @@
           if (!entity || !id) return;
 
           // verificar propiedad antes de permitir borrar (se puede omitir si es admin)
-            let currentUser = null;
-            try {
-              const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
-              if (isAdmin) {
-                currentUser = 'admin';
-              } else {
-                currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
-                const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
-                const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
-                const body = await resp.json().catch(() => ({}));
-                if (!body || body.canEdit !== true) {
-                  const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
-                  showForbiddenModal(msg);
-                  return;
-                }
+          let currentUser = null;
+          try {
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            if (isAdmin) {
+              currentUser = 'admin';
+            } else {
+              currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : (localStorage.getItem('username') || sessionStorage.getItem('username') || null);
+              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+              const body = await resp.json().catch(() => ({}));
+              if (!body || body.canEdit !== true) {
+                const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
+                showForbiddenModal(msg);
+                return;
               }
+            }
           } catch (e) {
             // en caso de error de red, informar y bloquear para evitar borrados accidentales
             alert('Error verificando permisos: ' + (e && e.message ? e.message : e));
@@ -310,7 +478,9 @@
           const routeMap = {
             sorcerer: '/sorcerer/',
             technique: '/technique/',
-            curses: '/curses/'
+            curses: '/curses/',
+            resource: '/resources/',
+            recursos: '/resources/'
           };
           const base = routeMap[entity] || (`/${entity}/`);
           try {
@@ -335,21 +505,37 @@
           ev.stopPropagation();
           const item = btnEdit.closest('.query-item');
           if (!item) return;
-          const entity = item.dataset.entity;
+          let entity = item.dataset.entity;
           const id = item.dataset.id;
           if (!entity || !id) return;
 
-            try {
+          // Normalizar el nombre de la entidad para recursos
+          if (entity === 'resource' || entity === 'recursos') {
+            entity = 'recurso';
+          }
+
+          try {
             const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            let currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : (localStorage.getItem('username') || sessionStorage.getItem('username') || null);
             if (!isAdmin) {
-              const currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : null;
-              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
-              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
-              const body = await resp.json().catch(() => ({}));
-              if (!body || body.canEdit !== true) {
-                const msg = body && body.message ? body.message : 'No puedes editar este elemento.';
-                showForbiddenModal(msg);
-                return;
+              // Si es recurso, obtener el recurso y comparar createdBy
+              if (entity === 'recurso') {
+                const resp = await fetch(`${API_BASE}/resources/${encodeURIComponent(id)}`);
+                const recurso = await resp.json();
+                if (!resp.ok || !recurso || recurso.createdBy !== currentUser) {
+                  showForbiddenModal('No puedes editar este recurso. Solo el creador puede editarlo.');
+                  return;
+                }
+              } else {
+                // Para otras entidades, usar el endpoint de ownership
+                const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+                const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+                const body = await resp.json().catch(() => ({}));
+                if (!body || body.canEdit !== true) {
+                  const msg = body && body.message ? body.message : 'No puedes editar este elemento.';
+                  showForbiddenModal(msg);
+                  return;
+                }
               }
             }
           } catch (e) {

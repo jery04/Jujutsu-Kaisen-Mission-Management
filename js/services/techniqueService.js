@@ -10,14 +10,8 @@ module.exports = {
     const techRepo = getRepository(db, 'Technique');
     const dup = await techRepo.getOne({ nombre });
     if (dup) { const err = new Error('Técnica ya existe'); err.status = 409; err.id = dup.id; throw err; }
-    const saved = await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones_de_uso: condiciones || null });
-    // Vincular al usuario si viene en el contexto
-    if (saved && userId) {
-      try {
-        const linkRepo = getRepository(db, 'UserTechnique');
-        await linkRepo.add({ user_id: userId, technique_id: saved.id });
-      } catch (e) { console.warn('[techniqueService] No se pudo vincular técnica a usuario:', e.message); }
-    }
+    if (!userId) throw Object.assign(new Error('Usuario creador requerido'), { status: 400 });
+    const saved = await techRepo.add({ nombre, tipo, descripcion: descripcion || null, condiciones_de_uso: condiciones || null, createBy: userId });
     return saved;
   },
   async list(db) {
@@ -44,24 +38,19 @@ module.exports = {
     // Verificar permiso: solo el creador puede editar (admin bypass)
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     if (String(userId) !== 'admin') {
-      try {
-        const linkRepo = getRepository(db, 'UserTechnique');
-        const link = await linkRepo.getOne({ technique_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
-      } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+      const technique = await repo.getById(id);
+      if (!technique) { const err = new Error('Técnica no encontrada'); err.status = 404; throw err; }
+      if (technique.createBy !== userId) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
     }
-
     return await repo.update(id, partial);
   },
   async remove(db, id, userId) {
     const repo = getRepository(db, 'Technique');
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     if (String(userId) !== 'admin') {
-      try {
-        const linkRepo = getRepository(db, 'UserTechnique');
-        const link = await linkRepo.getOne({ technique_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
-      } catch (e) { if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err; }
+      const technique = await repo.getById(id);
+      if (!technique) { const err = new Error('Técnica no encontrada'); err.status = 404; throw err; }
+      if (technique.createBy !== userId) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
     }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };

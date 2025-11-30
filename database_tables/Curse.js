@@ -10,7 +10,13 @@ module.exports = new EntitySchema({
     tipo: { type: 'varchar', length: 100 },
     fecha_aparicion: { type: 'datetime' },
     ubicacion: { type: 'varchar', length: 150 },
-    estado_actual: { type: 'varchar', length: 100 }
+    estado_actual: { type: 'varchar', length: 100 },
+      createBy: {
+        type: 'varchar',
+        length: 120,
+        nullable: false,
+        comment: 'Referencia a nombre_usuario de Usuario'
+      }
   },
   relations: {},
   indices: [

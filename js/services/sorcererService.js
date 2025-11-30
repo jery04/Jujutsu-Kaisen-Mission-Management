@@ -29,7 +29,8 @@ module.exports = {
       anios_experiencia: anios_experiencia != null ? Number(anios_experiencia) : 0,
       estado_operativo: estado_operativo || 'activo',
       causa_muerte: causa_muerte || null,
-      fecha_fallecimiento: fecha_fallecimiento ? new Date(fecha_fallecimiento) : null
+      fecha_fallecimiento: fecha_fallecimiento ? new Date(fecha_fallecimiento) : null,
+      createBy: userId
     });
     let result = saved;
     // Asegurar unicidad de principal y luego establecer la nueva
@@ -39,13 +40,7 @@ module.exports = {
       // Incluir referencia ligera en respuesta para conveniencia
       result = { ...saved, tecnica_principal: nombreTec };
     }
-    // Vincular hechicero al usuario SIEMPRE
-    if (saved && userId) {
-      try {
-        const userLinkRepo = getRepository(db, 'UserSorcerer');
-        await userLinkRepo.add({ user_id: userId, sorcerer_id: saved.id });
-      } catch (e) { console.warn('[sorcererService] No se pudo vincular hechicero a usuario:', e.message); }
-    }
+    // Ya no se vincula con UserSorcerer, el campo createBy lo registra
     return result;
   },
   async getByName(db, nombre) {
@@ -81,14 +76,10 @@ module.exports = {
     }
     // Admin bypass
     if (String(userId) !== 'admin') {
-      try {
-        const userLinkRepo = getRepository(db, 'UserSorcerer');
-        const link = await userLinkRepo.getOne({ sorcerer_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err; }
-      } catch (e) {
-        if (e.status) throw e; // rethrow our own errors
-        // si ocurre un error inesperado al consultar, rechazar con 500
-        const err = new Error('Error verificando permisos'); err.status = 500; throw err;
+      const sorcerer = await repo.getById(id);
+      if (!sorcerer) { const err = new Error('Entidad no encontrada'); err.status = 404; throw err; }
+      if (String(sorcerer.createBy) !== String(userId)) {
+        const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err;
       }
     }
 
@@ -100,12 +91,10 @@ module.exports = {
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     // Admin bypass
     if (String(userId) !== 'admin') {
-      try {
-        const userLinkRepo = getRepository(db, 'UserSorcerer');
-        const link = await userLinkRepo.getOne({ sorcerer_id: Number(id), user_id: userId });
-        if (!link) { const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err; }
-      } catch (e) {
-        if (e.status) throw e; const err = new Error('Error verificando permisos'); err.status = 500; throw err;
+      const sorcerer = await repo.getById(id);
+      if (!sorcerer) { const err = new Error('Entidad no encontrada'); err.status = 404; throw err; }
+      if (String(sorcerer.createBy) !== String(userId)) {
+        const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err;
       }
     }
     const res = await repo.delete(id);

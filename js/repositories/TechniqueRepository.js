@@ -8,6 +8,10 @@ class TechniqueRepository extends BaseRepository {
   async getByNombre(nombre) {
     return await this.findOne({ where: { nombre } });
   }
+
+  async getById(id) {
+    return await this.findOne({ where: { id } });
+  }
 }
 
 module.exports = TechniqueRepository;
