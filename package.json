@@ -9,6 +9,7 @@
     "setup": "npm install",
     "smoke": "node scripts/smoke.js",
     "seed": "node scripts/seed.js",
+    "fix:fk": "node scripts/fix_fk_technique_usuario.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

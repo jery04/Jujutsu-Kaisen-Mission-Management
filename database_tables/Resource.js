@@ -6,7 +6,7 @@ module.exports = new EntitySchema({
     columns: {
         id: { type: 'int', primary: true, generated: true },
         nombre: { type: 'varchar', length: 150 },
-        createdBy: { type: 'varchar', length: 120, nullable: false }
+        createdBy: { type: 'varchar', length: 120, nullable: true }
     },
     relations: {
         usuario: {
@@ -15,7 +15,9 @@ module.exports = new EntitySchema({
             joinColumn: {
                 name: 'createdBy',
                 referencedColumnName: 'nombre_usuario'
-            }
+            },
+            nullable: true,
+            onDelete: 'SET NULL'
         }
     }
 });

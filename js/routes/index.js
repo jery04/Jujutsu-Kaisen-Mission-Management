@@ -13,7 +13,7 @@ module.exports = function registerRoutes(app, db) {
   const resourceController = require('../controllers/resourceController')(db);
   const transferController = require('../controllers/transferController')(db);
   // Optional auth middleware from Josue_Capas (not applied globally here)
-  try { require('../middleware/authMiddleware'); } catch(_) {}
+  try { require('../middleware/authMiddleware'); } catch (_) { }
   // Validation
   const { validateBody } = require('../middleware/validate');
   const schemas = require('../validation/schemas');

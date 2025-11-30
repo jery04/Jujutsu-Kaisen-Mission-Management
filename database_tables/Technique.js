@@ -9,16 +9,9 @@ module.exports = new EntitySchema({
     tipo: { type: 'varchar', length: 100 },
     descripcion: { type: 'text', nullable: true },
     condiciones_de_uso: { type: 'text', nullable: true },
-    createBy: { type: 'varchar', length: 120 }
+    createBy: { type: 'varchar', length: 120, nullable: true }
   },
-  relations: {
-    usuario: {
-      type: 'many-to-one',
-      target: 'Usuario',
-      joinColumn: { name: 'createBy', referencedColumnName: 'nombre_usuario' },
-      nullable: false
-    }
-  },
+  relations: {},
   indices: [
     { columns: ['tipo'] }
   ]
