@@ -30,6 +30,14 @@ class MissionRepository extends BaseRepository {
     qb.groupBy('m.id').orderBy('m.fecha_inicio', 'ASC');
     return await qb.getRawMany();
   }
+
+  async getByCurseId(curseId) {
+    return await this.find({ where: { curse: { id: Number(curseId) } }, order: { id: 'DESC' } });
+  }
+
+  async getRecent(limit = 10) {
+    return await this.find({ order: { id: 'DESC' }, take: Number(limit) });
+  }
 }
 
 module.exports = MissionRepository;

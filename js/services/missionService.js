@@ -45,9 +45,9 @@ function rankSorcerers(list) {
 async function assignTeam(db, curse, maxMembers = 3) {
   const sorcRepo = getRepository(db, 'Sorcerer');
   const all = await sorcRepo.getAll({ where: { estado_operativo: 'activo' } });
-  const ranked = rankSorcerers(all);
-  const principal = ranked[0] || null;
-  const team = ranked.slice(0, Math.max(1, Math.min(maxMembers, ranked.length)));
+  const { rank, selectTeam } = require('./RankingService');
+  const ranked = rank(all, { region: curse?.ubicacion });
+  const { principal, team } = selectTeam(ranked, maxMembers);
   return { principal, team };
 }
 
@@ -56,6 +56,16 @@ module.exports = {
   async getBySorcerer(db, sorcererId) {
     const missionRepo = getRepository(db, 'Mission');
     const missions = await missionRepo.getBySorcerer(sorcererId);
+    return { ok: true, missions };
+  },
+  async getByCurse(db, curseId) {
+    const missionRepo = getRepository(db, 'Mission');
+    const missions = await missionRepo.getByCurseId(curseId);
+    return { ok: true, missions };
+  },
+  async recent(db, limit) {
+    const missionRepo = getRepository(db, 'Mission');
+    const missions = await missionRepo.getRecent(limit || 10);
     return { ok: true, missions };
   },
   async successRange(db, from, to) {

@@ -56,6 +56,8 @@ module.exports = function registerRoutes(app, db) {
   app.get('/missions/success-range', missionController.successRange);
   app.post('/missions/:id/start', validateBody(schemas.missionStart), missionController.start);
   app.post('/missions/:id/close', validateBody(schemas.missionClose), missionController.close);
+  app.get('/missions/by-curse/:id', missionController.getByCurse);
+  app.get('/missions/recent', missionController.recent);
 
   // Auth (Usuarios)
   app.post('/auth/register', validateBody(schemas.userRegister), userController.register);
