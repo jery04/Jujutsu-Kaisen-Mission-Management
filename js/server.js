@@ -135,6 +135,7 @@ if (process.env.NODE_ENV === 'test') {
       events.on('mission:created', (payload) => io.emit('mission:created', payload));
       events.on('mission:closed', (payload) => io.emit('mission:closed', payload));
       events.on('mission:started', (payload) => io.emit('mission:started', payload));
+      events.on('transfer:updated', (payload) => io.emit('transfer:updated', payload));
 
       // Reemplazar listen para usar httpServer
       app._httpServer = httpServer;
@@ -152,30 +153,21 @@ if (process.env.NODE_ENV === 'test') {
 
     // Arranque del servidor con tolerancia a puerto en uso (solo dev).
     const requestedPort = Number(process.env.PORT) || 3000;
-    const maxAttempts = 5;
-    let attempt = 0;
-
-    const tryListen = (port) => {
-      attempt += 1;
-      const server = (app._httpServer || app).listen(port, () => {
-        console.log(`Servidor escuchando en http://localhost:${port}`);
-      });
-      server.on('error', (err) => {
-        if (err && err.code === 'EADDRINUSE' && attempt < maxAttempts) {
-          const nextPort = port + 1;
-          console.warn(`Puerto ${port} en uso. Probando ${nextPort}...`);
-          setTimeout(() => tryListen(nextPort), 300);
-        } else if (err && err.code === 'EADDRINUSE') {
-          console.error(`No fue posible iniciar el servidor tras ${attempt} intentos. Establece PORT en un puerto libre.`);
-          process.exit(1);
-        } else {
-          console.error('Error iniciando servidor:', err);
-          process.exit(1);
-        }
-      });
-    };
-
-    tryListen(requestedPort);
+    // Escucha directa en 3000; si falla por EADDRINUSE muestra consejo y termina.
+    // Si falla por EACCES da mensaje claro de permisos.
+    const server = (app._httpServer || app).listen(requestedPort, () => {
+      console.log(`Servidor escuchando en http://localhost:${requestedPort}`);
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`Puerto ${requestedPort} en uso. Libera el puerto o establece PORT a otro valor.`);
+      } else if (err.code === 'EACCES') {
+        console.error(`Permiso denegado en el puerto ${requestedPort}. Ejecuta PowerShell como Administrador o usa un puerto >1024 diferente con $env:PORT.`);
+      } else {
+        console.error('Error iniciando servidor:', err);
+      }
+      process.exit(1);
+    });
 
   }).catch(err => {
     console.error('Error conexión DB:', err);

@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: Jujutsu-Kaisen Mission Management API
+  version: 1.0.0
+  description: API HTTP para gestión de misiones, maldiciones, hechiceros y traslados.
+servers:
+  - url: http://localhost:3000
+paths:
+  /curses:
+    get:
+      summary: Lista maldiciones
+      responses:
+        '200':
+          description: Lista de maldiciones
+    post:
+      summary: Crea una maldición y autogenera misión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                grado: { type: string }
+                tipo: { type: string }
+                fecha_aparicion: { type: string, format: date-time }
+                ubicacion: { type: string }
+                estado_actual: { type: string }
+              required: [nombre, grado, tipo, fecha_aparicion, ubicacion, estado_actual]
+      responses:
+        '201':
+          description: Maldición creada
+  /curses/{id}:
+    get:
+      summary: Obtiene una maldición
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Maldición
+    put:
+      summary: Actualiza una maldición
+      parameters:
+        - in: header
+          name: x-user-id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Maldición actualizada
+    delete:
+      summary: Elimina una maldición
+      parameters:
+        - in: header
+          name: x-user-id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Eliminada
+  /missions/sorcerer/{id}:
+    get:
+      summary: Misiones de un hechicero
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lista de misiones
+  /missions/success-range:
+    get:
+      summary: Misiones exitosas en rango
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Resultados agregados
+  /missions/{id}/start:
+    post:
+      summary: Inicia una misión
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Misión iniciada
+  /missions/{id}/close:
+    post:
+      summary: Cierra una misión
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: header
+          name: x-user-id
+          required: true
+          schema: { type: string }
+        - in: header
+          name: x-user-role
+          required: true
+          schema:
+            type: string
+            enum: [soporte, admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resultado:
+                  type: string
+                  enum: [exito, fracaso]
+                descripcion_evento: { type: string }
+                danos_colaterales: { type: string }
+                tecnicas_usadas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      technique_id: { type: integer }
+                      sorcerer_id: { type: integer }
+      responses:
+        '200':
+          description: Misión cerrada
+  /missions/by-curse/{id}:
+    get:
+      summary: Misiones por maldición
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lista de misiones
+  /missions/recent:
+    get:
+      summary: Misiones recientes
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lista de misiones
+  /transfers/{id}/status:
+    put:
+      summary: Actualiza estado de traslado
+      parameters:
+        - in: header
+          name: x-user-role
+          required: true
+          schema:
+            type: string
+            enum: [soporte, admin]
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estado: { type: string }
+              required: [estado]
+      responses:
+        '200':
+          description: Traslado actualizado
+components: {}

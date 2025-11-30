@@ -1,0 +1,12 @@
+{
+  "gradeWeights": {
+    "especial": 5,
+    "alto": 4,
+    "medio": 3,
+    "aprendiz": 2,
+    "estudiante": 1
+  },
+  "teamSizeDefault": 3,
+  "successWeightMultiplier": 0.2,
+  "regionBoost": 3
+}

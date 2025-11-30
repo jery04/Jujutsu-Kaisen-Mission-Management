@@ -48,3 +48,8 @@ Instrucciones rápidas:
    - `GET /missions/sorcerer/:id` - misiones de un hechicero
    - `GET /missions/success-range?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
+## Documentación oficial
+
+- API y eventos: ver `API_DOCS.md`.
+- OpenAPI spec (para integraciones y tooling): ver `docs/openapi.yaml`.
+

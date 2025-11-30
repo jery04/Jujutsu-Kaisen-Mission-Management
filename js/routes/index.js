@@ -11,6 +11,7 @@ module.exports = function registerRoutes(app, db) {
   const userController = require('../controllers/userController')(db);
   const ownershipController = require('../controllers/ownershipController')(db);
   const resourceController = require('../controllers/resourceController')(db);
+  const transferController = require('../controllers/transferController')(db);
   // Validation
   const { validateBody } = require('../middleware/validate');
   const schemas = require('../validation/schemas');
@@ -58,6 +59,9 @@ module.exports = function registerRoutes(app, db) {
   app.post('/missions/:id/close', validateBody(schemas.missionClose), missionController.close);
   app.get('/missions/by-curse/:id', missionController.getByCurse);
   app.get('/missions/recent', missionController.recent);
+
+  // Transfers
+  app.put('/transfers/:id/status', validateBody(schemas.transferStatusUpdate), transferController.updateStatus);
 
   // Auth (Usuarios)
   app.post('/auth/register', validateBody(schemas.userRegister), userController.register);

@@ -56,7 +56,11 @@ const missionStart = z.object({});
 const missionClose = z.object({
   resultado: z.enum(['exito', 'fracaso']),
   descripcion_evento: z.string().optional(),
-  danos_colaterales: z.string().optional()
+  danos_colaterales: z.string().optional(),
+  tecnicas_usadas: z.array(z.object({
+    technique_id: z.coerce.number().int().positive(),
+    sorcerer_id: z.coerce.number().int().positive()
+  })).optional()
 });
 
 // Usuario schemas
@@ -86,5 +90,6 @@ module.exports = {
   userRegister,
   userLogin,
   resourceCreate,
-  resourceUpdate
+  resourceUpdate,
+  transferStatusUpdate: z.object({ estado: nonEmpty('Estado es requerido').max(100) })
 };

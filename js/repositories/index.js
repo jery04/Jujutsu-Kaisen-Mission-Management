@@ -3,6 +3,8 @@ const MissionRepository = require('./MissionRepository');
 const TechniqueRepository = require('./TechniqueRepository');
 const SorcererRepository = require('./SorcererRepository');
 const SorcererTechniqueRepository = require('./SorcererTechniqueRepository');
+const TransferRepository = require('./TransferRepository');
+const CurseRepository = require('./CurseRepository');
 
 function getRepository(db, entity) {
   switch (entity) {
@@ -14,9 +16,13 @@ function getRepository(db, entity) {
       return new SorcererRepository(db);
     case 'SorcererTechnique':
       return new SorcererTechniqueRepository(db);
+    case 'Transfer':
+      return new TransferRepository(db);
+    case 'Curse':
+      return new CurseRepository(db);
     default:
       return new BaseRepository(db, entity);
   }
 }
 
-module.exports = { BaseRepository, MissionRepository, TechniqueRepository, SorcererRepository, SorcererTechniqueRepository, getRepository };
+module.exports = { BaseRepository, MissionRepository, TechniqueRepository, SorcererRepository, SorcererTechniqueRepository, TransferRepository, CurseRepository, getRepository };

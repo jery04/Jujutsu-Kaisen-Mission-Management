@@ -1,3 +1,4 @@
+// missionService: reglas de negocio para misiones (creación automática, asignación equipo, inicio/cierre).
 const { getRepository } = require('../repositories');
 
 // Mapping helpers for mission state and urgency (kept simple, extendable)
@@ -23,31 +24,14 @@ function deriveUrgencyFromCurse(curse) {
   return URGENCY_LEVELS.planificada;
 }
 
-function gradeWeight(grade) {
-  const g = (grade || '').toLowerCase();
-  if (g.includes('especial')) return 5;
-  if (g.includes('alto')) return 4;
-  if (g.includes('medio')) return 3;
-  if (g.includes('aprendiz') || g.includes('estudiante')) return 2;
-  return 1;
-}
 
-function rankSorcerers(list) {
-  // Score based on grade and experience years
-  return [...(list || [])]
-    .map(s => ({
-      ...s,
-      _score: (gradeWeight(s.grado) * 10) + (Number(s.anios_experiencia) || 0)
-    }))
-    .sort((a, b) => b._score - a._score);
-}
-
-async function assignTeam(db, curse, maxMembers = 3) {
+// Asignación de equipo usando RankingService (configurable N)
+async function assignTeam(db, curse, maxMembers) {
   const sorcRepo = getRepository(db, 'Sorcerer');
   const all = await sorcRepo.getAll({ where: { estado_operativo: 'activo' } });
-  const { rank, selectTeam } = require('./RankingService');
+  const { rank, selectTeam, getDefaultTeamSize } = require('./RankingService');
   const ranked = rank(all, { region: curse?.ubicacion });
-  const { principal, team } = selectTeam(ranked, maxMembers);
+  const { principal, team } = selectTeam(ranked, maxMembers || getDefaultTeamSize());
   return { principal, team };
 }
 
@@ -119,13 +103,57 @@ module.exports = {
     return { ok: true, mission: upd };
   },
 
-  async closeMission(db, missionId, payload) {
+  async closeMission(db, missionId, payload, user) {
     const missionRepo = getRepository(db, 'Mission');
     const found = await missionRepo.getById(missionId);
     if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
+    // Permisos: solo soporte/admin pueden cerrar
+    if (!user || !['soporte', 'admin'].includes(String(user.role || '').toLowerCase())) {
+      const err = new Error('No autorizado para cerrar misión'); err.status = 403; throw err;
+    }
     const { resultado, descripcion_evento, danos_colaterales } = payload || {};
     const estado = resultado === 'exito' ? MISSION_STATES.completada_exito : MISSION_STATES.completada_fracaso;
-    const upd = await missionRepo.update(missionId, { estado, descripcion_evento, danos_colaterales, fecha_fin: new Date() });
+    const upd = await missionRepo.update(missionId, {
+      estado,
+      descripcion_evento,
+      danos_colaterales,
+      fecha_fin: new Date(),
+      closed_by: user.id ? Number(user.id) : null
+    });
+
+    // Registrar técnicas usadas si vienen en payload
+    if (payload && Array.isArray(payload.tecnicas_usadas) && payload.tecnicas_usadas.length) {
+      const mtuRepo = getRepository(db, 'MissionTechniqueUsage');
+      for (const tu of payload.tecnicas_usadas) {
+        const rec = {
+          mission_id: Number(missionId),
+          technique_id: Number(tu.technique_id),
+          sorcerer_id: Number(tu.sorcerer_id)
+        };
+        await mtuRepo.add(rec);
+      }
+    }
+
+    // Actualizar tasa de éxito de hechiceros participantes
+    try {
+      const mpRepo = getRepository(db, 'MissionParticipant');
+      const participants = await mpRepo.find({ where: { mission: { id: Number(missionId) } } });
+      const sorcRepo = getRepository(db, 'Sorcerer');
+      for (const p of participants) {
+        const sorc = await sorcRepo.getById(p.sorcerer_id || (p.sorcerer && p.sorcerer.id));
+        if (!sorc) continue;
+        // Simple recálculo: incrementar éxitos o fallos y derivar tasa (placeholder si no existen campos)
+        const total_prev = Number(sorc.total_misiones) || 0;
+        const exitos_prev = Number(sorc.misiones_exito) || 0;
+        const nuevos_total = total_prev + 1;
+        const nuevos_exitos = exitos_prev + (estado === MISSION_STATES.completada_exito ? 1 : 0);
+        const tasa = nuevos_total > 0 ? Math.round((nuevos_exitos / nuevos_total) * 100) : 0;
+        await sorcRepo.update(sorc.id, { total_misiones: nuevos_total, misiones_exito: nuevos_exitos, tasa_exito: tasa });
+      }
+    } catch (e) {
+      // No romper cierre si campos no existen en esquema del hechicero
+      console.warn('[missionService] No se pudo actualizar tasa_exito:', e.message);
+    }
     try { events.emit('mission:closed', { mission_id: Number(missionId), estado }); } catch (_) { }
     return { ok: true, mission: upd };
   }

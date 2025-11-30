@@ -1,38 +1,97 @@
 /**
- * RankingService: calcula puntajes y selecciona equipos para misiones.
- * Patrón: Strategy (posible) para diferentes agregadores de score.
+ * RankingService
+ * - Cálculo de puntajes desacoplado mediante una estrategia base configurable.
+ * - Lee pesos desde config/ranking.config.json (gradeWeights, teamSizeDefault, etc.).
+ * - Expone funciones rank/selectTeam y utilidades para breakdown del score.
+ * - Preparado para Pattern Strategy: se puede inyectar otra función de cálculo.
  */
 
-function gradeWeight(grade) {
-  const g = (grade || '').toLowerCase();
-  if (g.includes('especial')) return 5;
-  if (g.includes('alto')) return 4;
-  if (g.includes('medio')) return 3;
-  if (g.includes('aprendiz') || g.includes('estudiante')) return 2;
-  return 1;
+const fs = require('fs');
+const path = require('path');
+
+// Carga perezosa de configuración externa
+let _configCache = null;
+function loadConfig() {
+    if (_configCache) return _configCache;
+    const cfgPath = path.join(__dirname, '..', '..', 'config', 'ranking.config.json');
+    try {
+        const raw = fs.readFileSync(cfgPath, 'utf8');
+        _configCache = JSON.parse(raw);
+    } catch (e) {
+        // Fallback seguro si el archivo no existe
+        _configCache = {
+            gradeWeights: { especial: 5, alto: 4, medio: 3, aprendiz: 2, estudiante: 1 },
+            teamSizeDefault: 3,
+            successWeightMultiplier: 0.2,
+            regionBoost: 3
+        };
+    }
+    return _configCache;
 }
 
-function baseScore(hechicero, context = {}) {
-  const wGrade = gradeWeight(hechicero.grado) * 10;
-  const exp = Number(hechicero.anios_experiencia) || 0;
-  // Placeholder para tasa de éxito y otros factores
-  const success = Number(hechicero.tasa_exito || 0); // 0..100
-  const successWeight = success * 0.2; // peso configurable
-  // Proximidad o región (si aplica)
-  const regionBoost = (context.region && hechicero.region === context.region) ? 3 : 0;
-  return wGrade + exp + successWeight + regionBoost;
+function getGradeWeight(grade) {
+    const cfg = loadConfig();
+    const map = cfg.gradeWeights || {};
+    const g = (grade || '').toLowerCase();
+    // Emparejar claves aproximadas (contains)
+    if (g.includes('especial')) return map.especial || 5;
+    if (g.includes('alto')) return map.alto || 4;
+    if (g.includes('medio')) return map.medio || 3;
+    if (g.includes('aprendiz')) return map.aprendiz || 2;
+    if (g.includes('estudiante')) return map.estudiante || 1; // estudiante explícito
+    // Sin "otro" según requerimiento; fallback al menor peso definido.
+    return Math.min(...Object.values(map));
+}
+
+// Estrategia base (puede reemplazarse por inyección futura)
+function defaultScoreStrategy(hechicero, context = {}, cfg = loadConfig()) {
+    const gradePart = getGradeWeight(hechicero.grado) * 10;
+    const expPart = Number(hechicero.anios_experiencia) || 0;
+    const success = Number(hechicero.tasa_exito || 0); // 0..100
+    const successPart = success * (cfg.successWeightMultiplier || 0.2);
+    const regionPart = (context.region && hechicero.region === context.region) ? (cfg.regionBoost || 3) : 0;
+    return {
+        gradePart,
+        expPart,
+        successPart,
+        regionPart,
+        total: gradePart + expPart + successPart + regionPart
+    };
+}
+
+let activeStrategy = defaultScoreStrategy;
+function setStrategy(fn) {
+    if (typeof fn === 'function') activeStrategy = fn;
 }
 
 function rank(list, context) {
-  return [...(list || [])]
-    .map(s => ({ ...s, _score: baseScore(s, context) }))
-    .sort((a, b) => b._score - a._score);
+    const cfg = loadConfig();
+    return [...(list || [])]
+        .map(s => {
+            const breakdown = activeStrategy(s, context, cfg);
+            return { ...s, _score: breakdown.total, _breakdown: breakdown };
+        })
+        .sort((a, b) => b._score - a._score);
 }
 
-function selectTeam(ranked, maxMembers = 3) {
-  const team = ranked.slice(0, Math.max(1, Math.min(maxMembers, ranked.length)));
-  const principal = team[0] || null;
-  return { principal, team };
+function selectTeam(ranked, maxMembers) {
+    const cfg = loadConfig();
+    const size = Number(maxMembers || process.env.RANKING_TEAM_SIZE || cfg.teamSizeDefault || 3);
+    const team = ranked.slice(0, Math.max(1, Math.min(size, ranked.length)));
+    const principal = team[0] || null;
+    return { principal, team };
 }
 
-module.exports = { rank, selectTeam };
+function getDefaultTeamSize() {
+    const cfg = loadConfig();
+    return Number(process.env.RANKING_TEAM_SIZE || cfg.teamSizeDefault || 3);
+}
+
+module.exports = {
+    loadConfig,
+    getDefaultTeamSize,
+    getGradeWeight,
+    setStrategy,
+    rank,
+    selectTeam
+};
