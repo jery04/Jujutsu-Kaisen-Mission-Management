@@ -4,7 +4,7 @@ const express = require('express');
 const typeorm = require('typeorm');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+// Rate limit ahora gestionado vía middleware dedicado
 const path = require('path');
 
 // Entidades TypeORM
@@ -31,6 +31,12 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
+// Logger básico de peticiones (primero)
+app.use((req, _res, next) => {
+  if (process.env.NODE_ENV !== 'test') console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // CORS with optional whitelist (CORS_ORIGIN can be comma-separated list). If not provided, allow all in dev.
 const allowedOrigins = (process.env.CORS_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(cors({
@@ -43,12 +49,23 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parser with sane limits
+// Body parser with sane limits (después del logger)
 app.use(express.json({ limit: '1mb' }));
 
-// Basic rate limiting (configurable)
-const rlMax = Number(process.env.RATE_LIMIT_MAX || 100);
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: rlMax, standardHeaders: true, legacyHeaders: false }));
+// Rate limiting avanzado (excluye /health y permite límites distintos para endpoints pesados)
+const { createApiRateLimiter } = require('./middleware/rateLimit');
+const { baseLimiter, heavyLimiter } = createApiRateLimiter(app);
+app.use(baseLimiter);
+
+// Ejemplo de aplicación de heavyLimiter para endpoints de escritura intensiva.
+// Se delega a registerRoutes la creación de rutas; aquí se prepara un wrapper
+// si se quiere proteger POST masivos. Puede ajustarse según necesidad.
+app.use(['/missions', '/curses', '/transfers'], (req, res, next) => {
+  if (req.method === 'POST') {
+    return heavyLimiter(req, res, next);
+  }
+  return next();
+});
 // Servir frontend estático (css, js, html/*) sin index automático
 const staticRoot = path.join(__dirname, '..');
 app.use(express.static(staticRoot, { index: false }));
@@ -56,29 +73,37 @@ app.use(express.static(staticRoot, { index: false }));
 try {
   const jspdfDist = path.join(__dirname, '..', 'node_modules', 'jspdf', 'dist');
   app.use('/lib/jspdf', express.static(jspdfDist));
-  console.log('Ruta /lib/jspdf habilitada.');
+  if (process.env.NODE_ENV !== 'test') console.log('Ruta /lib/jspdf habilitada.');
 } catch (e) {
-  console.warn('No se pudo registrar ruta /lib/jspdf:', e.message);
+  if (process.env.NODE_ENV !== 'test') console.warn('No se pudo registrar ruta /lib/jspdf:', e.message);
 }
 // Hacer que la ruta raíz entregue home.html
 app.get('/', (_req, res) => {
   res.sendFile(path.join(staticRoot, 'home.html'));
 });
-// Logger básico de peticiones
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
 
 // In test mode, don't connect DB or listen. Just register routes with null db and export app.
 if (process.env.NODE_ENV === 'test') {
+  // Stub DB para que los controladores se inicialicen sin fallar y las rutas existan.
+  const stubRepo = () => ({
+    getAll: async () => [],
+    getById: async () => null,
+    getOne: async () => null,
+    add: async (o) => ({ id: 1, ...o }),
+    update: async (id, partial) => ({ id, ...partial }),
+    delete: async () => ({ affected: 0 })
+  });
+  const stubDb = {
+    query: async () => [[]],
+    getRepository: (_name) => stubRepo()
+  };
   try {
     const registerRoutes = require('./routes/index');
-    registerRoutes(app, null);
+    registerRoutes(app, stubDb);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('Error registrando rutas en test:', e);
+    if (process.env.NODE_ENV !== 'test') console.error('Error registrando rutas en test:', e);
   }
+  // 404 debe ir después de rutas.
   app.use((req, _res, next) => { const err = new Error('Not Found'); err.status = 404; next(err); });
   const errorHandler = require('./middleware/errorHandler');
   app.use(errorHandler);
@@ -111,7 +136,7 @@ if (process.env.NODE_ENV === 'test') {
     ],
     synchronize: false // Deshabilitar sync automático para evitar conflictos de FK con datos existentes
   }).then(async (dbConn) => {
-    console.log('Conectado a la base de datos jujutsu_misiones_db');
+    if (process.env.NODE_ENV !== 'test') console.log('Conectado a la base de datos jujutsu_misiones_db');
     // Registrar rutas desacopladas (N-capas) y preparar Socket.IO
     try {
       // Crear servidor HTTP y Socket.IO
@@ -151,7 +176,7 @@ if (process.env.NODE_ENV === 'test') {
     // Escucha directa en 3000; si falla por EADDRINUSE muestra consejo y termina.
     // Si falla por EACCES da mensaje claro de permisos.
     const server = (app._httpServer || app).listen(requestedPort, () => {
-      console.log(`Servidor escuchando en http://localhost:${requestedPort}`);
+      if (process.env.NODE_ENV !== 'test') console.log(`Servidor escuchando en http://localhost:${requestedPort}`);
     });
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
@@ -165,7 +190,41 @@ if (process.env.NODE_ENV === 'test') {
     });
 
   }).catch(err => {
-    console.error('Error conexión DB:', err);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'test') console.error('Error conexión DB (modo degradado, sin detener servidor):', err.message || err);
+    // Modo degradado: registrar rutas con db=null y arrancar servidor para exponer endpoints básicos
+    try {
+      const http = require('http');
+      const httpServer = http.createServer(app);
+      const { Server } = require('socket.io');
+      const io = new Server(httpServer, { cors: { origin: '*' } });
+      app.set('io', io);
+
+      const registerRoutes = require('./routes/index');
+      registerRoutes(app, null);
+
+      // 404 handler
+      app.use((req, _res, next) => { const e = new Error('Not Found'); e.status = 404; next(e); });
+      // Global error handler
+      const errorHandler = require('./middleware/errorHandler');
+      app.use(errorHandler);
+
+      const requestedPort = Number(process.env.PORT) || 3000;
+      const server = (app._httpServer || httpServer).listen(requestedPort, () => {
+        if (process.env.NODE_ENV !== 'test') console.log(`Servidor (modo degradado) en http://localhost:${requestedPort}`);
+      });
+      server.on('error', (err2) => {
+        if (err2.code === 'EADDRINUSE') {
+          console.error(`Puerto ${requestedPort} en uso. Libera el puerto o establece PORT a otro valor.`);
+        } else if (err2.code === 'EACCES') {
+          console.error(`Permiso denegado en el puerto ${requestedPort}. Ejecuta PowerShell como Administrador o usa un puerto >1024 diferente con $env:PORT.`);
+        } else {
+          console.error('Error iniciando servidor:', err2);
+        }
+        process.exit(1);
+      });
+    } catch (e) {
+      console.error('Fallo al iniciar en modo degradado:', e);
+      process.exit(1);
+    }
   });
 }

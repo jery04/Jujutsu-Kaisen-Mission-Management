@@ -1,12 +1,12 @@
 const ResourceService = require('../services/resourceService');
 
-module.exports = function(db) {
+module.exports = function (db) {
   const ResourceService = require('../services/resourceService')(db);
   return {
     async createResource(req, res, next) {
       try {
         // Si no hay usuario, busca el primer usuario válido
-        let userId = req.user?.id || req.headers['x-usuario'];
+        let userId = req.user?.id;
         if (!userId) {
           // Buscar el primer usuario en la base de datos
           const UsuarioRepo = require('../repositories/BaseRepository');

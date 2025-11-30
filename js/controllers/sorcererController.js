@@ -3,7 +3,7 @@ const service = require('../services/sorcererService');
 module.exports = (db) => ({
     create: async (req, res) => {
         try {
-            const userId = req.headers['x-user-id'];
+            const userId = req.user?.id;
             const saved = await service.create(db, req.body, userId);
             res.status(201).json(saved);
         } catch (error) {
@@ -39,7 +39,7 @@ module.exports = (db) => ({
     },
     update: async (req, res) => {
         try {
-            const userId = req.headers['x-user-id'];
+            const userId = req.user?.id;
             const saved = await service.update(db, req.params.id, req.body, userId);
             res.json(saved);
         } catch (error) {
@@ -53,7 +53,7 @@ module.exports = (db) => ({
     },
     remove: async (req, res) => {
         try {
-            const userId = req.headers['x-user-id'];
+            const userId = req.user?.id;
             const out = await service.remove(db, req.params.id, userId);
             res.json(out);
         } catch (error) {

@@ -32,7 +32,7 @@ module.exports = (db) => {
       }
       const hashed = hashPassword(password);
       const entity = await repo.add({ nombre_usuario: username, contrasenna: hashed });
-      return { nombre_usuario: entity.nombre_usuario };
+      return { id: entity.id, nombre_usuario: entity.nombre_usuario, role: entity.role || entity.rol || 'estudiante' };
     },
 
     async login({ username, password }) {
@@ -48,7 +48,7 @@ module.exports = (db) => {
         err.status = 401;
         throw err;
       }
-      return { nombre_usuario: user.nombre_usuario };
+      return { id: user.id, nombre_usuario: user.nombre_usuario, role: user.role || user.rol || 'estudiante' };
     }
   };
 };

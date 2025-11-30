@@ -1,3 +1,46 @@
+## Advanced Queries
+- `GET /reports/techniques/effectiveness`: Lista técnicas con usos, éxitos y porcentaje de éxito.
+- `GET /ranking/sorcerers`: Ranking público de hechiceros por `tasa_exito` y `total_misiones`.
+- `GET /relations/master-disciples`: Relaciones maestro–discípulo.
+
+## Auth & Roles (JWT)
+ Login: `POST /auth/login` → body `{ username, password }` → devuelve `{ ok, token, user }`.
+ Token: `user` contiene `{ id, username, role }` y el `token` expira en 8h.
+ Uso: Enviar `Authorization: Bearer <token>` en endpoints protegidos.
+ Roles: `authorizeRoles(['soporte','admin'])` aplicado al cierre de misión.
+ Flujo:
+  1) Login → token.
+  2) Cliente guarda token.
+  3) Llamadas protegidas con header `Authorization`.
+- Middleware: `requireAuth` y `authorizeRoles([...])`.
+- Protección aplicada:
+  - CRUD de `Sorcerer`, `Technique`, `Curse`, `Resource`: requieren autenticación.
+  - `POST /missions/:id/close`: requiere roles `soporte` o `admin`.
+
+
+### Ejemplos
+```
+POST /auth/login
+{ "username": "gojo", "password": "secret" }
+
+GET /sorcerer
+Authorization: Bearer <token>
+
+POST /missions/123/close
+Authorization: Bearer <token>
+Body: { "resultado": "exito", "descripcion_evento": "..." }
+
+GET /ranking/sorcerers
+```
+## Rate Limiting
+- Variables: `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`, `RATE_LIMIT_HEAVY_WINDOW_MS`, `RATE_LIMIT_HEAVY_MAX`, `RATE_LIMIT_SKIP_HEALTH`.
+- Endpoints pesados (`POST /missions`, `POST /curses`, `POST /transfers`) aplican límite más estricto.
+
+## Migrations (TypeORM)
+- Archivo: `migrations/20251130_restore_fks.js`.
+- Objetivo: restablecer FKs de `Technique.createBy` y `Resource.createdBy` → `Usuario(id)` con `ON DELETE SET NULL`.
+- Requisitos: configurar DataSource en TypeORM 0.3 y ejecutar `typeorm migration:run`.
+
 # Jujutsu-Kaisen Mission Management — API y Eventos
 
 Documentación oficial de la API HTTP y eventos en tiempo real del sistema. Arquitectura N‑capas: Frontend → Controladores → Servicios → Repositorios → Base de datos. Transportes en tiempo real mediante Socket.IO reemitidos desde `server.js`. Roles requeridos indicados en headers.

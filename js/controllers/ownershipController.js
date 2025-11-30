@@ -7,7 +7,7 @@ module.exports = (db) => ({
     try {
       const entity = String(req.query.entity || '').trim();
       const id = req.query.id;
-      const userId = req.headers['x-user-id'];
+      const userId = req.user?.id;
 
       if (!entity || !id) return res.status(400).json({ canEdit: false, message: 'Parámetros inválidos' });
       if (!userId) return res.status(200).json({ canEdit: false, message: 'Usuario no autenticado' });
@@ -33,15 +33,15 @@ module.exports = (db) => ({
         }
         return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
       }
-        if (entity === 'sorcerer') {
-          // Verifica ownership por campo createBy en Sorcerer
-          const repo = getRepository(db, 'Sorcerer');
-          const sorcerer = await repo.getById(id);
-          if (sorcerer && String(sorcerer.createBy) === String(userId)) {
-            return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
-          }
-          return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      if (entity === 'sorcerer') {
+        // Verifica ownership por campo createBy en Sorcerer
+        const repo = getRepository(db, 'Sorcerer');
+        const sorcerer = await repo.getById(id);
+        if (sorcerer && String(sorcerer.createBy) === String(userId)) {
+          return res.status(200).json({ canEdit: true, message: 'Usuario es el creador' });
         }
+        return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
+      }
       // Map entity type to linking repository and lookup criteria
       if (entity === 'curses') {
         const repo = getRepository(db, 'Curse');
