@@ -1,3 +1,20 @@
+/* Etiquetas de entidad para show.html */
+.entity-label {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #dcdcdc;
+    background: #fafafa;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    display: block;
+    min-height: 40px;
+}
+
+.entity-label-large {
+    min-height: 72px;
+}
 /* Global page settings moved from :root/body */
 /* html */
 html {
