@@ -12,6 +12,9 @@ class MissionRepository extends BaseRepository {
       .orderBy('m.fecha_inicio', 'DESC');
     return await qb.getMany();
   }
+    async getById(id) {
+      return await this.findOne({ where: { id: Number(id) } });
+    }
 
   async successRange(from, to) {
     const qb = this.createQueryBuilder('m')

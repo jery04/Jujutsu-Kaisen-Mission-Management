@@ -42,6 +42,16 @@ module.exports = {
     const missions = await missionRepo.getBySorcerer(sorcererId);
     return { ok: true, missions };
   },
+    async getById(db, id) {
+      const missionRepo = getRepository(db, 'Mission');
+      const mission = await missionRepo.getById(id);
+      if (!mission) {
+        const err = new Error('Misión no encontrada');
+        err.status = 404;
+        throw err;
+      }
+      return { ok: true, mission };
+    },
   async getByCurse(db, curseId) {
     const missionRepo = getRepository(db, 'Mission');
     const missions = await missionRepo.getByCurseId(curseId);
@@ -71,7 +81,7 @@ module.exports = {
     const curseEntity = await curseRepo.getById(curse.id);
     const baseMission = {
       estado,
-      descripcion_evento: `Autogenerada por aparición de maldición: ${curse.nombre}`,
+      descripcion_evento: `${curse.nombre}`,
       fecha_inicio: new Date(curse.fecha_aparicion || Date.now()),
       fecha_fin: null,
       danos_colaterales: null,

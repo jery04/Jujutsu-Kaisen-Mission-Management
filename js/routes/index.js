@@ -61,6 +61,7 @@ module.exports = function registerRoutes(app, db) {
   app.post('/missions/:id/close', validateBody(schemas.missionClose), missionController.close);
   app.get('/missions/by-curse/:id', missionController.getByCurse);
   app.get('/missions/recent', missionController.recent);
+  app.get('/missions/:id', missionController.getById);
 
   // Transfers
   app.put('/transfers/:id/status', validateBody(schemas.transferStatusUpdate), transferController.updateStatus);

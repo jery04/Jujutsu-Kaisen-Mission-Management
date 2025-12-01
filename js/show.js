@@ -8,10 +8,11 @@
     const goBackBtn = document.getElementById('goBackBtn');
 
     const params = new URLSearchParams(window.location.search);
-    const entity = params.get('entity'); // 'sorcerer' | 'technique' | 'curses' | 'resources'
+    const entity = params.get('entity'); // 'sorcerer' | 'technique' | 'curses' | 'resources' | 'mission'
     const id = params.get('id');
+    console.log('SIUUU', entity)
 
-    const endpointMap = { sorcerer: '/sorcerer', technique: '/technique', curses: '/curses' };
+    const endpointMap = { sorcerer: '/sorcerer', technique: '/technique', curses: '/curses', mision: '/missions' };
 
     function showFor(key) {
         fieldsets.forEach(fs => {
@@ -28,6 +29,7 @@
         if (e === 'technique') return 'tecnica';
         if (e === 'curses') return 'maldicion';
         if (e === 'recursos' || e === 'resource') return 'recurso';
+        if (e === 'mision' || e === 'mission' || e === 'missions') return 'mision';
         return 'hechicero';
     }
 
@@ -49,6 +51,7 @@
             fsKey = 'recurso';
         }
         try {
+            console.log(fsKey, base, id);
             const r = await fetch(`${API_BASE}${base}/${encodeURIComponent(id)}`);
             const raw = await r.text();
             let data;
@@ -119,9 +122,40 @@
                 setText('m_estado', ent && (ent.estado ?? ent.estado_actual));
             } else if (fsKey === 'recurso') {
                 setText('r_nombre', ent && ent.nombre);
+            } else if (fsKey === 'mision') {
+                const m = ent && ent.mission ? ent.mission : ent;
+                console.log('[show.js] mostrando misión:', m);
+                setText('mi_nombre', m && m.id ? `Misión #${m.id}` : 'Misión');
+                setText('mi_maldicion', m && m.descripcion_evento);
+                setText('mi_estado', m && m.estado);
+                // Fecha inicio
+                if (m && m.fecha_inicio) {
+                    try {
+                        const d = new Date(m.fecha_inicio);
+                        setText('mi_fecha', d.toLocaleDateString());
+                    } catch {
+                        setText('mi_fecha', m.fecha_inicio);
+                    }
+                } else {
+                    setText('mi_fecha', '');
+                }
+                // Fecha fin
+                if (m && m.fecha_fin) {
+                    try {
+                        const d = new Date(m.fecha_fin);
+                        setText('mi_fecha_fin', d.toLocaleDateString());
+                    } catch {
+                        setText('mi_fecha_fin', m.fecha_fin);
+                    }
+                } else {
+                    setText('mi_fecha_fin', '');
+                }
+                setText('mi_ubicacion', m && m.ubicacion);
+                setText('mi_urgencia', m && m.nivel_urgencia);
+                setText('mi_closed_by', m && m.closed_by);
+                setText('mi_danos_colaterales', m && m.danos_colaterales);
             }
-                // Si tienes más campos, agrégalos aquí
-            
+
         } catch (err) {
             console.error(err);
             resultEl.style.display = 'block';

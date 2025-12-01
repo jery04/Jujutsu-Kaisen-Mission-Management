@@ -280,10 +280,43 @@
         return;
       }
 
-      if (entitySelect.value === 'technique') loadTechniques();
+      // Asegura que la opción 'Misiones' esté presente en el select
+      if (!Array.from(entitySelect.options).some(opt => opt.value === 'mission')) {
+        const optMission = document.createElement('option');
+        optMission.value = 'mission';
+        optMission.textContent = 'Misiones';
+        entitySelect.appendChild(optMission);
+      }
+
+      if (entitySelect.value === 'mission' || entitySelect.value === 'missions') {
+        loadMissions();
+      } else if (entitySelect.value === 'technique') loadTechniques();
       else if (entitySelect.value === 'curses') loadCurses();
       else if (entitySelect.value === 'recursos' || entitySelect.value === 'resource') loadResources();
       else loadSorcerers();
+      // Renderizado visual mejorado para misiones
+      function renderMissions(payload) {
+        let data = [];
+        if (Array.isArray(payload)) {
+          data = payload;
+        } else if (payload && Array.isArray(payload.data)) {
+          data = payload.data;
+        } else if (payload && Array.isArray(payload.ok ? payload.missions : payload.count ? payload.missions : [])) {
+          data = payload.missions;
+        }
+        renderPaginated(data, function (m) {
+          const lines = [
+            `Nivel de urgencia: <strong>${m.nivel_urgencia || '-'}</strong>`,
+            `Ubicación: <strong>${m.lugar || m.ubicacion || '-'}</strong>`,
+            `Estado actual: <strong>${m.estado || '-'}</strong>`
+          ];
+          const item = makeItem(m.nombre || m.titulo || ('Misión #' + m.id), lines);
+          item.dataset.entity = 'mission';
+          if (m.id != null) item.dataset.id = String(m.id);
+          results.appendChild(item);
+        }, 'misiones');
+      }
+      function loadMissions() { return loadList('/missions/recent', renderMissions); }
     });
 
     // carga inicial simple según ?entity=
@@ -432,10 +465,17 @@
         if (!btnDelete && !btnEdit) {
           const item = ev.target.closest('.query-item');
           if (!item) return;
-          const entity = item.dataset.entity;
+          let entity = item.dataset.entity;
           const id = item.dataset.id;
-          if (entity && id) {
+          // Normalizar 'mission' a 'mision' para show.html
+          if (entity === 'mission' || entity === 'missions') entity = 'mision';
+          // Validar que entity e id sean válidos y no undefined/null
+          if (typeof entity === 'string' && entity && typeof id === 'string' && id) {
             window.location.href = `/html/show.html?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+            return;
+          } else {
+            // Si entity o id no son válidos, mostrar error o ignorar
+            console.warn('Redirección fallida: entity o id no definidos', { entity, id });
             return;
           }
         }
@@ -480,7 +520,8 @@
             technique: '/technique/',
             curses: '/curses/',
             resource: '/resources/',
-            recursos: '/resources/'
+            recursos: '/resources/',
+            
           };
           const base = routeMap[entity] || (`/${entity}/`);
           try {
