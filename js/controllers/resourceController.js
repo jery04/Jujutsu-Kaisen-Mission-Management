@@ -1,21 +1,14 @@
 const ResourceService = require('../services/resourceService');
 
-module.exports = function(db) {
+module.exports = function (db) {
   const ResourceService = require('../services/resourceService')(db);
   return {
     async createResource(req, res, next) {
       try {
-        // Si no hay usuario, busca el primer usuario válido
-        let userId = req.user?.id || req.headers['x-usuario'];
+        // Solo acepta si el usuario está explícitamente en el header
+        const userId = req.user?.id || req.headers['x-usuario'] || req.headers['x-user-id'];
         if (!userId) {
-          // Buscar el primer usuario en la base de datos
-          const UsuarioRepo = require('../repositories/BaseRepository');
-          const usuarioRepo = new UsuarioRepo(db, 'Usuario');
-          const firstUser = await usuarioRepo.getAll({ take: 1 });
-          userId = firstUser && firstUser.length > 0 ? firstUser[0].nombre_usuario : null;
-        }
-        if (!userId) {
-          return res.status(400).json({ message: 'No existe ningún usuario en el sistema para asignar como creador.' });
+          return res.status(400).json({ message: 'Debe especificar el usuario creador en el header (x-usuario o x-user-id).' });
         }
         const resourceData = { ...req.body, createdBy: userId };
         const resource = await ResourceService.createResource(resourceData);

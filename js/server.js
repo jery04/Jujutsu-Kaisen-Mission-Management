@@ -47,7 +47,7 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 
 // Basic rate limiting (configurable)
-const rlMax = Number(process.env.RATE_LIMIT_MAX || 100);
+const rlMax = Number(process.env.RATE_LIMIT_MAX || 1000);
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: rlMax, standardHeaders: true, legacyHeaders: false }));
 // Servir frontend estático (css, js, html/*) sin index automático
 const staticRoot = path.join(__dirname, '..');
