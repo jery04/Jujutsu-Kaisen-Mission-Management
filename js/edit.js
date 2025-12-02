@@ -1,15 +1,15 @@
 // Verifica si el usuario actual es administrador
-    function isAdmin() {
-        // El admin se marca con isAdmin = '1' en localStorage/sessionStorage
-        const isAdminFlag = localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1';
-        if (isAdminFlag) {
-            console.debug('Usuario detectado como ADMIN por flag isAdmin');
-            return true;
-        } else {
-            console.debug('Usuario NO es admin. Falta flag isAdmin en storage.');
-        }
-        return false;
+function isAdmin() {
+    // El admin se marca con isAdmin = '1' en localStorage/sessionStorage
+    const isAdminFlag = localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1';
+    if (isAdminFlag) {
+        console.debug('Usuario detectado como ADMIN por flag isAdmin');
+        return true;
+    } else {
+        console.debug('Usuario NO es admin. Falta flag isAdmin en storage.');
     }
+    return false;
+}
 (function () {
     'use strict';
     const API_BASE = window.API_BASE || window.location.origin;
@@ -198,21 +198,21 @@
             } else if (fsKey === 'maldicion') {
                 const nombreInput = document.getElementById('m_nombre');
                 if (nombreInput) nombreInput.value = record.nombre || '';
-                    // Precargar el select de grado correctamente
-                    const gradoSelect = document.getElementById('m_grado');
-                    if (gradoSelect) {
-                        // Si el valor existe en las opciones, lo selecciona; si no, lo deja vacío
-                        const found = Array.from(gradoSelect.options).find(opt => opt.value === record.grado);
-                        gradoSelect.value = found ? record.grado : '';
-                    }
-                    const tipoSelect = document.getElementById('m_tipo');
-                    if (tipoSelect) tipoSelect.value = record.tipo || 'maligna';
-                    const ubicacionInput = document.getElementById('m_ubicacion');
-                    if (ubicacionInput) ubicacionInput.value = record.ubicacion || '';
-                    if (record.fecha_aparicion) {
-                        // convert to local datetime-local value
-                        form.fecha.value = formatLocalDateTime(record.fecha_aparicion);
-                    }
+                // Precargar el select de grado correctamente
+                const gradoSelect = document.getElementById('m_grado');
+                if (gradoSelect) {
+                    // Si el valor existe en las opciones, lo selecciona; si no, lo deja vacío
+                    const found = Array.from(gradoSelect.options).find(opt => opt.value === record.grado);
+                    gradoSelect.value = found ? record.grado : '';
+                }
+                const tipoSelect = document.getElementById('m_tipo');
+                if (tipoSelect) tipoSelect.value = record.tipo || 'maligna';
+                const ubicacionInput = document.getElementById('m_ubicacion');
+                if (ubicacionInput) ubicacionInput.value = record.ubicacion || '';
+                if (record.fecha_aparicion) {
+                    // convert to local datetime-local value
+                    form.fecha.value = formatLocalDateTime(record.fecha_aparicion);
+                }
                 const estadoSelect = document.getElementById('m_estado');
                 // El campo en la base de datos es 'estado_actual', pero puede venir como 'estado' por compatibilidad
                 if (estadoSelect) {
@@ -253,7 +253,7 @@
         } else if (fsKey === 'hechicero') {
             const gradoMap = { 'grado medio': 'grado_medio', 'grado alto': 'grado_alto', 'grado especial': 'grado_especial' };
             const grado = gradoMap[raw.grado] || raw.grado || 'estudiante';
-                return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
+            return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
         } else if (fsKey === 'tecnica') {
             // Enviar los campos como string, nunca null
             const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
@@ -342,12 +342,17 @@
                 window.location.href = target;
                 return;
             }
-            // En creación (modo fallback), mantener feedback en la misma página
-            if (resultEl) {
-                resultEl.style.backgroundColor = '#d4edda';
-                resultEl.style.color = '#155724';
-                resultEl.innerHTML = '✅ ' + (isEditing ? 'Actualización' : 'Creación') + ' exitosa.<br><pre>' + JSON.stringify(body, null, 2) + '</pre>';
-            }
+            // En creación (modo fallback), usar modal de éxito
+            const prettyEntity = (function () {
+                const e = entity || fsKey;
+                const map = { sorcerer: 'Hechicero', tecnica: 'Técnica', technique: 'Técnica', curses: 'Maldición', maldicion: 'Maldición', recurso: 'Recurso', resource: 'Recurso' };
+                return map[e] || (e ? e.charAt(0).toUpperCase() + e.slice(1) : 'Entidad');
+            })();
+            const creator = headers['x-user-id'] || (localStorage.getItem('username') || sessionStorage.getItem('username') || 'desconocido');
+            showSuccessModal({
+                title: 'Registro exitoso',
+                bodyHtml: `<strong>Se ha registrado exitosamente ${prettyEntity}</strong><br>por el usuario <strong>${creator}</strong>`
+            });
         } catch (err) {
             if (resultEl) {
                 resultEl.style.backgroundColor = '#f8d7da';
@@ -365,4 +370,28 @@
     const fsKeyInit = normalizeEntity(entity);
     showFor(fsKeyInit);
     loadExisting().catch((e) => { console.debug('loadExisting failed', e); });
+    // Helper modal success (copia ligera de register.js hasta refactor común)
+    function showSuccessModal({ title, bodyHtml }) {
+        const old = document.querySelector('.modal-overlay-success');
+        if (old) old.remove();
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay-success';
+        overlay.innerHTML = `
+                    <div class="modal-success-box" role="alertdialog" aria-modal="true" aria-label="${title}">
+                        <h3><span class="icon">✅</span> <span>${title}</span></h3>
+                        <div class="modal-success-details">${bodyHtml}</div>
+                        <div class="modal-success-actions">
+                            <button type="button" id="successCloseBtn">Cerrar</button>
+                        </div>
+                    </div>`;
+        document.body.appendChild(overlay);
+        const closeBtn = overlay.querySelector('#successCloseBtn');
+        function close() { overlay.remove(); }
+        closeBtn.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        window.addEventListener('keydown', function escHandler(ev) {
+            if (ev.key === 'Escape') { close(); window.removeEventListener('keydown', escHandler); }
+        });
+        setTimeout(() => closeBtn.focus(), 50);
+    }
 })();

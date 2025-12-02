@@ -128,7 +128,7 @@
         let userId = '';
         try {
             userId = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
-        } catch (_) {}
+        } catch (_) { }
 
         if (entityType === 'hechicero') {
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
@@ -185,7 +185,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                        ...(userId ? { 'x-user-id': userId } : {})
+                    ...(userId ? { 'x-user-id': userId } : {})
                 },
                 body: JSON.stringify(payload),
             });
@@ -208,12 +208,14 @@
                 throw new Error(friendly);
             }
 
-            // Éxito: muestra resultado y deja el formulario listo para otro
+            // Éxito: mostrar modal centrado
             const id = result.id || result?.sorcerer?.id || 'N/A';
-            resultEl.style.backgroundColor = '#d4edda'; // verde claro
-            resultEl.style.color = '#155724';
-            resultEl.innerHTML = `✅ Registro de <strong>${entityType}</strong> exitoso. ID: <strong>${id}</strong><br><pre>${JSON.stringify(result, null, 2)}</pre>`;
-            resultEl.style.display = 'block';
+            const creator = userId || 'desconocido';
+            const prettyName = entityType.charAt(0).toUpperCase() + entityType.slice(1);
+            showSuccessModal({
+                title: 'Registro exitoso',
+                bodyHtml: `<strong>Se ha registrado exitosamente ${prettyName}</strong><br>por el usuario <strong>${creator}</strong><br><span style="font-size:12px;opacity:.75">ID asignado: ${id}</span>`
+            });
 
             form.reset();
             // No llamamos a showFor() aquí para no tocar el mensaje ni estilos.
@@ -249,5 +251,32 @@
                 }
             } catch (_) { /* no-op */ }
         }
+    }
+    // Utilidad para mostrar modal de éxito (reutilizable)
+    function showSuccessModal({ title, bodyHtml }) {
+        // Eliminar modal previo si existe
+        const old = document.querySelector('.modal-overlay-success');
+        if (old) old.remove();
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay-success';
+        overlay.innerHTML = `
+                    <div class="modal-success-box" role="alertdialog" aria-modal="true" aria-label="${title}">
+                        <h3><span class="icon">✅</span> <span>${title}</span></h3>
+                        <div class="modal-success-details">${bodyHtml}</div>
+                        <div class="modal-success-actions">
+                            <button type="button" id="successCloseBtn">Cerrar</button>
+                        </div>
+                    </div>`;
+        document.body.appendChild(overlay);
+        const closeBtn = overlay.querySelector('#successCloseBtn');
+        function close() { overlay.remove(); }
+        closeBtn.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        // Escape para cerrar
+        window.addEventListener('keydown', function escHandler(ev) {
+            if (ev.key === 'Escape') { close(); window.removeEventListener('keydown', escHandler); }
+        });
+        // Enfocar el botón para accesibilidad
+        setTimeout(() => closeBtn.focus(), 50);
     }
 })();
