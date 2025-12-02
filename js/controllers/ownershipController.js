@@ -46,6 +46,12 @@ module.exports = (db) => ({
       if (entity === 'curses') {
         const repo = getRepository(db, 'Curse');
         const curse = await repo.getById(id);
+        // Si la maldición está en estados bloqueados, negar edición para no administradores
+        const lockedStates = ['en proceso de exorcismo', 'exorcizada'];
+        const current = (curse && curse.estado_actual ? String(curse.estado_actual) : '').toLowerCase().trim();
+        if (lockedStates.includes(current)) {
+          return res.status(200).json({ canEdit: false, message: 'No es posible modificar la maldición debido a su estado actual' });
+        }
         const creador = (curse && curse.createBy) ? curse.createBy.toString().trim().toLowerCase() : '';
         const actual = (userId || '').toString().trim().toLowerCase();
         if (creador && creador === actual) {

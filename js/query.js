@@ -495,13 +495,42 @@
               currentUser = 'admin';
             } else {
               currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : (localStorage.getItem('username') || sessionStorage.getItem('username') || null);
-              const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
-              const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
-              const body = await resp.json().catch(() => ({}));
-              if (!body || body.canEdit !== true) {
-                const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
-                showForbiddenModal(msg);
-                return;
+              // Reglas especiales para maldiciones:
+              // - Solo se puede eliminar si está "exorcizada" y si el usuario es el creador
+              if (entity === 'curses') {
+                try {
+                  const cRes = await fetch(`${API_BASE}/curses/${encodeURIComponent(id)}`);
+                  const curse = await cRes.json().catch(() => null);
+                  if (!cRes.ok || !curse) {
+                    showForbiddenModal('No se pudo verificar el estado de la maldición.');
+                    return;
+                  }
+                  const estado = (curse.estado_actual ? String(curse.estado_actual) : '').toLowerCase().trim();
+                  const creador = (curse.createBy ? String(curse.createBy) : '').trim().toLowerCase();
+                  const actual = (currentUser || '').toString().trim().toLowerCase();
+                  if (estado !== 'exorcizada') {
+                    showForbiddenModal('Solo se puede eliminar una maldición exorcizada');
+                    return;
+                  }
+                  if (creador && creador !== actual) {
+                    showForbiddenModal('No puedes eliminar esta maldición. Solo el creador o un administrador puede hacerlo.');
+                    return;
+                  }
+                  // si pasa estas validaciones, permitimos continuar con el borrado
+                } catch (e) {
+                  alert('Error verificando permisos: ' + (e && e.message ? e.message : e));
+                  return;
+                }
+              } else {
+                // Para otras entidades, usar el endpoint de ownership
+                const checkUrl = `${API_BASE}/ownership/check?entity=${encodeURIComponent(entity)}&id=${encodeURIComponent(id)}`;
+                const resp = await fetch(checkUrl, { headers: { 'x-user-id': currentUser || '' } });
+                const body = await resp.json().catch(() => ({}));
+                if (!body || body.canEdit !== true) {
+                  const msg = body && body.message ? body.message : 'No puedes eliminar este elemento.';
+                  showForbiddenModal(msg);
+                  return;
+                }
               }
             }
           } catch (e) {
@@ -558,6 +587,21 @@
           try {
             const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
             let currentUser = (window.getCurrentUserId && typeof window.getCurrentUserId === 'function') ? window.getCurrentUserId() : (localStorage.getItem('username') || sessionStorage.getItem('username') || null);
+
+            // Regla: si es una maldición en estado bloqueado y no es admin, no permitir editar
+            if (!isAdmin && (entity === 'curses' || entity === 'maldicion' || entity === 'maldiciones')) {
+              try {
+                const resp = await fetch(`${API_BASE}/curses/${encodeURIComponent(id)}`);
+                const curse = await resp.json().catch(() => null);
+                const estado = (curse && curse.estado_actual ? String(curse.estado_actual) : '').toLowerCase().trim();
+                const locked = ['en proceso de exorcismo', 'exorcizada'];
+                if (locked.includes(estado)) {
+                  showForbiddenModal('No es posible modificar la maldición debido a su estado actual');
+                  return;
+                }
+              } catch(_) { /* si falla, seguimos al chequeo normal de ownership */ }
+            }
+
             if (!isAdmin) {
               // Si es recurso, obtener el recurso y comparar createdBy
               if (entity === 'recurso') {

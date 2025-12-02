@@ -111,7 +111,7 @@
                 <input id="m_nombre" name="nombre" type="text" required>
 
                 <label for="m_grado">Grado</label>
-                <select id="m_grado" name="grado">
+                <select id="m_grado" name="grado" required>
                     <option value="" selected disabled>-- Selecciona grado --</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -121,7 +121,7 @@
                 </select>
 
                 <label for="m_tipo">Tipo</label>
-                <select id="m_tipo" name="tipo">
+                <select id="m_tipo" name="tipo" required>
                     <option value="" selected disabled>-- Selecciona tipo --</option>
                     <option value="maligna">Maligna</option>
                     <option value="semi-maldicion">Semi-maldición</option>
@@ -141,10 +141,9 @@
                     <div class="col">
                         <label for="m_estado">Estado actual</label>
                         <select id="m_estado" name="estado">
-                            <option value="" selected disabled>-- Selecciona estado --</option>
-                            <option value="activa">Activa</option>
-                            <option value="en proceso de exorcismo">En proceso de exorcismo</option>
-                            <option value="exorcizada">Exorcizada</option>
+                            <option value="activa" selected>Activa</option>
+                            <option value="en proceso de exorcismo" disabled style="color:gray;">En proceso de exorcismo</option>
+                            <option value="exorcizada" disabled style="color:gray;">Exorcizada</option>
                         </select>
                     </div>
                 </div>
