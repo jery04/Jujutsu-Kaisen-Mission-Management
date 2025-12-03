@@ -487,6 +487,32 @@
           const id = item.dataset.id;
           if (!entity || !id) return;
 
+          // Si es misión y NO es admin -> bloquear con mensaje
+          try {
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            const isMission = (entity === 'mission' || entity === 'missions' || entity === 'mision');
+            if (isMission && !isAdmin) {
+              showForbiddenModal('No puedes borrar una misión. Esta acción es solo para administradores.');
+              return;
+            }
+          } catch(_) { /* noop */ }
+
+          // Si es misión y sí es admin, validar que esté finalizada
+          try {
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            const isMission = (entity === 'mission' || entity === 'missions' || entity === 'mision');
+            if (isMission && isAdmin) {
+              const r = await fetch(`${API_BASE}/missions/${encodeURIComponent(id)}`);
+              const payload = await r.json().catch(() => ({ mission: null }));
+              const mission = Array.isArray(payload) ? null : (payload.mission || payload);
+              const finished = Boolean(mission && (mission.fecha_fin || mission.fecha_terminacion));
+              if (!finished) {
+                showForbiddenModal('Solo se puede borrar la misión una vez finalizada.');
+                return;
+              }
+            }
+          } catch(_) { /* si falla, el backend también validará */ }
+
           // verificar propiedad antes de permitir borrar (se puede omitir si es admin)
           let currentUser = null;
           try {
@@ -550,6 +576,9 @@
             curses: '/curses/',
             resource: '/resources/',
             recursos: '/resources/',
+            mission: '/missions/',
+            missions: '/missions/',
+            mision: '/missions/'
             
           };
           const base = routeMap[entity] || (`/${entity}/`);
@@ -583,6 +612,16 @@
           if (entity === 'resource' || entity === 'recursos') {
             entity = 'recurso';
           }
+
+          // Si es misión y NO es admin -> bloquear con mensaje y no continuar
+          try {
+            const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+            const isMission = (entity === 'mission' || entity === 'missions' || entity === 'mision');
+            if (isMission && !isAdmin) {
+              showForbiddenModal('No puedes editar una misión. Esta acción es solo para administradores.');
+              return;
+            }
+          } catch(_) { /* noop */ }
 
           try {
             const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');

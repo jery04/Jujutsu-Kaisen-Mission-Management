@@ -38,4 +38,13 @@ module.exports = (db) => ({
         }
         catch (err) { const code = err.status || 500; res.status(code).json({ ok: false, message: err.message }); }
     },
+    remove: async (req, res) => {
+        try {
+            const user = { id: req.headers['x-user-id'] || null, role: req.headers['x-user-role'] || null };
+            const out = await service.deleteMission(db, req.params.id, user);
+            res.json(out);
+        } catch (err) {
+            const code = err.status || 500; res.status(code).json({ ok: false, message: err.message });
+        }
+    }
 });

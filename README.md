@@ -24,6 +24,12 @@
 ## Estados de misión
 
 - `pendiente`, `en_ejecucion`, `completada_exito`, `completada_fracaso`, `cancelada`.
+ 
+## Roles y permisos
+
+- Editar y borrar Misiones: solo administradores.
+- Borrado de Misión: permitido únicamente si la misión tiene fecha de terminación registrada (campo `fecha_fin`/`fecha_terminacion` distinto de null).
+- Para otras entidades, la edición/eliminación requieren ser el creador, salvo bypass de administrador.
 # Jujutsu Misiones - Node.js API (EntitySchema)
 
 Contenido generado automáticamente.

@@ -167,4 +167,19 @@ module.exports = {
     try { events.emit('mission:closed', { mission_id: Number(missionId), estado }); } catch (_) { }
     return { ok: true, mission: upd };
   }
+,
+  async deleteMission(db, missionId, user) {
+    const missionRepo = getRepository(db, 'Mission');
+    const found = await missionRepo.getById(missionId);
+    if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
+    // Solo administradores pueden borrar
+    const role = String(user && user.role || '').toLowerCase();
+    if (role !== 'admin') { const err = new Error('No autorizado: solo administradores pueden borrar misiones'); err.status = 403; throw err; }
+    // Regla: solo si tiene fecha de terminación distinta de null
+    const finished = Boolean(found.fecha_fin || found.fecha_terminacion);
+    if (!finished) { const err = new Error('No permitido: la misión aún no tiene fecha de terminación'); err.status = 409; throw err; }
+    const res = await missionRepo.delete(missionId);
+    try { events.emit('mission:deleted', { mission_id: Number(missionId) }); } catch (_) { }
+    return { ok: true, deleted: Number(missionId), affected: res?.affected };
+  }
 };

@@ -89,6 +89,7 @@ module.exports = {
 
     // Solo el administrador puede modificar el estado_actual explícitamente
     if (estado_actual != null) {
+      console.log('Verificando cambio de estado_actual:', estado_actual, 'vs', curse.estado_actual,String(userId));
       if (estado_actual !== curse.estado_actual && String(userId) !== 'admin') {
         const err = new Error('No está permitido modificar el estado actual de la maldición');
         err.status = 403;
@@ -102,7 +103,17 @@ module.exports = {
     if (typeof grado === 'string') partial.grado = grado;
     if (typeof tipo === 'string') partial.tipo = tipo;
     if (fecha_aparicion) { const newDate = new Date(fecha_aparicion); if (!isNaN(newDate.getTime())) partial.fecha_aparicion = newDate; }
-    if (typeof ubicacion === 'string' && ubicacion.trim()) partial.ubicacion = ubicacion;
+    // Regla de negocio: NO permitir editar la ubicación de una maldición si es distinta a la almacenada
+    if (ubicacion !== undefined) {
+      const newUbicacion = String(ubicacion).trim();
+      const currentUbicacion = String(curse.ubicacion || '').trim();
+      if (newUbicacion !== currentUbicacion) {
+        const err = new Error('No está permitido alterar ni modificar la ubicación de una maldición');
+        err.status = 403;
+        throw err;
+      }
+      // Si es igual, simplemente no aplicamos cambio
+    }
     // Verificar permiso de edición: solo el creador (admin bypass)
     if (!userId) { const err = new Error('Usuario no autenticado'); err.status = 401; throw err; }
     if (String(userId) !== 'admin') {

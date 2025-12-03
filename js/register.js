@@ -174,9 +174,6 @@
 
         // Feedback de envío y bloqueo de doble submit
         clearResult();
-        resultEl.innerHTML = `<span style="color:blue;">Enviando ${entityType}...</span>`;
-        resultEl.style.backgroundColor = '#f0f0f0';
-        resultEl.style.display = 'block';
         if (submitBtn) submitBtn.disabled = true;
 
         try {

@@ -37,6 +37,8 @@ const curseCreate = z.object({
   ubicacion: nonEmpty('Ubicación es requerida').max(150),
   estado_actual: nonEmpty('Estado actual es requerido').max(100)
 });
+// En actualizaciones, se permite enviar "ubicacion" pero la lógica de negocio
+// decidirá si se puede cambiar (comparado contra el valor almacenado).
 const curseUpdate = curseCreate.partial();
 
 // Mission schema (not wired to routes yet)

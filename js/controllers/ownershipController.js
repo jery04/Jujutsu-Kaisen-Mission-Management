@@ -59,6 +59,14 @@ module.exports = (db) => ({
         }
         return res.status(200).json({ canEdit: false, message: 'No autorizado: solo el creador puede editar/eliminar' });
       }
+
+      // Misiones: por regla de negocio, solo administradores pueden editar/eliminar
+      if (entity === 'mission' || entity === 'missions' || entity === 'mision') {
+        return res.status(200).json({ canEdit: false, message: 'Solo administradores pueden editar o eliminar misiones.' });
+      }
+
+      // Entidad no soportada: negar por defecto
+      return res.status(200).json({ canEdit: false, message: 'Entidad no soportada para edición/eliminación.' });
     } catch (e) {
       console.error('[ownershipController] Error verificando propiedad:', e && e.message ? e.message : e);
       return res.status(500).json({ canEdit: false, message: 'Error verificando permisos' });

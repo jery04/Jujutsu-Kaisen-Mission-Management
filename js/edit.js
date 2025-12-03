@@ -1,14 +1,22 @@
 // Verifica si el usuario actual es administrador
 function isAdmin() {
-    // El admin se marca con isAdmin = '1' en localStorage/sessionStorage
-    const isAdminFlag = localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1';
-    if (isAdminFlag) {
-        console.debug('Usuario detectado como ADMIN por flag isAdmin');
-        return true;
-    } else {
-        console.debug('Usuario NO es admin. Falta flag isAdmin en storage.');
+    // Solo verdadero si:
+    // 1) existe flag isAdmin === '1' en storage, y
+    // 2) el nombre de usuario indica modo administrador
+    const flagLocal = (localStorage.getItem('isAdmin') || '').trim();
+    const flagSession = (sessionStorage.getItem('isAdmin') || '').trim();
+    const hasAdminFlag = (flagLocal === '1' || flagSession === '1');
+
+    const username = ((localStorage.getItem('username') || sessionStorage.getItem('username') || '') + '').trim().toLowerCase();
+    const looksAdminUser = (username === 'administrador' || username === 'admin');
+
+    const isReallyAdmin = hasAdminFlag && looksAdminUser;
+    if (!isReallyAdmin) {
+        console.debug('Usuario NO es admin. Flag/username inválidos.', { hasAdminFlag, username });
+        return false;
     }
-    return false;
+    console.debug('Usuario detectado como ADMIN');
+    return true;
 }
 (function () {
     'use strict';
@@ -32,6 +40,7 @@ function isAdmin() {
         technique: '/technique',
         curses: '/curses',
         resource: '/resources'
+        
     };
 
     function showFor(value) {
@@ -320,7 +329,7 @@ function isAdmin() {
 
         try {
             const headers = { 'Content-Type': 'application/json' };
-            // Si el usuario es admin, enviar 'admin' como x-user-id
+            // Enviar 'admin' si el usuario es administrador; de lo contrario, enviar el username de la sesión
             let user = localStorage.getItem('username') || sessionStorage.getItem('username') || '';
             if (isAdmin()) {
                 headers['x-user-id'] = 'admin';
