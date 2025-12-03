@@ -1,3 +1,45 @@
+/* Tables: generic styling used across entity views */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* keeps columns evenly sized */
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.table thead th {
+    text-align: center;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #111827;
+    background: #f7f7f9;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table tbody td {
+    text-align: center; /* centers content under each column */
+    padding: 12px 16px;
+    color: #1f2937;
+    word-wrap: break-word;
+}
+
+.table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.table tbody tr:hover {
+    background: #eef2ff; /* subtle hover */
+}
+
+/* Empty state message centered */
+#assigned-sorcerers-empty {
+    text-align: center;
+}
 /* body */
 body {
     margin: 0;

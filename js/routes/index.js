@@ -39,6 +39,7 @@ module.exports = function registerRoutes(app, db) {
   app.delete('/technique/:id', techniqueController.remove);
 
   // Curses
+  app.get('/missions/:id/sorcerers', missionController.getSorcerersForMission);
   app.get('/curses', curseController.list);
   app.get('/curses/:id', curseController.getById);
   app.post('/curses', validateBody(schemas.curseCreate), curseController.create);

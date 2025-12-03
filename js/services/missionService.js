@@ -52,6 +52,12 @@ module.exports = {
       }
       return { ok: true, mission };
     },
+    async getSorcerersForMission(db, missionId) {
+      if (!missionId) throw new Error('Mission ID requerido');
+      const missionRepo = getRepository(db, 'Mission');
+      const sorcerers = await missionRepo.getSorcerersForMission(Number(missionId));
+      return { ok: true, sorcerers };
+    },
   async getByCurse(db, curseId) {
     const missionRepo = getRepository(db, 'Mission');
     const missions = await missionRepo.getByCurseId(curseId);

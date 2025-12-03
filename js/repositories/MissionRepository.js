@@ -15,6 +15,21 @@ class MissionRepository extends BaseRepository {
     async getById(id) {
       return await this.findOne({ where: { id: Number(id) } });
     }
+    
+    async getSorcerersForMission(missionId) {
+      const qb = this.createQueryBuilder('m')
+        .innerJoin('mission_participant', 'mp', 'mp.mission_id = m.id')
+        .innerJoin('sorcerer', 's', 's.id = mp.sorcerer_id')
+        .select([
+          's.id AS id',
+          's.nombre AS nombre',
+          's.grado AS grado',
+          's.anios_experiencia AS anios_experiencia'
+        ])
+        .where('m.id = :missionId', { missionId: Number(missionId) })
+        .orderBy('s.nombre', 'ASC');
+      return await qb.getRawMany();
+    }
 
   async successRange(from, to) {
     const qb = this.createQueryBuilder('m')

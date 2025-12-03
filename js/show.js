@@ -154,6 +154,34 @@
                 setText('mi_urgencia', m && m.nivel_urgencia);
                 setText('mi_closed_by', m && m.closed_by);
                 setText('mi_danos_colaterales', m && m.danos_colaterales);
+
+                // Render mini query of sorcerers assigned
+                const fsSorcs = document.querySelector('fieldset[data-for="mision-hechiceros"]');
+                if (fsSorcs) fsSorcs.style.display = '';
+                const tbody = document.querySelector('#assigned-sorcerers-table tbody');
+                const empty = document.getElementById('assigned-sorcerers-empty');
+                const errBox = document.getElementById('assigned-sorcerers-error');
+                const missionId = m && m.id ? m.id : id;
+                if (!missionId) { if (empty) empty.style.display = ''; return; }
+                try {
+                    const r2 = await fetch(`${API_BASE}/missions/${encodeURIComponent(missionId)}/sorcerers`);
+                    const data2 = await r2.json();
+                    if (!r2.ok || !data2.ok) throw new Error((data2 && data2.message) || `HTTP ${r2.status}`);
+                    const list = data2.sorcerers || [];
+                    if (!list.length) { if (empty) empty.style.display = ''; return; }
+                    if (empty) empty.style.display = 'none';
+                    if (tbody) {
+                        tbody.innerHTML = list.map(s => (
+                            `<tr>
+                                <td>${escapeHtml(s.nombre ?? s.name ?? '')}</td>
+                                <td>${escapeHtml(s.grado ?? s.grade ?? '')}</td>
+                                <td>${escapeHtml(s.anios_experiencia ?? s.years_experience ?? '')}</td>
+                            </tr>`
+                        )).join('');
+                    }
+                } catch (e) {
+                    if (errBox) { errBox.textContent = e.message; errBox.style.display = ''; }
+                }
             }
 
         } catch (err) {

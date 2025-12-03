@@ -18,6 +18,12 @@ module.exports = (db) => ({
         try { const { from, to } = req.query; const out = await service.successRange(db, from, to); res.json(out); }
         catch (err) { console.error(err); res.status(500).json({ ok: false, message: 'Error en consulta rango' }); }
     },
+    getSorcerersForMission: async (req, res, next) => {
+        try {
+            const out = await service.getSorcerersForMission(db, req.params.id);
+            res.json(out);
+        } catch (err) { next(err); }
+    },
     getByCurse: async (req, res) => {
         try { const out = await service.getByCurse(db, req.params.id); res.json(out); }
         catch (err) { console.error(err); res.status(500).json({ ok: false, message: 'Error consultando por maldición' }); }

@@ -155,6 +155,25 @@
                 <label for="mi_maldicion">Nombre de la maldición asignada</label>
                 <label id="mi_maldicion" aria-label="maldicion-mision" class="entity-label"></label>
 
+            <!-- Mini query: Hechiceros asignados a la misión -->
+            <fieldset data-for="mision-hechiceros" style="display:none">
+                <legend>Hechiceros asignados</legend>
+                <div id="assigned-sorcerers-empty" class="entity-label" style="display:none">No hay hechiceros asignados.</div>
+                <div class="table-wrapper">
+                    <table id="assigned-sorcerers-table" class="table" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Grado</th>
+                                <th>Años de experiencia</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div id="assigned-sorcerers-error" class="error" style="display:none"></div>
+            </fieldset>
+
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
                     <p>
