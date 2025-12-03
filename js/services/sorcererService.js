@@ -63,7 +63,7 @@ module.exports = {
     const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
-    if (typeof grado === 'string') partial.grado = grado;
+    if (typeof grado === 'string' && grado.trim() !== '') partial.grado = grado;
     if (anios_experiencia != null) partial.anios_experiencia = Number(anios_experiencia) || 0;
     if (typeof estado_operativo === 'string') partial.estado_operativo = estado_operativo;
     if (typeof causa_muerte === 'string' || causa_muerte === null) partial.causa_muerte = causa_muerte || null;
@@ -75,11 +75,44 @@ module.exports = {
       const err = new Error('Usuario no autenticado'); err.status = 401; throw err;
     }
     // Admin bypass
-    if (String(userId) !== 'admin') {
-      const sorcerer = await repo.getById(id);
-      if (!sorcerer) { const err = new Error('Entidad no encontrada'); err.status = 404; throw err; }
-      if (String(sorcerer.createBy) !== String(userId)) {
-        const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err;
+    const isAdmin = String(userId) === 'admin';
+    const sorcerer = await repo.getById(id);
+    if (!sorcerer) { const err = new Error('Entidad no encontrada'); err.status = 404; throw err; }
+    if (!isAdmin && String(sorcerer.createBy) !== String(userId)) {
+      const err = new Error('No autorizado: solo el creador puede editar'); err.status = 403; throw err;
+    }
+
+    // Regla: estado_operativo solo puede cambiarlo el admin
+    if (!isAdmin && partial.estado_operativo !== undefined && partial.estado_operativo !== sorcerer.estado_operativo) {
+      const err = new Error('No autorizado: solo el administrador puede cambiar el estado operativo'); err.status = 403; throw err;
+    }
+
+    // Regla: anios_experiencia solo puede aumentar
+    if (partial.anios_experiencia !== undefined) {
+      const prevExp = Number(sorcerer.anios_experiencia) || 0;
+      const nextExp = Number(partial.anios_experiencia) || 0;
+      if (nextExp < prevExp) {
+        const err = new Error('No permitido: los años de experiencia no pueden disminuir'); err.status = 400; throw err;
+      }
+    }
+
+    // Regla: grado solo puede mejorar
+    if (partial.grado !== undefined && String(partial.grado).trim() !== '') {
+      // Escala de grados (de menor a mayor)
+      const scale = ['estudiante', 'aprendiz', 'grado_medio', 'grado_alto', 'grado_especial'];
+      const normalize = (g) => {
+        if (!g) return '';
+        const s = String(g).trim().toLowerCase();
+        // Convertir formatos con espacios a guiones bajos
+        return s.replace(/\s+/g, '_');
+      };
+      const currentIdx = scale.indexOf(normalize(sorcerer.grado));
+      const nextIdx = scale.indexOf(normalize(partial.grado));
+      if (currentIdx === -1 || nextIdx === -1) {
+        const err = new Error('Valor de grado inválido'); err.status = 400; throw err;
+      }
+      if (nextIdx < currentIdx) {
+        const err = new Error('No permitido: el grado no puede disminuir'); err.status = 400; throw err;
       }
     }
 
