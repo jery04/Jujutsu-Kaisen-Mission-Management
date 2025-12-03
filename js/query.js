@@ -233,10 +233,27 @@
     const btnCur = document.getElementById('curses');
     const entitySelect = document.getElementById('entity-select');
 
+    // Asegurar que el select tenga como valor por defecto "hechicero" (sorcerer)
+    try {
+      if (entitySelect && (!entitySelect.dataset || entitySelect.dataset.mode !== 'estado')) {
+        // Garantizar que exista la opción 'sorcerer'
+        const hasSorcerer = Array.from(entitySelect.options).some(opt => opt.value === 'sorcerer');
+        if (!hasSorcerer) {
+          const optSor = document.createElement('option');
+          optSor.value = 'sorcerer';
+          optSor.textContent = 'Hechiceros';
+          entitySelect.insertBefore(optSor, entitySelect.firstChild);
+        }
+        // Establecer el valor por defecto
+        entitySelect.value = 'sorcerer';
+      }
+    } catch (_) { /* noop */ }
+
     // Si la página fue invocada con una lista específica de estados, adaptar
     // el select existente `#entity-select` para mostrar solo esos estados.
     try {
       const estadoRaw = sessionStorage.getItem('estadoOptions');
+      const specialMode = sessionStorage.getItem('mode');
       if (estadoRaw) {
         const allowed = JSON.parse(estadoRaw);
         if (entitySelect) {
@@ -263,6 +280,25 @@
 
         // Limpiar flag para que no persista en futuras visitas
         sessionStorage.removeItem('estadoOptions');
+      }
+      // Si venimos en modo especial de "misiones por hechicero"
+      if (specialMode === 'missionsBySorcerer') {
+        // Remover el select de entidad para evitar confusión en este modo
+        if (entitySelect && entitySelect.parentNode) {
+          try {
+            entitySelect.parentNode.removeChild(entitySelect);
+          } catch (_) {}
+        }
+
+        // Preparamos la UI para buscar hechicero (input y submit ya existentes)
+        // Colocar un aviso breve en resultados como guía
+        clearResults();
+        if (results) {
+          const tip = document.createElement('div');
+          tip.className = 'query-item';
+          tip.innerHTML = '<h3>Buscar misiones por hechicero</h3><p>Escribe el nombre del hechicero y presiona Enter para ver sus misiones.</p>';
+          results.appendChild(tip);
+        }
       }
     } catch (e) { console.warn('No se pudo aplicar filtro de estados', e); }
 
@@ -323,13 +359,20 @@
     try {
       const params = new URLSearchParams(window.location.search);
       const view = params.get('entity');
-      if (view === 'technique') loadTechniques();
-      else if (view === 'curses') loadCurses();
-      else if (view === 'recursos' || view === 'resource') loadResources();
-      else loadSorcerers();
+      // Si estamos en modo 'estado' (primer botón), NO cargar hechiceros por defecto.
+      if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
+        // Dejar que el usuario elija un estado antes de mostrar resultados.
+      } else {
+        if (view === 'technique') loadTechniques();
+        else if (view === 'curses') loadCurses();
+        else if (view === 'recursos' || view === 'resource') loadResources();
+        else loadSorcerers();
+      }
       if (entitySelect && (!entitySelect.dataset || entitySelect.dataset.mode !== 'estado') && (view === 'technique' || view === 'curses' || view === 'sorcerer' || view === 'recursos' || view === 'resource')) entitySelect.value = view;
     } catch (e) {
-      loadSorcerers();
+      if (!(entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado')) {
+        loadSorcerers();
+      }
     }
 
     // Manejador del formulario de búsqueda: obtiene la entidad seleccionada y busca por nombre
@@ -341,6 +384,55 @@
           ev.preventDefault();
           const raw = String(searchInput.value || '').trim();
           const selected = (entitySelect && entitySelect.value) ? entitySelect.value : 'sorcerer';
+
+          // Modo especial: misiones por hechicero
+          try {
+            const specialMode = sessionStorage.getItem('mode');
+            if (specialMode === 'missionsBySorcerer') {
+              if (!raw) { clearResults(); if (results) results.innerHTML = '<div class="query-item"><h3>Ingresa un nombre de hechicero</h3></div>'; return; }
+              (async function () {
+                clearResults();
+                try {
+                  // 1) Buscar hechicero por nombre (fetch all y filtrar por substring)
+                  const rS = await fetch(API_BASE + '/sorcerer');
+                  if (!rS.ok) throw new Error('HTTP ' + rS.status);
+                  const sorRaw = await rS.json();
+                  const sorList = Array.isArray(sorRaw) ? sorRaw : (sorRaw && Array.isArray(sorRaw.data) ? sorRaw.data : []);
+                  const q = raw.toLowerCase();
+                  const match = sorList.find(s => String(s.nombre || '').toLowerCase().indexOf(q) !== -1);
+                  if (!match || !match.id) {
+                    if (results) results.innerHTML = '<div class="query-item"><h3>No se encontró el hechicero</h3></div>';
+                    return;
+                  }
+                  const sorcererId = match.id;
+
+                  // 2) Consultar misiones por hechicero
+                  const rM = await fetch(API_BASE + '/missions/sorcerer/' + encodeURIComponent(String(sorcererId)));
+                  if (!rM.ok) throw new Error('HTTP ' + rM.status);
+                  const payload = await rM.json();
+                  let missions = [];
+                  if (Array.isArray(payload)) missions = payload;
+                  else if (payload && Array.isArray(payload.missions)) missions = payload.missions;
+
+                  // 3) Renderizar sólo fecha y resultado/estado
+                  renderPaginated(missions, function (m) {
+                    const fecha = m.fecha_inicio || m.fecha || m.fecha_fin || '-';
+                    const resultado = m.resultado || m.estado || '-';
+                    const item = makeItem('Misión #' + (m.id != null ? m.id : ''), [
+                      `Fecha: <strong>${fecha}</strong>`,
+                      `Resultado: <strong>${resultado}</strong>`
+                    ]);
+                    item.dataset.entity = 'mission';
+                    if (m.id != null) item.dataset.id = String(m.id);
+                    results.appendChild(item);
+                  }, 'misiones');
+                } catch (err) {
+                  if (results) results.innerHTML = '<div class="query-item"><h3>Error conectando a la API</h3><p>' + err.message + '</p></div>';
+                }
+              }());
+              return;
+            }
+          } catch (_) {}
 
           // Si el select fue adaptado para estados, tratar diferente: buscamos entre MALDICIONES
           if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {

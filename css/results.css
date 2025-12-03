@@ -118,6 +118,14 @@
     transition: transform .25s ease, box-shadow .25s ease;
 }
 
+/* Hover para Exportar y Volver (mismo efecto) */
+#export-pdf.btn-action:hover,
+#go-back.btn-action:hover {
+    background: #dcdce0;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
 /* Botones de exportar y volver en fila horizontal */
 .btn-group.horizontal {
     display: flex;
