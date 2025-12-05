@@ -23,25 +23,9 @@ html {
     padding: 20px;
     background: #f7f7f7;
     color: #222;
-    padding-top: 150px;
+ 
 }
 
-/* Title block styling aligned with query page */
-/* .title */
-.title {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-/* .title h2 */
-.title h2 {
-    margin: 0 0 6px 0;
-}
-
-/* .title p */
-.title p {
-    margin: 0;
-}
 
 /* Container styled like the signup box you provided */
 /* .container */

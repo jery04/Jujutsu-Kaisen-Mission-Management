@@ -39,8 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const userNameEl = document.getElementById('user-name');
   const userAvatarEl = document.getElementById('user-avatar');
   const queryplusBtn = document.getElementById('open-queryplus');
-
-
+  const tutorialBtn = document.getElementById('open-tutorial');
 
   if (signupBtn) {
     signupBtn.addEventListener('click', () => {
@@ -49,12 +48,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (addBtn) {
-    addBtn.addEventListener('click', () => {
-      // Navigate to the add page (relative to index.html)
-      window.location.href = 'html/register.html';
-    });
-  }
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        // Navigate to the add page (relative to index.html)
+        window.location.href = 'html/register.html';
+      });
+    }
+
+    if (tutorialBtn) {
+      tutorialBtn.addEventListener('click', () => {
+        // Navigate to the tutorial page (relative to index.html)
+        window.location.href = 'html/tutorial.html';
+      });
+    }
 
   if (queryplusBtn) {
     queryplusBtn.addEventListener('click', () => {
