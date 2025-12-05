@@ -1,0 +1,11 @@
+{
+  "probabilities": {
+    "daily": {
+      "success": 0.5,
+      "fail": 0.2
+    }
+  },
+  "delay": {
+    "startDays": 2
+  }
+}

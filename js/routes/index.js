@@ -12,6 +12,7 @@ module.exports = function registerRoutes(app, db) {
   const ownershipController = require('../controllers/ownershipController')(db);
   const resourceController = require('../controllers/resourceController')(db);
   const transferController = require('../controllers/transferController')(db);
+  const adminController = require('../controllers/adminController')(db);
   // Optional auth middleware from Josue_Capas (not applied globally here)
   try { require('../middleware/authMiddleware'); } catch(_) {}
   // Validation
@@ -73,4 +74,8 @@ module.exports = function registerRoutes(app, db) {
   app.post('/auth/login', validateBody(schemas.userLogin), userController.login);
   // Ownership check (frontend uses this to show immediate feedback)
   app.get('/ownership/check', ownershipController.check);
+
+  // Admin Time Controls
+  app.get('/admin/time', adminController.getCurrentTime);
+  app.post('/admin/time/advance', adminController.advanceTime);
 };

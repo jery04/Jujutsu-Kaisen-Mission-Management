@@ -23,10 +23,14 @@ const PrincipalAssignment = require('../database_tables/PrincipalAssignment');
 const SorcererDeathCause = require('../database_tables/SorcererDeathCause');
 const SorcererSubordination = require('../database_tables/SorcererSubordination');
 const Usuario = require('../database_tables/Usuario');
+const ProjectTime = require('../database_tables/ProjectTime');
 // ...existing code...
 
 // Express
 const app = express();
+
+// Config de progresión centralizada
+const progressCfg = require('./config/progress');
 
 // Security middleware
 app.use(helmet());
@@ -89,7 +93,7 @@ if (process.env.NODE_ENV === 'test') {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 3306,
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '1234',
+    password: process.env.DB_PASSWORD || 'Alexby9511*',
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
@@ -107,6 +111,7 @@ if (process.env.NODE_ENV === 'test') {
       SorcererDeathCause,
       SorcererSubordination,
       Usuario,
+      ProjectTime,
       // ...existing code...
     ],
     synchronize: true // Habilitar sincronización automática para desarrollo
@@ -127,6 +132,86 @@ if (process.env.NODE_ENV === 'test') {
 
       // Suscribirse a eventos del bus y reenviar por Socket.IO
       const events = require('./utils/events');
+      // Scheduler: on time advanced, evaluate missions progression in batch (lightweight placeholder)
+      events.on('time:advanced', async ({ from, to }) => {
+        try {
+          const { getRepository } = require('./repositories');
+          const missionRepo = getRepository(dbConn, 'Mission');
+          // Probabilidades base desde JSON (con overrides por entorno)
+          const probs = progressCfg.getProbabilities();
+          const P_SUCCESS = probs.daily.success;
+          const P_FAIL = probs.daily.fail;
+          const P_CONTINUE = probs.daily.continue;
+          const dayMs = 24 * 60 * 60 * 1000;
+          const start = new Date(from);
+          const end = new Date(to);
+          const days = Math.max(1, Math.ceil((end - start) / dayMs));
+
+          // Candidatas: todas pendientes o en ejecución que tengan fecha_inicio <= end
+          const pending = await missionRepo.find({ where: { estado: 'pendiente' } });
+          const running = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
+          const candidates = [...pending, ...running];
+
+          const missionService = require('./services/missionService');
+          for (const m of candidates) {
+            // Si está pendiente y ya llegó su fecha de inicio, iniciarla
+            if (m.estado === 'pendiente' && new Date(m.fecha_inicio) <= end) {
+              try { await missionService.startMission(dbConn, m.id); } catch (_) {}
+            }
+          }
+
+          // Reconsultar las en ejecucion tras posibles inicios
+          const executing = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
+          for (const m of executing) {
+            let lastEval = m.last_evaluated_at ? new Date(m.last_evaluated_at) : new Date(m.fecha_inicio);
+            // Avanzar día a día dentro del rango
+            for (let d = 0; d < days; d++) {
+              const tick = new Date(start.getTime() + d * dayMs);
+              if (tick <= lastEval) continue;
+              if (tick > end) break;
+
+              // Comprobar si todos los hechiceros están muertos -> cancelar
+              try {
+                const { createQueryBuilder } = missionRepo;
+                const qb = createQueryBuilder.call(missionRepo, 'ms')
+                  .innerJoin('mission_participant', 'mp', 'mp.mission_id = ms.id')
+                  .innerJoin('sorcerer', 's', 's.id = mp.sorcerer_id')
+                  .select(['s.fecha_fallecimiento AS fecha_fallecimiento'])
+                  .where('ms.id = :mid', { mid: m.id });
+                const rows = await qb.getRawMany();
+                const allDead = rows.length > 0 && rows.every(r => r.fecha_fallecimiento);
+                if (allDead) {
+                  // Cancelar misión actual
+                  await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
+                  // Crear nueva misión para la misma maldición
+                  try {
+                    await missionService.createForCurse(dbConn, m.curse || { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion, fecha_aparicion: tick });
+                  } catch (_) {}
+                  app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
+                  break; // misión terminada
+                }
+              } catch (_) {}
+
+              // Decidir resultado del día
+              const roll = Math.random();
+              if (roll < P_SUCCESS) {
+                await missionService.closeMission(dbConn, m.id, { resultado: 'exito', descripcion_evento: 'Cierre automático (éxito) por progreso diario' }, { id: null, role: 'admin' });
+                break;
+              } else if (roll < P_SUCCESS + P_FAIL) {
+                await missionService.closeMission(dbConn, m.id, { resultado: 'fracaso', descripcion_evento: 'Cierre automático (fracaso) por progreso diario' }, { id: null, role: 'admin' });
+                break;
+              } else {
+                // Continúa
+                await missionRepo.update(m.id, { last_evaluated_at: tick });
+                app.get('io')?.emit('mission:progress', { mission_id: m.id, date: tick });
+              }
+            }
+          }
+          console.log(`[Time] Evaluación diaria completada. Pendientes: ${pending.length}, Iniciadas: ${executing.length}.`);
+        } catch (e) {
+          console.warn('[Time] Error evaluando misiones:', e.message);
+        }
+      });
       events.on('mission:created', (payload) => io.emit('mission:created', payload));
       events.on('mission:closed', (payload) => io.emit('mission:closed', payload));
       events.on('mission:started', (payload) => io.emit('mission:started', payload));

@@ -77,7 +77,6 @@ module.exports = {
   // Auto-generation when a curse is created
   async createForCurse(db, curse) {
     const missionRepo = getRepository(db, 'Mission');
-    const mpRepo = getRepository(db, 'MissionParticipant');
     if (!curse || !curse.id) throw Object.assign(new Error('Curse inválida'), { status: 400 });
 
     const nivel_urgencia = deriveUrgencyFromCurse(curse);
@@ -97,23 +96,31 @@ module.exports = {
       curse: curseEntity
     };
     const mission = await missionRepo.add(baseMission);
-
-    // Assign team and persist participants
-    const { principal, team } = await assignTeam(db, curse);
-    for (const s of team) {
-      await mpRepo.add({ mission_id: mission.id, sorcerer_id: s.id, rol: (principal?.id === s.id ? 'principal' : 'miembro') });
-    }
-
     const payload = { mission_id: mission.id, curse_id: curse.id, ubicacion: mission.ubicacion, nivel_urgencia, estado: mission.estado };
     try { events.emit('mission:created', payload); } catch (_) { }
-    return { ok: true, mission, principal: principal ? { id: principal.id, nombre: principal.nombre } : null, team: team.map(s => ({ id: s.id, nombre: s.nombre })) };
+    return { ok: true, mission };
   },
 
   async startMission(db, missionId) {
     const missionRepo = getRepository(db, 'Mission');
+    const mpRepo = getRepository(db, 'MissionParticipant');
     const found = await missionRepo.getById(missionId);
     if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
     if (found.estado === MISSION_STATES.en_ejecucion) return { ok: true, mission: found };
+    // Try to assign team at start
+    const { principal, team } = await assignTeam(db, found.curse || { id: found.curse_id, ubicacion: found.ubicacion });
+    if (!team || team.length === 0) {
+      // Delay mission start by configured days
+      const delayDays = Number(process.env.MISSION_START_DELAY_DAYS || 2);
+      const newStart = new Date(found.fecha_inicio || Date.now());
+      newStart.setDate(newStart.getDate() + delayDays);
+      const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
+      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
+    }
+    for (const s of team) {
+      await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol: (principal?.id === s.id ? 'principal' : 'miembro') });
+    }
     const upd = await missionRepo.update(missionId, { estado: MISSION_STATES.en_ejecucion, fecha_inicio: new Date() });
     try { events.emit('mission:started', { mission_id: Number(missionId) }); } catch (_) { }
     return { ok: true, mission: upd };
@@ -178,9 +185,9 @@ module.exports = {
     const missionRepo = getRepository(db, 'Mission');
     const found = await missionRepo.getById(missionId);
     if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
-    // Solo administradores pueden borrar
-    const role = String(user && user.role || '').toLowerCase();
-    if (role !== 'admin') { const err = new Error('No autorizado: solo administradores pueden borrar misiones'); err.status = 403; throw err; }
+    // Solo el único admin del sistema puede borrar: valida por ID exacto
+    const userId = String(user && user.id || '').trim().toLowerCase();
+    if (userId !== 'admin') { const err = new Error('No autorizado: solo el administrador puede borrar misiones'); err.status = 403; throw err; }
     // Regla: solo si tiene fecha de terminación distinta de null
     const finished = Boolean(found.fecha_fin || found.fecha_terminacion);
     if (!finished) { const err = new Error('No permitido: la misión aún no tiene fecha de terminación'); err.status = 409; throw err; }

@@ -13,8 +13,10 @@ module.exports = {
 
     const curseRepo = getRepository(db, 'Curse');
     const fechaDate = new Date(fecha);
-      // Validar que la fecha no sea anterior a la actual (año, mes, día, hora, minuto)
-      const now = new Date();
+      // Validar contra el reloj virtual del servidor
+      const TimeService = require('./TimeService');
+      const timeService = new TimeService(db);
+      const now = await timeService.getNow();
       if (
         fechaDate.getFullYear() < now.getFullYear() ||
         (fechaDate.getFullYear() === now.getFullYear() && fechaDate.getMonth() < now.getMonth()) ||
