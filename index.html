@@ -12,8 +12,9 @@
     <header>
         <h1>Jujutsu Kaisen</h1>
         <p>Explora el universo de Jujutsu Kaisen con una plataforma que transforma la gestión de misiones y maldiciones en una experiencia estratégica y dinámica</p>
-        <div class="advance-block">
-            <label for="advance-btn">05/12/25 14:30</label>
+        <div class="advance-block" aria-label="Control de tiempo virtual">
+            <label id="virtual-time-label" for="advance-target">Cargando tiempo virtual…</label>
+            <input id="advance-target" type="datetime-local" />
             <button id="advance-btn" type="button">Adelantar</button>
         </div>
     </header>
@@ -74,6 +75,7 @@
         </section>
     </main>
 
+    <script src="/js/utils/time.js"></script>
     <script src="/js/utils/auth.js"></script>
     <script src="./js/index.js"></script>
 </body>

@@ -3,7 +3,24 @@ const service = require('../services/techniqueService');
 module.exports = (db) => ({
     create: async (req, res) => {
         try {
-            const userId = req.headers['x-user-id'];
+            // Resolver userId igual que en hechiceros y normalizar admin
+            let userId = req.user?.id || req.headers['x-usuario'] || req.headers['x-user-id'] || '';
+            const role = String(req.headers['x-user-role'] || '').toLowerCase();
+            if (!userId) {
+                if (role === 'super_admin') userId = 'admin';
+            }
+            // Asegurar que el usuario existe cuando hay FK (Technique.createBy)
+            if (userId) {
+                try {
+                    const { getRepository } = require('../repositories');
+                    const userRepo = getRepository(db, 'Usuario');
+                    const existing = await userRepo.getOne({ nombre_usuario: userId });
+                    if (!existing) {
+                        const userService = require('../services/userService')(db);
+                        await userService.register({ username: userId, password: Math.random().toString(36).slice(2) });
+                    }
+                } catch (_) {}
+            }
             const saved = await service.create(db, req.body, userId);
             res.status(201).json(saved);
         } catch (error) {
@@ -22,11 +39,23 @@ module.exports = (db) => ({
         catch (error) { console.error('Error obteniendo Técnica:', error); const status = error.status || 500; res.status(status).json({ message: status === 500 ? 'Error obteniendo técnica' : error.message, details: error.message }); }
     },
     update: async (req, res) => {
-        try { const userId = req.headers['x-user-id']; const saved = await service.update(db, req.params.id, req.body, userId); res.json(saved); }
+        try {
+            let userId = req.user?.id || req.headers['x-usuario'] || req.headers['x-user-id'] || '';
+            const role = String(req.headers['x-user-role'] || '').toLowerCase();
+            if (!userId && role === 'super_admin') userId = 'admin';
+            const saved = await service.update(db, req.params.id, req.body, userId);
+            res.json(saved);
+        }
         catch (error) { console.error('Error actualizando Técnica:', error); if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) return res.status(409).json({ message: 'Técnica ya existe' }); const status = error.status || 500; res.status(status).json({ message: status === 500 ? 'Error actualizando técnica' : error.message, details: error.message }); }
     },
     remove: async (req, res) => {
-        try { const userId = req.headers['x-user-id']; const out = await service.remove(db, req.params.id, userId); res.json(out); }
+        try {
+            let userId = req.user?.id || req.headers['x-usuario'] || req.headers['x-user-id'] || '';
+            const role = String(req.headers['x-user-role'] || '').toLowerCase();
+            if (!userId && role === 'super_admin') userId = 'admin';
+            const out = await service.remove(db, req.params.id, userId);
+            res.json(out);
+        }
         catch (error) { console.error('Error eliminando Técnica:', error); if (error && (error.code === 'ER_ROW_IS_REFERENCED_2' || /foreign key/i.test(error.message || ''))) return res.status(409).json({ ok: false, message: 'No se puede eliminar: la técnica está referenciada por otras entidades.' }); const status = error.status || 500; res.status(status).json({ ok: false, message: status === 500 ? 'Error eliminando técnica' : error.message, details: error.message }); }
     }
 });
