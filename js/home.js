@@ -46,7 +46,23 @@ window.addEventListener('keydown', function (e) {
         try { window.location.assign('/index.html'); } catch { window.location.href = '/index.html'; }
       }, DURATION);
     } catch (err) {
-      alert(err.message || 'Error al iniciar sesión');
+      // Mostrar modal de error en lugar de alert
+      try {
+        const modal = document.getElementById('errorModal');
+        const title = document.getElementById('errorModalTitle');
+        const msg = document.getElementById('errorModalMessage');
+        title.textContent = 'Credenciales inválidas';
+        msg.textContent = err?.message || 'Error al iniciar sesión';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('error-close-btn');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert(err.message || 'Error al iniciar sesión');
+      }
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -95,14 +111,14 @@ window.addEventListener('keydown', function (e) {
     try {
       const value = adminPasswordInput?.value || '';
       if (value === '1234') {
-        try { localStorage.setItem('isAdmin', '1'); } catch (_) {}
-        try { sessionStorage.setItem('isAdmin', '1'); } catch (_) {}
+        try { localStorage.setItem('isAdmin', '1'); } catch (_) { }
+        try { sessionStorage.setItem('isAdmin', '1'); } catch (_) { }
         // opcional: guardar nombre de usuario como 'Administrador'
-        try { localStorage.setItem('username', 'Administrador'); } catch (_) {}
-        try { sessionStorage.setItem('username', 'Administrador'); } catch (_) {}
+        try { localStorage.setItem('username', 'Administrador'); } catch (_) { }
+        try { sessionStorage.setItem('username', 'Administrador'); } catch (_) { }
         closeAdminModal();
         // marcar flujo y navegar a index
-        try { sessionStorage.setItem('flowFromHome', '1'); } catch (_) {}
+        try { sessionStorage.setItem('flowFromHome', '1'); } catch (_) { }
         document.body.classList.add('leaving');
         setTimeout(() => { window.location.assign('/index.html'); }, 300);
         return;
@@ -168,9 +184,41 @@ window.addEventListener('keydown', function (e) {
         throw new Error(data?.message || 'No fue posible registrar');
       }
       closeRegisterModal();
-      alert('Registro completado. Ahora puedes iniciar sesión.');
+      // Mostrar modal de confirmación de registro en lugar de alert
+      try {
+        const modal = document.getElementById('registerOkModal');
+        const title = document.getElementById('registerOkTitle');
+        const msg = document.getElementById('registerOkMessage');
+        if (title) title.textContent = 'Registro completado';
+        if (msg) msg.textContent = 'Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('register-ok-close');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert('Registro completado. Ahora puedes iniciar sesión.');
+      }
     } catch (err) {
-      alert(err.message || 'Error en el registro');
+      // Mostrar modal de error de registro en lugar de alert
+      try {
+        const modal = document.getElementById('errorModal');
+        const title = document.getElementById('errorModalTitle');
+        const msg = document.getElementById('errorModalMessage');
+        if (title) title.textContent = 'No se pudo registrar';
+        if (msg) msg.textContent = err?.message || 'Error en el registro';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('error-close-btn');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert(err.message || 'Error en el registro');
+      }
     }
   });
 

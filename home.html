@@ -46,7 +46,7 @@
                             <img src="/img/admn.png" alt="Administrador" class="admin-img">
                         </button>
                         <span class="login-link">
-                            ¿Aún sin registro? 
+                            ¿Aún sin registro?
                             <a id="signupLink" href="signup.html" style="color: var(--accent-2); text-decoration: underline;">
                                 ¡Haz clic aquí!
                             </a>
@@ -86,6 +86,28 @@
                     <button type="submit" id="register-btn" class="btn">Registrar</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Registro -->
+    <div id="registerOkModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="registerOkTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="registerOkTitle">Registro completado</h3>
+            <p id="registerOkMessage">Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.</p>
+            <div class="modal-actions">
+                <button type="button" id="register-ok-close" class="btn" aria-label="Cerrar aviso">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Error de Login -->
+    <div id="errorModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="errorModalTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="errorModalTitle">Credenciales inválidas</h3>
+            <p id="errorModalMessage">Verifica tu usuario y contraseña e intenta nuevamente.</p>
+            <div class="modal-actions">
+                <button type="button" id="error-close-btn" class="btn">Cerrar</button>
+            </div>
         </div>
     </div>
 

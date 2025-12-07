@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     : (window.location && window.location.origin ? window.location.origin : 'http://127.0.0.1:3000');
 
   const $ = (sel) => document.querySelector(sel);
-  const results = $('#results'); 
+  const results = $('#results');
 
   function clearResults() { if (results) results.innerHTML = ''; }
 
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (entitySelect && entitySelect.parentNode) {
           try {
             entitySelect.parentNode.removeChild(entitySelect);
-          } catch (_) {}
+          } catch (_) { }
         }
 
         // Preparamos la UI para buscar hechicero (input y submit ya existentes)
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }());
               return;
             }
-          } catch (_) {}
+          } catch (_) { }
 
           // Si el select fue adaptado para estados, tratar diferente: buscamos entre MALDICIONES
           if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
@@ -583,31 +583,75 @@ document.addEventListener('DOMContentLoaded', () => {
         // simple modal para mostrar aviso de permiso denegado
         function showForbiddenModal(msg) {
           try {
-            let modal = document.getElementById('forbid-modal');
-            if (!modal) {
-              modal = document.createElement('div');
-              modal.id = 'forbid-modal';
-              modal.style.position = 'fixed';
-              modal.style.left = '0';
-              modal.style.top = '0';
-              modal.style.width = '100%';
-              modal.style.height = '100%';
-              modal.style.display = 'flex';
-              modal.style.alignItems = 'center';
-              modal.style.justifyContent = 'center';
-              modal.style.background = 'rgba(0,0,0,0.45)';
-              modal.innerHTML = `
-                <div style="background:#fff;padding:18px;border-radius:8px;max-width:520px;width:92%;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
-                  <h3 style="margin:0 0 8px 0;">Acción no permitida</h3>
-                  <div id="forbid-modal-msg" style="margin-bottom:12px;color:#333"></div>
-                  <div style="text-align:right"><button id="forbid-close" style="padding:8px 12px;border-radius:6px;background:#2d7ef7;color:#fff;border:0;cursor:pointer">Cerrar</button></div>
-                </div>`;
-              document.body.appendChild(modal);
-              modal.querySelector('#forbid-close').addEventListener('click', function () { if (modal && modal.parentNode) modal.parentNode.removeChild(modal); });
+            let overlay = document.getElementById('forbid-overlay');
+            if (!overlay) {
+              overlay = document.createElement('div');
+              overlay.id = 'forbid-overlay';
+              overlay.style.position = 'fixed';
+              overlay.style.inset = '0';
+              overlay.style.background = 'rgba(0,0,0,.55)';
+              overlay.style.display = 'flex';
+              overlay.style.alignItems = 'center';
+              overlay.style.justifyContent = 'center';
+              overlay.style.zIndex = '9999';
+              overlay.style.padding = '16px';
+              overlay.style.backdropFilter = 'blur(2px)';
+
+              const box = document.createElement('div');
+              box.style.width = '100%';
+              box.style.maxWidth = '440px';
+              box.style.background = 'linear-gradient(180deg, rgba(26,28,32,.96), rgba(22,24,28,.96))';
+              box.style.border = '1px solid rgba(255,255,255,0.08)';
+              box.style.borderRadius = '16px';
+              box.style.boxShadow = '0 14px 40px rgba(0,0,0,.45)';
+              box.style.padding = '18px 16px 14px';
+              box.style.color = '#e5e7eb';
+
+              const titleEl = document.createElement('h3');
+              titleEl.textContent = 'Acción no permitida';
+              titleEl.style.margin = '0 0 8px 0';
+              titleEl.style.fontSize = '1.12rem';
+              titleEl.style.color = '#f9fafb';
+
+              const msgEl = document.createElement('p');
+              msgEl.id = 'forbid-modal-msg';
+              msgEl.style.margin = '0 0 14px 0';
+              msgEl.style.color = '#cbd5e1';
+              msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
+
+              const actions = document.createElement('div');
+              actions.style.display = 'flex';
+              actions.style.justifyContent = 'flex-end';
+              actions.style.marginTop = '6px';
+
+              const closeBtn = document.createElement('button');
+              closeBtn.id = 'forbid-close';
+              closeBtn.type = 'button';
+              closeBtn.textContent = 'Cerrar';
+              closeBtn.style.appearance = 'none';
+              closeBtn.style.border = 'none';
+              closeBtn.style.minHeight = '34px';
+              closeBtn.style.padding = '8px 14px';
+              closeBtn.style.borderRadius = '10px';
+              closeBtn.style.background = 'linear-gradient(135deg, #3b82f6, #06b6d4)';
+              closeBtn.style.color = '#ffffff';
+              closeBtn.style.fontWeight = '600';
+              closeBtn.style.boxShadow = '0 6px 16px rgba(6,182,212,.35)';
+
+              actions.appendChild(closeBtn);
+              box.appendChild(titleEl);
+              box.appendChild(msgEl);
+              box.appendChild(actions);
+              overlay.appendChild(box);
+              document.body.appendChild(overlay);
+
+              closeBtn.addEventListener('click', function () { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }, { once: true });
+              overlay.addEventListener('click', function (ev) { if (ev.target === overlay) { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); } });
+              window.addEventListener('keydown', function escHandler(e) { if (e.key === 'Escape') { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); window.removeEventListener('keydown', escHandler); } });
+            } else {
+              const msgEl = overlay.querySelector('#forbid-modal-msg');
+              if (msgEl) msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
             }
-            const msgEl = modal.querySelector('#forbid-modal-msg');
-            if (msgEl) msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
-            modal.style.display = 'flex';
           } catch (e) { alert(msg || 'No tienes permisos para realizar esta acción.'); }
         }
 
@@ -623,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
               window.location.href = primary;
             });
           }
-        } catch (e) {}
+        } catch (e) { }
 
         // ...existing code...
         // Click en el item (fuera de botones) -> ver detalle
@@ -660,7 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
               showForbiddenModal('No puedes borrar una misión. Esta acción es solo para administradores.');
               return;
             }
-          } catch(_) { /* noop */ }
+          } catch (_) { /* noop */ }
 
           // Si es misión y sí es admin, validar que esté finalizada
           try {
@@ -676,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
               }
             }
-          } catch(_) { /* si falla, el backend también validará */ }
+          } catch (_) { /* si falla, el backend también validará */ }
 
           // verificar propiedad antes de permitir borrar (se puede omitir si es admin)
           let currentUser = null;
@@ -731,7 +775,96 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           const title = item.querySelector('h3') ? item.querySelector('h3').textContent : '';
-          const ok = confirm(`¿Eliminar "${title}"? Esta acción no se puede deshacer.`);
+          // Modal de confirmación con UI bonita
+          async function showConfirmModal(message) {
+            return new Promise((resolve) => {
+              // Crear overlay
+              const overlay = document.createElement('div');
+              overlay.className = 'modal-overlay';
+              overlay.style.position = 'fixed';
+              overlay.style.inset = '0';
+              overlay.style.background = 'rgba(0,0,0,.55)';
+              overlay.style.display = 'flex';
+              overlay.style.alignItems = 'center';
+              overlay.style.justifyContent = 'center';
+              overlay.style.zIndex = '9999';
+              overlay.style.padding = '16px';
+
+              // Caja modal
+              const modal = document.createElement('div');
+              modal.className = 'modal';
+              modal.style.width = '100%';
+              modal.style.maxWidth = '440px';
+              modal.style.background = 'linear-gradient(180deg, rgba(26,28,32,.96), rgba(22,24,28,.96))';
+              modal.style.border = '1px solid rgba(255,255,255,0.08)';
+              modal.style.borderRadius = '16px';
+              modal.style.boxShadow = '0 14px 40px rgba(0,0,0,.45)';
+              modal.style.padding = '18px 16px 14px';
+              modal.style.color = '#e5e7eb';
+
+              const titleEl = document.createElement('h3');
+              titleEl.textContent = 'Confirmar eliminación';
+              titleEl.style.margin = '0 0 8px 0';
+              titleEl.style.fontSize = '1.12rem';
+              titleEl.style.color = '#f9fafb';
+
+              const msgEl = document.createElement('p');
+              msgEl.innerHTML = message;
+              msgEl.style.margin = '0 0 14px 0';
+              msgEl.style.color = '#cbd5e1';
+
+              const actions = document.createElement('div');
+              actions.style.display = 'flex';
+              actions.style.justifyContent = 'flex-end';
+              actions.style.gap = '10px';
+
+              const cancelBtn = document.createElement('button');
+              cancelBtn.type = 'button';
+              cancelBtn.textContent = 'Cancelar';
+              cancelBtn.style.appearance = 'none';
+              cancelBtn.style.border = 'none';
+              cancelBtn.style.minHeight = '34px';
+              cancelBtn.style.padding = '8px 12px';
+              cancelBtn.style.borderRadius = '10px';
+              cancelBtn.style.background = '#374151';
+              cancelBtn.style.color = '#e5e7eb';
+
+              const okBtn = document.createElement('button');
+              okBtn.type = 'button';
+              okBtn.textContent = 'Eliminar';
+              okBtn.style.appearance = 'none';
+              okBtn.style.border = 'none';
+              okBtn.style.minHeight = '34px';
+              okBtn.style.padding = '8px 14px';
+              okBtn.style.borderRadius = '10px';
+              okBtn.style.background = 'linear-gradient(135deg, #ef4444, #f59e0b)';
+              okBtn.style.color = '#ffffff';
+              okBtn.style.fontWeight = '600';
+              okBtn.style.boxShadow = '0 6px 16px rgba(239,68,68,.35)';
+
+              actions.appendChild(cancelBtn);
+              actions.appendChild(okBtn);
+
+              modal.appendChild(titleEl);
+              modal.appendChild(msgEl);
+              modal.appendChild(actions);
+              overlay.appendChild(modal);
+              document.body.appendChild(overlay);
+
+              function cleanup() {
+                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+              }
+
+              cancelBtn.addEventListener('click', () => { cleanup(); resolve(false); }, { once: true });
+              okBtn.addEventListener('click', () => { cleanup(); resolve(true); }, { once: true });
+              // Cerrar al hacer click fuera
+              overlay.addEventListener('click', (ev) => { if (ev.target === overlay) { cleanup(); resolve(false); } });
+              // Cerrar con ESC
+              window.addEventListener('keydown', function escHandler(e) { if (e.key === 'Escape') { cleanup(); resolve(false); window.removeEventListener('keydown', escHandler); } });
+            });
+          }
+
+          const ok = await showConfirmModal(`¿Eliminar <strong>"${title}"</strong>? Esta acción no se puede deshacer.`);
           if (!ok) return;
 
           // construir ruta según entidad
@@ -744,7 +877,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mission: '/missions/',
             missions: '/missions/',
             mision: '/missions/'
-            
+
           };
           const base = routeMap[entity] || (`/${entity}/`);
           try {
@@ -786,7 +919,7 @@ document.addEventListener('DOMContentLoaded', () => {
               showForbiddenModal('No puedes editar una misión. Esta acción es solo para administradores.');
               return;
             }
-          } catch(_) { /* noop */ }
+          } catch (_) { /* noop */ }
 
           try {
             const isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
@@ -803,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   showForbiddenModal('No es posible modificar la maldición debido a su estado actual');
                   return;
                 }
-              } catch(_) { /* si falla, seguimos al chequeo normal de ownership */ }
+              } catch (_) { /* si falla, seguimos al chequeo normal de ownership */ }
             }
 
             if (!isAdmin) {
