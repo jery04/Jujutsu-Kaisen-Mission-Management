@@ -670,6 +670,74 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (e) { alert(msg || 'No tienes permisos para realizar esta acción.'); }
         }
 
+        // Modal elegante para errores (ej. no se puede eliminar por misiones activas)
+        function showErrorModal(title, message) {
+          try {
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.background = 'rgba(0,0,0,.55)';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.zIndex = '9999';
+            overlay.style.padding = '16px';
+            overlay.style.backdropFilter = 'blur(2px)';
+
+            const box = document.createElement('div');
+            box.style.width = '100%';
+            box.style.maxWidth = '460px';
+            box.style.background = 'linear-gradient(180deg, rgba(26,28,32,.96), rgba(22,24,28,.96))';
+            box.style.border = '1px solid rgba(255,255,255,0.08)';
+            box.style.borderRadius = '16px';
+            box.style.boxShadow = '0 14px 40px rgba(0,0,0,.45)';
+            box.style.padding = '18px 16px 14px';
+            box.style.color = '#e5e7eb';
+
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title || 'No se pudo completar la acción';
+            titleEl.style.margin = '0 0 8px 0';
+            titleEl.style.fontSize = '1.12rem';
+            titleEl.style.color = '#f9fafb';
+
+            const msgEl = document.createElement('p');
+            msgEl.style.margin = '0 0 14px 0';
+            msgEl.style.color = '#cbd5e1';
+            msgEl.textContent = message || 'Intenta nuevamente o verifica los requisitos.';
+
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.justifyContent = 'flex-end';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.textContent = 'Entendido';
+            closeBtn.style.appearance = 'none';
+            closeBtn.style.border = 'none';
+            closeBtn.style.minHeight = '34px';
+            closeBtn.style.padding = '8px 14px';
+            closeBtn.style.borderRadius = '10px';
+            closeBtn.style.background = 'linear-gradient(135deg, #f97316, #ef4444)';
+            closeBtn.style.color = '#ffffff';
+            closeBtn.style.fontWeight = '600';
+            closeBtn.style.boxShadow = '0 6px 16px rgba(239,68,68,.35)';
+
+            actions.appendChild(closeBtn);
+            box.appendChild(titleEl);
+            box.appendChild(msgEl);
+            box.appendChild(actions);
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+
+            function cleanup() { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+            closeBtn.addEventListener('click', () => cleanup(), { once: true });
+            overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); });
+            window.addEventListener('keydown', function escHandler(e) { if (e.key === 'Escape') { cleanup(); window.removeEventListener('keydown', escHandler); } });
+          } catch (_) {
+            alert(message || title || 'No se pudo completar la acción');
+          }
+        }
+
         // Borrar: petición DELETE + animación de salida
 
         // robust go-back handler para el enlace con id 'go-back'
@@ -900,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) {
               const body = await res.json().catch(() => ({}));
               const msg = body && body.message ? body.message : `Error ${res.status}`;
-              alert('No se pudo eliminar: ' + msg);
+              showErrorModal('No se pudo eliminar', msg);
               return;
             }
             // Reacomodar paginación: quitar del estado y re-render
