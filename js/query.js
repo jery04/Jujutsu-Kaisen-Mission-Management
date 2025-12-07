@@ -529,12 +529,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // carga inicial simple según ?entity=
     try {
+      // Si se marcó la bandera para no listar nada inicialmente, respetarla
+      const noInitial = sessionStorage.getItem('noInitialList') === 'true';
+      if (noInitial) {
+        // Limpiar resultados y mostrar estado vacío opcional
+        clearResults();
+        if (results) {
+          results.innerHTML = '<div class="query-item"><h3>Sin resultados iniciales</h3><p>Usa el buscador o selecciona una opción para listar.</p></div>';
+        }
+        // Consumir la bandera para que no afecte futuras visitas
+        try { sessionStorage.removeItem('noInitialList'); } catch (_) {}
+      }
+
       const params = new URLSearchParams(window.location.search);
       const view = params.get('entity');
       // Si estamos en modo 'estado' (primer botón), NO cargar hechiceros por defecto.
       if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
         // Dejar que el usuario elija un estado antes de mostrar resultados.
-      } else {
+      } else if (!noInitial) {
         if (view === 'technique') loadTechniques();
         else if (view === 'curses') loadCurses();
         else if (view === 'recursos' || view === 'resource') loadResources();
