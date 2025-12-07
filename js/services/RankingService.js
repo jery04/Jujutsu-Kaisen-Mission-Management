@@ -76,7 +76,8 @@ function rank(list, context) {
 
 function selectTeam(ranked, maxMembers) {
     const cfg = loadConfig();
-    const size = Number(maxMembers || process.env.RANKING_TEAM_SIZE || cfg.teamSizeDefault || 3);
+    // Tamaño del equipo solo desde configuración (sin overrides por env)
+    const size = Number(maxMembers || cfg.teamSizeDefault || 3);
     const team = ranked.slice(0, Math.max(1, Math.min(size, ranked.length)));
     const principal = team[0] || null;
     return { principal, team };
@@ -84,7 +85,7 @@ function selectTeam(ranked, maxMembers) {
 
 function getDefaultTeamSize() {
     const cfg = loadConfig();
-    return Number(process.env.RANKING_TEAM_SIZE || cfg.teamSizeDefault || 3);
+    return Number(cfg.teamSizeDefault || 3);
 }
 
 module.exports = {

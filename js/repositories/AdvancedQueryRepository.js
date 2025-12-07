@@ -41,7 +41,7 @@ class AdvancedQueryRepository extends BaseRepository {
       INNER JOIN Sorcerer s ON s.id = mp.sorcererId
       LEFT JOIN MissionTechniqueUsage mtu ON mtu.missionId = m.id
       LEFT JOIN Technique t ON t.id = mtu.techniqueId
-      WHERE m.resultado = 'Exito' AND m.fecha BETWEEN ? AND ?
+      WHERE m.estado = 'completada' AND m.fecha BETWEEN ? AND ?
       GROUP BY m.id
     `, [fechaInicio, fechaFin]);
     return rows;

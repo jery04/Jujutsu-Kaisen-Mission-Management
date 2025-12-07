@@ -141,8 +141,8 @@ if (process.env.NODE_ENV === 'test') {
           // Probabilidades base desde JSON (con overrides por entorno)
           const probs = progressCfg.getProbabilities();
           const P_SUCCESS = probs.daily.success;
-          const P_FAIL = probs.daily.fail;
           const P_CONTINUE = probs.daily.continue;
+          const P_DEATH = probs.daily.death;
           const dayMs = 24 * 60 * 60 * 1000;
           const start = new Date(from);
           const end = new Date(to);
@@ -154,6 +154,7 @@ if (process.env.NODE_ENV === 'test') {
           const candidates = [...pending, ...running];
 
           const missionService = require('./services/missionService');
+          let deathApplied = false;
           for (const m of candidates) {
             // Si está pendiente y ya llegó su fecha de inicio, iniciarla
             if (m.estado === 'pendiente' && new Date(m.fecha_inicio) <= end) {
@@ -195,11 +196,29 @@ if (process.env.NODE_ENV === 'test') {
 
               // Decidir resultado del día
               const roll = Math.random();
+
+              // Evento de muerte diaria (máximo uno por día)
+              if (!deathApplied && Math.random() < P_DEATH) {
+                try {
+                  const mpRepo = getRepository(dbConn, 'MissionParticipant');
+                  const sorcRepo = getRepository(dbConn, 'Sorcerer');
+                  const participants = await mpRepo.find({ where: { mission: { id: Number(m.id) } } });
+                  const alive = [];
+                  for (const p of participants) {
+                    const s = await sorcRepo.getById(p.sorcerer_id || (p.sorcerer && p.sorcerer.id));
+                    if (s && !s.fecha_fallecimiento) alive.push(s);
+                  }
+                  if (alive.length) {
+                    const victim = alive[Math.floor(Math.random() * alive.length)];
+                    await sorcRepo.update(victim.id, { fecha_fallecimiento: tick, estado_operativo: 'dado_de_baja', causa_muerte: 'En mision' });
+                    deathApplied = true;
+                    try { events.emit('sorcerer:died', { sorcerer_id: Number(victim.id), mission_id: Number(m.id), at: tick }); } catch (_) {}
+                  }
+                } catch (_) {}
+              }
               if (roll < P_SUCCESS) {
-                await missionService.closeMission(dbConn, m.id, { resultado: 'exito', descripcion_evento: 'Cierre automático (éxito) por progreso diario' }, { id: null, role: 'admin' });
-                break;
-              } else if (roll < P_SUCCESS + P_FAIL) {
-                await missionService.closeMission(dbConn, m.id, { resultado: 'fracaso', descripcion_evento: 'Cierre automático (fracaso) por progreso diario' }, { id: null, role: 'admin' });
+                // Terminar siempre en vía neutral (sin éxito/fracaso)
+                await missionService.closeMission(dbConn, m.id, { descripcion_evento: 'Cierre automático por progreso diario' }, { id: null, role: 'admin' });
                 break;
               } else {
                 // Continúa

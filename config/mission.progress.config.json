@@ -1,8 +1,8 @@
 {
   "probabilities": {
     "daily": {
-      "success": 0.1,
-      "fail": 0.7
+      "success": 0.4,
+      "death": 0.2
     }
   },
   "delay": {
