@@ -62,22 +62,22 @@ module.exports = {
     const missions = await missionRepo.getBySorcerer(sorcererId);
     return { ok: true, missions };
   },
-    async getById(db, id) {
-      const missionRepo = getRepository(db, 'Mission');
-      const mission = await missionRepo.getById(id);
-      if (!mission) {
-        const err = new Error('Misión no encontrada');
-        err.status = 404;
-        throw err;
-      }
-      return { ok: true, mission };
-    },
-    async getSorcerersForMission(db, missionId) {
-      if (!missionId) throw new Error('Mission ID requerido');
-      const missionRepo = getRepository(db, 'Mission');
-      const sorcerers = await missionRepo.getSorcerersForMission(Number(missionId));
-      return { ok: true, sorcerers };
-    },
+  async getById(db, id) {
+    const missionRepo = getRepository(db, 'Mission');
+    const mission = await missionRepo.getById(id);
+    if (!mission) {
+      const err = new Error('Misión no encontrada');
+      err.status = 404;
+      throw err;
+    }
+    return { ok: true, mission };
+  },
+  async getSorcerersForMission(db, missionId) {
+    if (!missionId) throw new Error('Mission ID requerido');
+    const missionRepo = getRepository(db, 'Mission');
+    const sorcerers = await missionRepo.getSorcerersForMission(Number(missionId));
+    return { ok: true, sorcerers };
+  },
   async getByCurse(db, curseId) {
     const missionRepo = getRepository(db, 'Mission');
     const missions = await missionRepo.getByCurseId(curseId);
@@ -106,12 +106,14 @@ module.exports = {
     const curseEntity = await curseRepo.getById(curse.id);
     // Guardar contra duplicados: si ya existe una misión pendiente o en ejecución para esta maldición, devolverla
     try {
-      const existing = await missionRepo.find({ where: [
-        { estado: 'pendiente', curse: { id: Number(curse.id) } },
-        { estado: 'en_ejecucion', curse: { id: Number(curse.id) } }
-      ] });
+      const existing = await missionRepo.find({
+        where: [
+          { estado: 'pendiente', curse: { id: Number(curse.id) } },
+          { estado: 'en_ejecucion', curse: { id: Number(curse.id) } }
+        ]
+      });
       if (Array.isArray(existing) && existing.length > 0) {
-        const latest = existing.sort((a,b) => Number(b.id) - Number(a.id))[0];
+        const latest = existing.sort((a, b) => Number(b.id) - Number(a.id))[0];
         return { ok: true, mission: latest, duplicate: true };
       }
     } catch (_) { /* si falla la comprobación, continuar creación */ }
@@ -152,7 +154,7 @@ module.exports = {
       const newStart = new Date(found.fecha_inicio || virtualNow);
       newStart.setDate(newStart.getDate() + delayDays);
       const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
-      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) { }
       return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
     // Segunda verificación de disponibilidad para evitar carreras: si ya está en otra misión activa, omitir
@@ -173,7 +175,7 @@ module.exports = {
         const lowered = String(current.estado_operativo || '').toLowerCase();
         if (current.fecha_fallecimiento || lowered === 'dado_de_baja') continue; // muerto o dado de baja
         const rol = (principal?.id === s.id ? 'principal' : 'miembro');
-          await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol });
+        await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol });
         actuallyAdded.push(s.id);
       } catch (e) {
         // Ignorar duplicados por clave primaria compuesta (mission_id, sorcerer_id)
@@ -192,7 +194,7 @@ module.exports = {
       const newStart = new Date(found.fecha_inicio || virtualNow);
       newStart.setDate(newStart.getDate() + delayDays);
       const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
-      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) { }
       return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
     const timeService = new TimeService(db);
@@ -210,9 +212,9 @@ module.exports = {
     if (!user || !['soporte', 'admin'].includes(String(user.role || '').toLowerCase())) {
       const err = new Error('No autorizado para cerrar misión'); err.status = 403; throw err;
     }
-      const { descripcion_evento, danos_colaterales } = payload || {};
-      // Estado neutral: siempre 'completada' (sin éxito/fracaso)
-      const estado = 'completada';
+    const { descripcion_evento, danos_colaterales } = payload || {};
+    // Estado neutral: siempre 'completada' (sin éxito/fracaso)
+    const estado = 'completada';
     const timeService = new TimeService(db);
     const virtualNow = await timeService.getNow();
     const upd = await missionRepo.update(missionId, {
@@ -248,7 +250,7 @@ module.exports = {
         const total_prev = Number(sorc.total_misiones) || 0;
         const exitos_prev = Number(sorc.misiones_exito) || 0;
         const nuevos_total = total_prev + 1;
-          const nuevos_exitos = exitos_prev; // sin éxito/fracaso, no se altera el contador de éxitos
+        const nuevos_exitos = exitos_prev; // sin éxito/fracaso, no se altera el contador de éxitos
         const tasa = nuevos_total > 0 ? Math.round((nuevos_exitos / nuevos_total) * 100) : 0;
         await sorcRepo.update(sorc.id, { total_misiones: nuevos_total, misiones_exito: nuevos_exitos, tasa_exito: tasa });
       }
@@ -258,8 +260,24 @@ module.exports = {
     }
     try { events.emit('mission:closed', { mission_id: Number(missionId), estado }); } catch (_) { }
     return { ok: true, mission: upd };
-  }
-,
+  },
+
+  async updateMission(db, missionId, payload, user) {
+    const missionRepo = getRepository(db, 'Mission');
+    const found = await missionRepo.getById(missionId);
+    if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
+    const upd = {};
+    const { descripcion_evento, danos_colaterales } = payload || {};
+
+    if (descripcion_evento !== undefined) upd.descripcion_evento = descripcion_evento || null;
+    if (danos_colaterales !== undefined) upd.danos_colaterales = danos_colaterales || null;
+
+    if (Object.keys(upd).length === 0) return { ok: true, mission: found };
+    const saved = await missionRepo.update(missionId, upd);
+    try { events.emit('mission:updated', { mission_id: Number(missionId), user: user?.id || null }); } catch (_) { }
+    return { ok: true, mission: saved };
+  },
+
   async deleteMission(db, missionId, user) {
     const missionRepo = getRepository(db, 'Mission');
     const found = await missionRepo.getById(missionId);

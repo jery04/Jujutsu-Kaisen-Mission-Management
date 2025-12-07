@@ -14,7 +14,7 @@ module.exports = function registerRoutes(app, db) {
   const transferController = require('../controllers/transferController')(db);
   const adminController = require('../controllers/adminController')(db);
   // Optional auth middleware from Josue_Capas (not applied globally here)
-  try { require('../middleware/authMiddleware'); } catch(_) {}
+  try { require('../middleware/authMiddleware'); } catch (_) { }
   // Validation
   const { validateBody } = require('../middleware/validate');
   const schemas = require('../validation/schemas');
@@ -59,6 +59,7 @@ module.exports = function registerRoutes(app, db) {
   // Missions
   app.get('/missions/sorcerer/:id', missionController.getBySorcerer);
   app.get('/missions/success-range', missionController.successRange);
+  app.put('/missions/:id', validateBody(schemas.missionUpdate), missionController.update);
   app.post('/missions/:id/start', validateBody(schemas.missionStart), missionController.start);
   app.post('/missions/:id/close', validateBody(schemas.missionClose), missionController.close);
   app.get('/missions/by-curse/:id', missionController.getByCurse);

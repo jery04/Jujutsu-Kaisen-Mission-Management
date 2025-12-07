@@ -162,9 +162,9 @@ if (process.env.NODE_ENV === 'test') {
               const pendList = await missionRepo.find({ where: { estado: 'pendiente' } });
               for (const p of pendList) {
                 const fi = new Date(p.fecha_inicio);
-                if (fi <= tick) { try { await missionService.startMission(dbConn, p.id); } catch (_) {} }
+                if (fi <= tick) { try { await missionService.startMission(dbConn, p.id); } catch (_) { } }
               }
-            } catch (_) {}
+            } catch (_) { }
 
             // 2) Evaluar las en ejecución para este tick
             const executingToday = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
@@ -187,9 +187,9 @@ if (process.env.NODE_ENV === 'test') {
                     const victim = alive[Math.floor(Math.random() * alive.length)];
                     await sorcRepo.update(victim.id, { fecha_fallecimiento: tick, estado_operativo: 'dado_de_baja', causa_muerte: 'En mision' });
                     deathApplied = true;
-                    try { events.emit('sorcerer:died', { sorcerer_id: Number(victim.id), mission_id: Number(m.id), at: tick }); } catch (_) {}
+                    try { events.emit('sorcerer:died', { sorcerer_id: Number(victim.id), mission_id: Number(m.id), at: tick }); } catch (_) { }
                   }
-                } catch (_) {}
+                } catch (_) { }
               }
 
               // 2.b) Cancelar si no quedan vivos y crear sucesora
@@ -210,12 +210,12 @@ if (process.env.NODE_ENV === 'test') {
                       try {
                         const mFull = await missionRepo.findOne({ where: { id: Number(m.id) }, relations: ['curse'] });
                         if (mFull && mFull.curse) cursePayload = mFull.curse;
-                      } catch (_) {}
+                      } catch (_) { }
                     }
                     if (!cursePayload || !cursePayload.id) {
                       cursePayload = { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion };
                     }
-                    try { const nextDay = new Date(tick); nextDay.setDate(nextDay.getDate() + 2); cursePayload.fecha_aparicion = nextDay; } catch (_) {}
+                    try { const nextDay = new Date(tick); nextDay.setDate(nextDay.getDate() + 2); cursePayload.fecha_aparicion = nextDay; } catch (_) { }
                     if (!cursePayload || !cursePayload.id) {
                       console.warn(`[Scheduler] No se pudo recrear misión: curse_id ausente para misión ${m.id}`);
                     } else {
@@ -226,10 +226,12 @@ if (process.env.NODE_ENV === 'test') {
                         } else {
                           _creatingByCurse.add(cid);
                           try {
-                            const existingForCurse = await missionRepo.find({ where: [
-                              { estado: 'pendiente', curse: { id: cid } },
-                              { estado: 'en_ejecucion', curse: { id: cid } }
-                            ] });
+                            const existingForCurse = await missionRepo.find({
+                              where: [
+                                { estado: 'pendiente', curse: { id: cid } },
+                                { estado: 'en_ejecucion', curse: { id: cid } }
+                              ]
+                            });
                             if (existingForCurse && existingForCurse.length > 0) {
                               console.log(`[Scheduler] Misiones activas/pending ya existen para curse ${cid}, se omite creación duplicada.`);
                             } else {
@@ -256,7 +258,7 @@ if (process.env.NODE_ENV === 'test') {
                   app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
                   continue;
                 }
-              } catch (_) {}
+              } catch (_) { }
 
               // 2.c) Decidir continuar o completar
               const roll = Math.random();
