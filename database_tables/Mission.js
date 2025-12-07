@@ -5,7 +5,6 @@ module.exports = new EntitySchema({
   tableName: 'mission',
   columns: {
     id: { type: 'int', primary: true, generated: true },
-    curse_id: { type: 'int' },
     estado: { type: 'varchar', length: 100 },
     descripcion_evento: { type: 'text', nullable: true },
     fecha_inicio: { type: 'datetime' },
