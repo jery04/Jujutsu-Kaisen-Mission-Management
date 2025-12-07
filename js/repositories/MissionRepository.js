@@ -39,12 +39,13 @@ class MissionRepository extends BaseRepository {
       .select([
         'm.id AS mission_id',
         'm.fecha_inicio AS fecha_inicio',
+        'm.fecha_fin AS fecha_fin',
         'm.ubicacion AS ubicacion',
         "GROUP_CONCAT(DISTINCT sp.nombre ORDER BY sp.nombre SEPARATOR ', ') AS hechiceros",
         "GROUP_CONCAT(DISTINCT CONCAT(mtu.mission_id,'-',mtu.technique_id,'-',mtu.sorcerer_id) ORDER BY mtu.technique_id SEPARATOR ',') AS tecnica_usada_ids"
       ])
-      .where('m.estado = :estado', { estado: 'completada_exito' });
-    if (from && to) { qb.andWhere('m.fecha_inicio BETWEEN :from AND :to', { from, to }); }
+      .where('m.estado = :estado', { estado: 'completada' });
+    if (from && to) { qb.andWhere('m.fecha_fin BETWEEN :from AND :to', { from, to }); }
     qb.groupBy('m.id').orderBy('m.fecha_inicio', 'ASC');
     return await qb.getRawMany();
   }

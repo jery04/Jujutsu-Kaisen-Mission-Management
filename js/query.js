@@ -445,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
               let missions = [];
               if (Array.isArray(payload)) missions = payload;
               else if (payload && Array.isArray(payload.missions)) missions = payload.missions;
+              else if (payload && Array.isArray(payload.results)) missions = payload.results;
 
               if (!missions.length) {
                 if (results) results.innerHTML = '<div class="query-item"><h3>No hay misiones exitosas en el rango</h3></div>';
@@ -453,15 +454,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
               // Renderizar misiones exitosas con datos clave
               renderPaginated(missions, function (m) {
-                const titulo = m.nombre || m.titulo || ('Misión #' + (m.id != null ? m.id : ''));
+                const titulo = m.nombre || m.titulo || ('Misión #' + (m.id != null ? m.id : (m.mission_id != null ? m.mission_id : '')));
                 const lines = [
-                  `Fecha: <strong>${m.fecha_fin || m.fecha || '-'}</strong>`,
+                  `Fecha: <strong>${m.fecha_fin || m.fecha || m.fecha_inicio || '-'}</strong>`,
                   `Ubicación: <strong>${m.lugar || m.ubicacion || '-'}</strong>`,
-                  `Maldición: <strong>${(m.curse && (m.curse.nombre || m.curse.name)) || m.maldicion || '-'}</strong>`
+                  `Hechiceros: <strong>${m.hechiceros || '-'}</strong>`
                 ];
                 const item = makeItem(titulo, lines);
                 item.dataset.entity = 'mission';
-                if (m.id != null) item.dataset.id = String(m.id);
+                const mid = (m.id != null ? m.id : m.mission_id);
+                if (mid != null) item.dataset.id = String(mid);
                 results.appendChild(item);
               }, 'misiones');
             } catch (err) {
