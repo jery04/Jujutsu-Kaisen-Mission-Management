@@ -215,6 +215,13 @@ if (process.env.NODE_ENV === 'test') {
                 if (allDeadNow) {
                   await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
                   try {
+                    // Al cancelar, la maldición vuelve a 'activa' (hasta que la sucesora inicie)
+                    try {
+                      const { getRepository } = require('./repositories');
+                      const curseRepoX = getRepository(dbConn, 'Curse');
+                      const curIdX = m.curse?.id || m.curse_id;
+                      if (curIdX) await curseRepoX.update(Number(curIdX), { estado_actual: 'activa' });
+                    } catch (_) {}
                     let cursePayload = m.curse;
                     if (!cursePayload || !cursePayload.id) {
                       try {

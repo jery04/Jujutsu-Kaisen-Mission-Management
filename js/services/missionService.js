@@ -133,6 +133,13 @@ module.exports = {
       curse: curseEntity
     };
     const mission = await missionRepo.add(baseMission);
+    // Al crear misión pendiente, la maldición queda 'activa'
+    try {
+      const curseRepo2 = getRepository(db, 'Curse');
+      const cid = Number(curse.id);
+      console.log('[missionService] Curse', cid, '-> estado_actual=activa (creación de misión)');
+      await curseRepo2.update(cid, { estado_actual: 'activa' });
+    } catch (_) {}
     const payload = { mission_id: mission.id, curse_id: curse.id, ubicacion: mission.ubicacion, nivel_urgencia, estado: mission.estado };
     try { events.emit('mission:created', payload); } catch (_) { }
     return { ok: true, mission };
@@ -226,6 +233,15 @@ module.exports = {
     // Mantener la fecha de inicio planificada cuando pasa a ejecución
     // No sobrescribir `fecha_inicio` con el momento actual
     const upd = await missionRepo.update(missionId, { estado: MISSION_STATES.en_ejecucion });
+    // Al iniciar misión, la maldición pasa a 'en proceso de exorcismo'
+    try {
+      const curseRepo = getRepository(db, 'Curse');
+      const curseId = found.curse?.id || found.curse_id;
+      if (curseId) {
+        console.log('[missionService] Curse', Number(curseId), "-> estado_actual='en proceso de exorcismo' (inicio de misión)");
+        await curseRepo.update(Number(curseId), { estado_actual: 'en proceso de exorcismo' });
+      }
+    } catch (_) {}
     try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) {}
     try { events.emit('mission:started', { mission_id: Number(missionId) }); } catch (_) { }
     return { ok: true, mission: upd };
@@ -286,6 +302,15 @@ module.exports = {
       console.warn('[missionService] No se pudo actualizar tasa_exito:', e.message);
     }
     try { events.emit('mission:closed', { mission_id: Number(missionId), estado }); } catch (_) { }
+    // Al completar misión, la maldición queda 'exorcizada'
+    try {
+      const curseRepo = getRepository(db, 'Curse');
+      const curseId = found.curse?.id || found.curse_id;
+      if (curseId) {
+        console.log('[missionService] Curse', Number(curseId), "-> estado_actual='exorcizada' (cierre de misión)");
+        await curseRepo.update(Number(curseId), { estado_actual: 'exorcizada' });
+      }
+    } catch (_) {}
     return { ok: true, mission: upd };
   }
 ,
