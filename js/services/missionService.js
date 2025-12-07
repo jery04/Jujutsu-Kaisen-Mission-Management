@@ -17,6 +17,9 @@ const URGENCY_LEVELS = {
 };
 const events = require('../utils/events');
 
+// Cerrojo en memoria por hechicero durante asignación para evitar carreras entre misiones concurrentes
+const _assigningSorcerers = new Set();
+
 function deriveUrgencyFromCurse(curse) {
   const grado = (curse?.grado || '').toLowerCase();
   // Basic rule of thumb: special → emergencia, 1 → urgente, otherwise planificada
@@ -140,16 +143,38 @@ module.exports = {
     const mpRepo = getRepository(db, 'MissionParticipant');
     const found = await missionRepo.getById(missionId);
     if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
+    // No iniciar si ya tiene fecha_fin (misión cerrada/cancelada)
+    if (found.fecha_fin) { return { ok: false, skipped: true, reason: 'already_finished' }; }
     if (found.estado === MISSION_STATES.en_ejecucion) return { ok: true, mission: found };
     // Try to assign team at start
     const { principal, team } = await assignTeam(db, found.curse || { id: found.curse_id, ubicacion: found.ubicacion });
+    // Si algún hechicero candidato está siendo asignado en paralelo, evitar carrera y diferir
+    try {
+      const teamIds = (team || []).map(s => Number(s.id));
+      if (teamIds.some(id => _assigningSorcerers.has(id))) {
+        const { getDelays } = require('../config/progress');
+        const delayDays = Number(getDelays().startDays || 2);
+        const timeService = new TimeService(db);
+        const virtualNow = await timeService.getNow();
+        let baseStart = new Date(found.fecha_inicio || virtualNow);
+        if (baseStart < new Date(virtualNow)) baseStart = new Date(virtualNow);
+        const newStart = new Date(baseStart); newStart.setDate(newStart.getDate() + delayDays);
+        const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
+        try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays, reason: 'lock_conflict' }); } catch (_) {}
+        return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
+      }
+      // Adquirir cerrojo por cada hechicero del equipo
+      for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.add(sid);
+    } catch (_) { /* si falla lock, continuar flujo normal */ }
     if (!team || team.length === 0) {
       // Delay mission start by configured days (from central config)
       const { getDelays } = require('../config/progress');
       const delayDays = Number(getDelays().startDays || 2);
       const timeService = new TimeService(db);
       const virtualNow = await timeService.getNow();
-      const newStart = new Date(found.fecha_inicio || virtualNow);
+      let baseStart = new Date(found.fecha_inicio || virtualNow);
+      if (baseStart < new Date(virtualNow)) baseStart = new Date(virtualNow);
+      const newStart = new Date(baseStart);
       newStart.setDate(newStart.getDate() + delayDays);
       const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
       try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
@@ -189,15 +214,19 @@ module.exports = {
       const delayDays = Number(getDelays().startDays || 2);
       const timeService = new TimeService(db);
       const virtualNow = await timeService.getNow();
-      const newStart = new Date(found.fecha_inicio || virtualNow);
+      let baseStart = new Date(found.fecha_inicio || virtualNow);
+      if (baseStart < new Date(virtualNow)) baseStart = new Date(virtualNow);
+      const newStart = new Date(baseStart);
       newStart.setDate(newStart.getDate() + delayDays);
       const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
       try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) {}
       return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
-    const timeService = new TimeService(db);
-    const virtualNow = await timeService.getNow();
-    const upd = await missionRepo.update(missionId, { estado: MISSION_STATES.en_ejecucion, fecha_inicio: virtualNow });
+    // Mantener la fecha de inicio planificada cuando pasa a ejecución
+    // No sobrescribir `fecha_inicio` con el momento actual
+    const upd = await missionRepo.update(missionId, { estado: MISSION_STATES.en_ejecucion });
+    try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) {}
     try { events.emit('mission:started', { mission_id: Number(missionId) }); } catch (_) { }
     return { ok: true, mission: upd };
   },

@@ -115,7 +115,9 @@ if (process.env.NODE_ENV === 'test') {
       ProjectTime,
       // ...existing code...
     ],
-    synchronize: false // Evitar cambios automáticos en producción/BD existente
+    // Permitir auto-creación de tablas en entornos de desarrollo si TYPEORM_SYNC=true
+    // Mantener desactivado por defecto para producción.
+    synchronize: true
   }).then(async (dbConn) => {
     console.log('Conectado a la base de datos jujutsu_misiones_db');
     // Registrar rutas desacopladas (N-capas) y preparar Socket.IO
@@ -135,6 +137,8 @@ if (process.env.NODE_ENV === 'test') {
       const events = require('./utils/events');
       // Mutex ligero en memoria para evitar creación doble por misma maldición
       const _creatingByCurse = new Set();
+      // Mutex para inicio de misión por id (evitar doble start concurrente)
+      const _startingMissionIds = new Set();
       // Scheduler: on time advanced, evaluate missions progression in batch (lightweight placeholder)
       events.on('time:advanced', async ({ from, to }) => {
         try {
@@ -160,8 +164,15 @@ if (process.env.NODE_ENV === 'test') {
             try {
               const pendList = await missionRepo.find({ where: { estado: 'pendiente' } });
               for (const p of pendList) {
+                // No intentar iniciar pendientes con fecha_fin ya definida (inconsistentes)
+                if (p.fecha_fin) continue;
                 const fi = new Date(p.fecha_inicio);
-                if (fi <= tick) { try { await missionService.startMission(dbConn, p.id); } catch (_) {} }
+                if (fi <= tick) {
+                  if (_startingMissionIds.has(Number(p.id))) continue;
+                  _startingMissionIds.add(Number(p.id));
+                  try { await missionService.startMission(dbConn, p.id); } catch (_) {}
+                  finally { _startingMissionIds.delete(Number(p.id)); }
+                }
               }
             } catch (_) {}
 
@@ -214,7 +225,12 @@ if (process.env.NODE_ENV === 'test') {
                     if (!cursePayload || !cursePayload.id) {
                       cursePayload = { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion };
                     }
-                    try { const nextDay = new Date(tick); nextDay.setDate(nextDay.getDate() + 2); cursePayload.fecha_aparicion = nextDay; } catch (_) {}
+                    // Fijar aparición de la sucesora al día siguiente del tick
+                    try {
+                      const nextDay = new Date(tick);
+                      nextDay.setDate(nextDay.getDate() + 1);
+                      cursePayload.fecha_aparicion = nextDay;
+                    } catch (_) {}
                     if (!cursePayload || !cursePayload.id) {
                       console.warn(`[Scheduler] No se pudo recrear misión: curse_id ausente para misión ${m.id}`);
                     } else {
