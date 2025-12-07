@@ -1,3 +1,76 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const titleDiv = document.querySelector('.title');
+
+  // Nuevo bloque para el botón 7: efectividad en emergencias críticas
+  if (sessionStorage.getItem('showEfectividadEmergenciasTitle') === 'true') {
+    titleDiv.innerHTML = `
+      <h1>Efectividad en Emergencias Críticas</h1>
+      <p>Determinar el porcentaje de efectividad de cada hechicero de grado medio en misiones de emergencia crítica que involucraron maldiciones de grado especial, y comparar este rendimiento con otros hechiceros</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showEfectividadEmergenciasTitle');
+  }
+  else if (sessionStorage.getItem('showEstadoTitle') === 'true') {
+    // Sustituir el contenido del div.title
+    titleDiv.innerHTML = `
+      <h2>Consulta de Maldiciones por Estado</h2>
+      <p>Permitir consultar todas las maldiciones que se encuentren en cierto estado, mostrando su nombre, ubicación, grado y hechicero asignado.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showEstadoTitle');
+  }
+
+  // Nuevo bloque para el botón 3: misiones exitosas por rango de fechas
+  else if (sessionStorage.getItem('showExitosasTitle') === 'true') {
+    titleDiv.innerHTML = `
+      <h1>Misiones Exitosas por Rango de Fechas</h1>
+      <p>Consultar todas las misiones completadas con éxito en un rango de fechas específico, mostrando la ubicación, la maldición enfrentada, los hechiceros participantes y las técnicas utilizadas.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showExitosasTitle');
+  }
+
+  // Nuevo bloque para el botón 4: reporte de efectividad de técnicas
+  else if (sessionStorage.getItem('showEfectividadTitle') === 'true') {
+    titleDiv.innerHTML = `
+      <h1>Reporte de Efectividad de Técnicas</h1>
+      <p>Mostrar un reporte para cada hechicero que calcule el promedio de efectividad de sus técnicas utilizadas en combate, clasificando el resultado como Alta, Media o Baja según el promedio.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showEfectividadTitle');
+  }
+
+  // Nuevo bloque para el botón 5: top hechiceros por nivel de misión
+  else if (sessionStorage.getItem('showTopHechicerosTitle') === 'true') {
+    titleDiv.innerHTML = `
+      <h1>Top Hechiceros por Nivel de Misión</h1>
+      <p>Listar para cada nivel de misión posible, los tres hechiceros con mayor porcentaje de éxito, mostrando el número total de misiones realizadas y el número de éxitos, condicionado por una región de acción.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showTopHechicerosTitle');
+  }
+
+  // Nuevo bloque para el botón 6: relación de hechiceros y discípulos
+  else if (sessionStorage.getItem('showRelacionTitle') === 'true') {
+    titleDiv.innerHTML = `
+      <h1>Relación de Hechiceros y Discípulos</h1>
+      <p>Establecer la relación de cada hechicero y sus discípulos o miembros de equipo, mostrando además el conteo de sus misiones exitosas y fallidas, ordenado de mayor a menor desempeño acorde al desempeño.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('showRelacionTitle');
+  }
+
+  // Nuevo bloque para el modo "missionsBySorcerer" (botón 2)
+  else if (sessionStorage.getItem('mode') === 'missionsBySorcerer') {
+    titleDiv.innerHTML = `
+      <h1>Misiones de un Hechicero</h1>
+      <p>Obtener el listado de todas las misiones en las que ha participado un hechicero específico, mostrando la fecha y el resultado de la misión.</p>
+    `;
+    // Limpiar la bandera para futuras visitas
+    sessionStorage.removeItem('mode');
+  }
+});
+
 (function () {
   'use strict';
 

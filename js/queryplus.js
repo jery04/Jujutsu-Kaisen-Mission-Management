@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (e) {
                     console.warn('No se pudo guardar estadoOptions en sessionStorage', e);
                 }
+                                    // Señalar que se debe mostrar el título y descripción personalizados en query.html
+                                    sessionStorage.setItem('showEstadoTitle', 'true');
             } else if (idx === 1) {
                 // Bloque para el botón 2
                 // Objetivo: consultar misiones en las que participó un hechicero específico.
@@ -28,15 +30,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn('No se pudo marcar el modo missionsBySorcerer', e);
                 }
             } else if (idx === 2) {
-                // Bloque para el botón 3
+                    // Bloque para el botón 3
+                    // Señalar que se debe mostrar el título y descripción personalizados en query.html para misiones exitosas por rango de fechas
+                    try {
+                        sessionStorage.setItem('showExitosasTitle', 'true');
+                    } catch (e) {
+                        console.warn('No se pudo guardar showExitosasTitle en sessionStorage', e);
+                    }
             } else if (idx === 3) {
-                // Bloque para el botón 4
+                    // Bloque para el botón 4
+                    // Señalar que se debe mostrar el título y descripción personalizados en query.html para reporte de efectividad de técnicas
+                    try {
+                        sessionStorage.setItem('showEfectividadTitle', 'true');
+                    } catch (e) {
+                        console.warn('No se pudo guardar showEfectividadTitle en sessionStorage', e);
+                    }
             } else if (idx === 4) {
-                // Bloque para el botón 5
+                    // Bloque para el botón 5
+                    // Señalar que se debe mostrar el título y descripción personalizados en query.html para top hechiceros por nivel de misión
+                    try {
+                        sessionStorage.setItem('showTopHechicerosTitle', 'true');
+                    } catch (e) {
+                        console.warn('No se pudo guardar showTopHechicerosTitle en sessionStorage', e);
+                    }
             } else if (idx === 5) {
                 // Bloque para el botón 6
+                // Señalar que se debe mostrar el título y descripción personalizados en query.html para relación de hechiceros y discípulos
+                try {
+                    sessionStorage.setItem('showRelacionTitle', 'true');
+                } catch (e) {
+                    console.warn('No se pudo guardar showRelacionTitle en sessionStorage', e);
+                }
             } else if (idx === 6) {
                 // Bloque para el botón 7
+                // Señalar que se debe mostrar el título y descripción personalizados en query.html para efectividad en emergencias críticas
+                try {
+                    sessionStorage.setItem('showEfectividadEmergenciasTitle', 'true');
+                } catch (e) {
+                    console.warn('No se pudo guardar showEfectividadEmergenciasTitle en sessionStorage', e);
+                }
             }
 
             // Después de ejecutar la lógica del botón (p. ej. establecer banderas), redirigimos

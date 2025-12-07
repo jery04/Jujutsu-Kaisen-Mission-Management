@@ -29,9 +29,28 @@ function deriveUrgencyFromCurse(curse) {
 // Asignación de equipo usando RankingService (configurable N)
 async function assignTeam(db, curse, maxMembers) {
   const sorcRepo = getRepository(db, 'Sorcerer');
+  const missionRepo = getRepository(db, 'Mission');
+  const mpRepo = getRepository(db, 'MissionParticipant');
   const all = await sorcRepo.getAll({ where: { estado_operativo: 'activo' } });
+  // Excluir hechiceros ya asignados a una misión en ejecución (no disponibles)
+  // Obtiene ids de hechiceros participantes en misiones en_ejecucion sin fecha_fin
+  const busySorcererIds = new Set();
+  try {
+    // Buscar misiones en ejecución
+    const running = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
+    const runningIds = running.map(m => m.id);
+    if (runningIds.length) {
+      // Consultar participantes para esas misiones
+      for (const mid of runningIds) {
+        const parts = await mpRepo.find({ where: { mission: { id: Number(mid) } } });
+        for (const p of parts) { if (p.sorcerer_id) busySorcererIds.add(Number(p.sorcerer_id)); }
+      }
+    }
+  } catch (_) { /* si falla, no bloquea asignación */ }
+  // Además, excluir hechiceros muertos o dados de baja
+  const available = all.filter(s => !busySorcererIds.has(Number(s.id)) && !s.fecha_fallecimiento && String(s.estado_operativo).toLowerCase() !== 'dado_de_baja');
   const { rank, selectTeam, getDefaultTeamSize } = require('./RankingService');
-  const ranked = rank(all, { region: curse?.ubicacion });
+  const ranked = rank(available, { region: curse?.ubicacion });
   const { principal, team } = selectTeam(ranked, maxMembers || getDefaultTeamSize());
   return { principal, team };
 }
@@ -114,8 +133,9 @@ module.exports = {
     // Try to assign team at start
     const { principal, team } = await assignTeam(db, found.curse || { id: found.curse_id, ubicacion: found.ubicacion });
     if (!team || team.length === 0) {
-      // Delay mission start by configured days
-      const delayDays = Number(process.env.MISSION_START_DELAY_DAYS || 2);
+      // Delay mission start by configured days (from central config)
+      const { getDelays } = require('../config/progress');
+      const delayDays = Number(getDelays().startDays || 2);
       const timeService = new TimeService(db);
       const virtualNow = await timeService.getNow();
       const newStart = new Date(found.fecha_inicio || virtualNow);
@@ -124,8 +144,39 @@ module.exports = {
       try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
       return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
+    // Segunda verificación de disponibilidad para evitar carreras: si ya está en otra misión activa, omitir
+    const actuallyAdded = [];
     for (const s of team) {
-      await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol: (principal?.id === s.id ? 'principal' : 'miembro') });
+      try {
+        // ¿El hechicero ya participa en alguna misión en ejecución?
+        const qb = mpRepo.createQueryBuilder('mp')
+          .innerJoin('mission', 'm', 'm.id = mp.mission_id')
+          .where('mp.sorcerer_id = :sid', { sid: Number(s.id) })
+          .andWhere('m.estado = :estado', { estado: 'en_ejecucion' });
+        const busyRows = await qb.getRawMany();
+        if (busyRows && busyRows.length > 0) continue; // ya ocupado, saltar
+        const rol = (principal?.id === s.id ? 'principal' : 'miembro');
+        await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol });
+        actuallyAdded.push(s.id);
+      } catch (e) {
+        // Ignorar duplicados por clave primaria compuesta (mission_id, sorcerer_id)
+        if (e && (String(e.code) === 'ER_DUP_ENTRY' || String(e.errno) === '1062')) {
+          continue;
+        }
+        throw e;
+      }
+    }
+    // Si tras la verificación no se pudo agregar a nadie, diferir inicio
+    if (actuallyAdded.length === 0) {
+      const { getDelays } = require('../config/progress');
+      const delayDays = Number(getDelays().startDays || 2);
+      const timeService = new TimeService(db);
+      const virtualNow = await timeService.getNow();
+      const newStart = new Date(found.fecha_inicio || virtualNow);
+      newStart.setDate(newStart.getDate() + delayDays);
+      const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
+      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
     const timeService = new TimeService(db);
     const virtualNow = await timeService.getNow();
@@ -142,8 +193,9 @@ module.exports = {
     if (!user || !['soporte', 'admin'].includes(String(user.role || '').toLowerCase())) {
       const err = new Error('No autorizado para cerrar misión'); err.status = 403; throw err;
     }
-    const { resultado, descripcion_evento, danos_colaterales } = payload || {};
-    const estado = resultado === 'exito' ? MISSION_STATES.completada_exito : MISSION_STATES.completada_fracaso;
+      const { descripcion_evento, danos_colaterales } = payload || {};
+      // Estado neutral: siempre 'completada' (sin éxito/fracaso)
+      const estado = 'completada';
     const timeService = new TimeService(db);
     const virtualNow = await timeService.getNow();
     const upd = await missionRepo.update(missionId, {
@@ -179,7 +231,7 @@ module.exports = {
         const total_prev = Number(sorc.total_misiones) || 0;
         const exitos_prev = Number(sorc.misiones_exito) || 0;
         const nuevos_total = total_prev + 1;
-        const nuevos_exitos = exitos_prev + (estado === MISSION_STATES.completada_exito ? 1 : 0);
+          const nuevos_exitos = exitos_prev; // sin éxito/fracaso, no se altera el contador de éxitos
         const tasa = nuevos_total > 0 ? Math.round((nuevos_exitos / nuevos_total) * 100) : 0;
         await sorcRepo.update(sorc.id, { total_misiones: nuevos_total, misiones_exito: nuevos_exitos, tasa_exito: tasa });
       }
