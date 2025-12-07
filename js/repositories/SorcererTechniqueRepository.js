@@ -37,6 +37,25 @@ class SorcererTechniqueRepository extends BaseRepository {
       .orIgnore();
     return await qb.execute();
   }
+
+  async clearNonPrincipal(sorcererId) {
+    const qb = this.createQueryBuilder('st')
+      .delete()
+      .from('sorcerer_technique')
+      .where('sorcerer_id = :sid', { sid: Number(sorcererId) })
+      .andWhere('es_principal = 0');
+    return await qb.execute();
+  }
+
+  async listNonPrincipalNames(sorcererId) {
+    const qb = this.createQueryBuilder('st')
+      .innerJoin('technique', 't', 't.id = st.technique_id')
+      .select('t.nombre', 'nombre')
+      .where('st.sorcerer_id = :sid', { sid: Number(sorcererId) })
+      .andWhere('st.es_principal = 0');
+    const rows = await qb.getRawMany();
+    return rows.map(r => r.nombre).filter(Boolean);
+  }
 }
 
 module.exports = SorcererTechniqueRepository;

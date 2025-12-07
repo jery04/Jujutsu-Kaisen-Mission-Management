@@ -71,10 +71,18 @@ module.exports = {
   },
   async getById(db, id) {
     const repo = getRepository(db, 'Sorcerer');
-    return await repo.getWithPrincipalById(id);
+    const linkRepo = getRepository(db, 'SorcererTechnique');
+    const base = await repo.getWithPrincipalById(id);
+    try {
+      const extras = await linkRepo.listNonPrincipalNames(id);
+      base.tecnicas_adicionales = extras;
+    } catch (_) { /* noop */ }
+    return base;
   },
   async update(db, id, payload, userId) {
     const repo = getRepository(db, 'Sorcerer');
+    const linkRepo = getRepository(db, 'SorcererTechnique');
+    const techniqueRepo = getRepository(db, 'Technique');
     const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
@@ -131,7 +139,45 @@ module.exports = {
       }
     }
 
-    return await repo.update(id, partial);
+    // Actualizar campos base
+    const updated = await repo.update(id, partial);
+
+    // Manejo de técnicas adicionales si se envían
+    if (payload && Object.prototype.hasOwnProperty.call(payload, 'tecnicas_adicionales')) {
+      const arr = Array.isArray(payload.tecnicas_adicionales) ? payload.tecnicas_adicionales : [];
+      const normalized = [];
+      for (const t of arr) {
+        const nm = String(t || '').trim();
+        if (!nm) continue;
+        const lower = nm.toLowerCase();
+        if (!normalized.some(x => x.toLowerCase() === lower)) normalized.push(nm);
+      }
+
+      // Validar existencia de cada técnica y que no coincida con la principal
+      let principalName = null;
+      try {
+        const main = await linkRepo.findOne({ where: { sorcerer_id: Number(id), es_principal: 1 }, relations: ['technique'] });
+        principalName = main && main.technique && main.technique.nombre ? String(main.technique.nombre).toLowerCase() : null;
+      } catch (_) { /* noop */ }
+      for (const nm of normalized) {
+        if (principalName && nm.toLowerCase() === principalName) {
+          const err = new Error('La técnica principal no puede repetirse como adicional'); err.status = 400; throw err;
+        }
+        const tech = await techniqueRepo.findOne({ where: { nombre: nm } });
+        if (!tech) { const err = new Error(`Técnica adicional no encontrada: ${nm}`); err.status = 404; throw err; }
+      }
+
+      // Limpiar técnicas no principales y reinsertar las nuevas
+      try {
+        await linkRepo.clearNonPrincipal(Number(id));
+      } catch (_) { /* noop */ }
+      for (const nm of normalized) {
+        const tech = await techniqueRepo.findOne({ where: { nombre: nm } });
+        if (tech) await linkRepo.addNonPrincipal(Number(id), tech.id, 0);
+      }
+    }
+
+    return updated;
   },
   async remove(db, id, userId) {
     const repo = getRepository(db, 'Sorcerer');

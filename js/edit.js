@@ -28,6 +28,10 @@ function isAdmin() {
   const resetBtn = document.getElementById('resetBtn');
   const goBackBtn = document.getElementById('goBackBtn');
   const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+  const extraTechInput = document.getElementById('h_tecnica_extra');
+  const addExtraTechBtn = document.getElementById('addExtraTechBtn');
+  const extraTechList = document.getElementById('extraTechList');
+  const additionalTechs = [];
 
   // Parse params (entity, id)
   const params = new URLSearchParams(window.location.search);
@@ -87,6 +91,7 @@ function isAdmin() {
     // Prefill both hechiceros and ubicaciones datalists when present.
     const dlHech = document.getElementById('dl_hechiceros');
     const dlUbi = document.getElementById('dl_ubicaciones');
+    const dlTech = document.getElementById('dl_techniques');
 
     // Helper to append unique option
     const appendUnique = (dl, value) => {
@@ -122,6 +127,42 @@ function isAdmin() {
         }
       } catch (e) { console.debug('prefill datalists (ubicaciones) error', e); }
     }
+
+    // Fetch técnicas para autocompletar
+    if (dlTech && dlTech.children.length === 0) {
+      try {
+        const r3 = await fetch(API_BASE + '/technique');
+        if (r3.ok) {
+          const list = await r3.json();
+          if (Array.isArray(list)) {
+            list.forEach(t => { if (t && t.nombre) appendUnique(dlTech, t.nombre); });
+          }
+        }
+      } catch (e) { console.debug('prefill datalists (techniques) error', e); }
+    }
+  }
+
+  function renderAdditionalTechs() {
+    if (!extraTechList) return;
+    extraTechList.innerHTML = '';
+    additionalTechs.forEach((name) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = name;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = '×';
+      btn.className = 'chip-remove';
+      btn.addEventListener('click', () => {
+        const idx = additionalTechs.indexOf(name);
+        if (idx >= 0) {
+          additionalTechs.splice(idx, 1);
+          renderAdditionalTechs();
+        }
+      });
+      chip.appendChild(btn);
+      extraTechList.appendChild(chip);
+    });
   }
 
   function formatLocalDateTime(input) {
@@ -202,6 +243,14 @@ function isAdmin() {
         } catch (e) { console.debug('set fecha_fallecimiento failed', e); }
         // Guardar record actual para validaciones de mejora
         try { window._recordCurrent = { grado: record.grado, anios_experiencia: record.anios_experiencia, estado_operativo: record.estado_operativo || record.estado || 'activo' }; } catch (e) { /* noop */ }
+        // Tecnicas adicionales si vienen del backend
+        if (Array.isArray(record.tecnicas_adicionales)) {
+          additionalTechs.splice(0, additionalTechs.length, ...record.tecnicas_adicionales);
+          renderAdditionalTechs();
+        } else {
+          additionalTechs.splice(0, additionalTechs.length);
+          renderAdditionalTechs();
+        }
         // Ocultar estado_operativo para usuarios no admin
         const estadoField = document.getElementById('h_estado_operativo');
         const estadoLabel = document.querySelector('label[for="h_estado_operativo"]');
@@ -287,7 +336,30 @@ function isAdmin() {
   }
 
   if (resetBtn) {
-    resetBtn.addEventListener('click', () => { const activeFs = fieldsets.find(fs => fs.style.display !== 'none'); if (!activeFs) return; const inputs = activeFs.querySelectorAll('input,select,textarea'); inputs.forEach(i => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; }); clearResult(); });
+    resetBtn.addEventListener('click', () => {
+      const activeFs = fieldsets.find(fs => fs.style.display !== 'none');
+      if (!activeFs) return;
+      const inputs = activeFs.querySelectorAll('input,select,textarea');
+      inputs.forEach(i => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; });
+      if (activeFs.getAttribute('data-for') === 'hechicero') {
+        additionalTechs.splice(0, additionalTechs.length);
+        renderAdditionalTechs();
+      }
+      clearResult();
+    });
+  }
+
+  if (addExtraTechBtn && extraTechInput) {
+    addExtraTechBtn.addEventListener('click', () => {
+      const val = String(extraTechInput.value || '').trim();
+      if (!val) return;
+      const lower = val.toLowerCase();
+      if (!additionalTechs.some(t => t.toLowerCase() === lower)) {
+        additionalTechs.push(val);
+        renderAdditionalTechs();
+      }
+      extraTechInput.value = '';
+    });
   }
 
   function buildUpdatePayload(fsKey) {
@@ -309,7 +381,7 @@ function isAdmin() {
         // En creación, si no se especifica, usar 'estudiante' por defecto
         if (!grado) grado = 'estudiante';
       }
-      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
+      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.slice(), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
     } else if (fsKey === 'tecnica') {
       // Enviar los campos como string, nunca null
       const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
@@ -390,6 +462,18 @@ function isAdmin() {
             resultEl.innerHTML = '⚠ No autorizado: solo el administrador puede cambiar el estado operativo.';
           }
           return;
+        }
+        // Validar que técnicas adicionales no dupliquen la principal
+        if (payloadPreview.tecnicas_adicionales && payloadPreview.tecnica) {
+          const mainLower = String(payloadPreview.tecnica).toLowerCase();
+          const dup = payloadPreview.tecnicas_adicionales.find(t => String(t || '').toLowerCase() === mainLower);
+          if (dup) {
+            if (resultEl) {
+              resultEl.style.display = 'block'; resultEl.style.backgroundColor = '#fff3cd'; resultEl.style.color = '#856404';
+              resultEl.innerHTML = '⚠ La técnica principal no puede repetirse como adicional.';
+            }
+            return;
+          }
         }
       }
     }

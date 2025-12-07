@@ -65,6 +65,14 @@
                 <label for="h_fecha_fallecimiento">Fecha de fallecimiento (si aplica)</label>
                 <input id="h_fecha_fallecimiento" name="fecha_fallecimiento" type="date">
 
+                <label for="h_tecnica_extra">Técnicas adicionales</label>
+                <div class="chip-input-row">
+                    <input id="h_tecnica_extra" type="text" list="dl_techniques" placeholder="Ej: Expansión de Dominio">
+                    <button type="button" id="addExtraTechBtn" class="btn-register" style="width:auto; padding:8px 12px;">Agregar</button>
+                </div>
+                <div id="extraTechList" class="chip-list"></div>
+                <small class="hint">Se puede eliminar una técnica extra desde la lista.</small>
+
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
                     <p>
@@ -237,6 +245,7 @@
             <!-- Datalists de apoyo para autocompletar -->
             <datalist id="dl_hechiceros"></datalist>
             <datalist id="dl_ubicaciones"></datalist>
+            <datalist id="dl_techniques"></datalist>
 
             <div class="actions">
                 <button type="button" class="btn-back" id="goBackBtn" title="Volver a la página anterior">Volver</button>
