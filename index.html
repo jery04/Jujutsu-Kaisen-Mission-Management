@@ -18,7 +18,7 @@
             <button id="advance-btn" type="button">Adelantar</button>
         </div>
     </header>
-    
+
     <main id="main-content">
         <section class="user-center" aria-label="Usuario y sesión">
             <div class="user-badge" id="user-badge" aria-live="polite">
@@ -50,7 +50,7 @@
                 </span>
                 <img src="/img/part2.png" alt="Jujutsu Kaisen" class="btn-illustration">
             </button>
-            
+
             <button id="open-queryplus" class="btn">
                 <span class="btn-content">
                     <img src="/img/consultas.png" alt="icono" class="btn-icon">
@@ -74,6 +74,17 @@
             </button>
         </section>
     </main>
+
+    <!-- Modal de Confirmación de Tiempo Virtual -->
+    <div id="timeOkModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="timeOkTitle" aria-hidden="true">
+        <div class="modal">
+            <h3 id="timeOkTitle">Acción completada</h3>
+            <p id="timeOkMessage">El tiempo virtual se actualizó correctamente.</p>
+            <div class="modal-actions">
+                <button type="button" id="time-ok-close" class="btn" aria-label="Cerrar aviso">Entendido</button>
+            </div>
+        </div>
+    </div>
 
     <script src="/js/utils/time.js"></script>
     <script src="/js/utils/auth.js"></script>

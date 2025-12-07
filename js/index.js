@@ -1,26 +1,26 @@
 // Configuración global y animaciones migradas desde index.html
-(function(){
-  try { window.API_BASE = window.location.origin; } catch(_) {}
+(function () {
+  try { window.API_BASE = window.location.origin; } catch (_) { }
 })();
 
 // Asegura el estado inicial antes del primer repintado
-(function(){
+(function () {
   try {
     var comingFromHome = sessionStorage.getItem('flowFromHome') === '1';
     if (comingFromHome) {
       document.documentElement.classList.add('flow-enter');
     }
-  } catch (_) {}
+  } catch (_) { }
 })();
 
 // Retira el estado inicial y deja que la transición haga el resto
-(function(){
-  var reveal = function(){
-    requestAnimationFrame(function(){
+(function () {
+  var reveal = function () {
+    requestAnimationFrame(function () {
       var html = document.documentElement;
       if (html.classList.contains('flow-enter')) {
         html.classList.remove('flow-enter');
-        try { sessionStorage.removeItem('flowFromHome'); } catch(_) {}
+        try { sessionStorage.removeItem('flowFromHome'); } catch (_) { }
       }
     });
   };
@@ -51,19 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
-        // Navigate to the add page (relative to index.html)
-        window.location.href = 'html/register.html';
-      });
-    }
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      // Navigate to the add page (relative to index.html)
+      window.location.href = 'html/register.html';
+    });
+  }
 
-    if (tutorialBtn) {
-      tutorialBtn.addEventListener('click', () => {
-        // Navigate to the tutorial page (relative to index.html)
-        window.location.href = 'html/tutorial.html';
-      });
-    }
+  if (tutorialBtn) {
+    tutorialBtn.addEventListener('click', () => {
+      // Navigate to the tutorial page (relative to index.html)
+      window.location.href = 'html/tutorial.html';
+    });
+  }
 
   if (queryplusBtn) {
     queryplusBtn.addEventListener('click', () => {
@@ -90,21 +90,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!storedName) storedName = 'Usuario';
     if (userNameEl) userNameEl.textContent = storedName;
     if (userAvatarEl) userAvatarEl.textContent = storedName.charAt(0).toUpperCase();
-  } catch (_) {}
+  } catch (_) { }
 
   // Logout clears common keys and returns to home
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       try {
-        const keys = ['username','userName','currentUserName','nombre','name','token','auth','accessToken','isAdmin'];
-        keys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} try { sessionStorage.removeItem(k); } catch(_) {} });
-      } catch(_) {}
+        const keys = ['username', 'userName', 'currentUserName', 'nombre', 'name', 'token', 'auth', 'accessToken', 'isAdmin'];
+        keys.forEach(k => { try { localStorage.removeItem(k); } catch (_) { } try { sessionStorage.removeItem(k); } catch (_) { } });
+      } catch (_) { }
       window.location.href = 'home.html';
     });
   }
 
   // Usar utilidad común para mostrar el tiempo virtual
-  try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch(_) {}
+  try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch (_) { }
 
   if (advanceBtn) {
     advanceBtn.addEventListener('click', () => {
@@ -120,19 +120,34 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json', 'x-user-role': 'super_admin' },
         body: JSON.stringify({ to: payloadDate })
       })
-      .then(r => r.json())
-      .then(d => {
-        if (d && d.ok) {
-          // Refrescar reloj común
-          try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch(_) {}
-          alert('Tiempo virtual avanzado correctamente');
-        } else {
-          alert('No se pudo avanzar el tiempo: ' + (d && d.message ? d.message : 'error'));
-        }
-      })
-      .catch(err => {
-        alert('Error de red: ' + err.message);
-      });
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.ok) {
+            // Refrescar reloj común
+            try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch (_) { }
+            // Mostrar modal bonito en el centro
+            try {
+              const modal = document.getElementById('timeOkModal');
+              const title = document.getElementById('timeOkTitle');
+              const msg = document.getElementById('timeOkMessage');
+              const closeBtn = document.getElementById('time-ok-close');
+              if (title) title.textContent = 'Tiempo virtual avanzado';
+              if (msg) msg.textContent = 'Tiempo virtual avanzado correctamente';
+              if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden', 'false'); }
+              closeBtn?.addEventListener('click', () => {
+                modal?.classList.remove('is-open');
+                modal?.setAttribute('aria-hidden', 'true');
+              }, { once: true });
+            } catch (_) {
+              alert('Tiempo virtual avanzado correctamente');
+            }
+          } else {
+            alert('No se pudo avanzar el tiempo: ' + (d && d.message ? d.message : 'error'));
+          }
+        })
+        .catch(err => {
+          alert('Error de red: ' + err.message);
+        });
     });
   }
 });
@@ -143,26 +158,26 @@ document.addEventListener('DOMContentLoaded', () => {
 * @param {string} endpoint - La ruta de la API (ej: '/sorcerer')
 */
 window.fetchApiData = function (endpoint) {
-    try {
-        var base = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : (window.location && window.location.origin ? window.location.origin : 'http://localhost:3000');
-        var path = (endpoint || '').startsWith('/') ? endpoint : ('/' + (endpoint || ''));
-        var fullUrl = base + path;
-        console.log('Realizando consulta GET a: ' + fullUrl);
+  try {
+    var base = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : (window.location && window.location.origin ? window.location.origin : 'http://localhost:3000');
+    var path = (endpoint || '').startsWith('/') ? endpoint : ('/' + (endpoint || ''));
+    var fullUrl = base + path;
+    console.log('Realizando consulta GET a: ' + fullUrl);
 
-        return fetch(fullUrl)
-            .then(function (response) {
-                if (!response.ok) {
-                    return response.json().then(function (err) {
-                        throw new Error('Error ' + response.status + ': ' + (err && err.message ? err.message : 'Error en la consulta al servidor'));
-                    });
-                }
-                return response.json();
-            })
-            .catch(function (error) {
-                console.error('Error de red/API:', error);
-                throw error;
-            });
-    } catch (e) {
-        return Promise.reject(e);
-    }
+    return fetch(fullUrl)
+      .then(function (response) {
+        if (!response.ok) {
+          return response.json().then(function (err) {
+            throw new Error('Error ' + response.status + ': ' + (err && err.message ? err.message : 'Error en la consulta al servidor'));
+          });
+        }
+        return response.json();
+      })
+      .catch(function (error) {
+        console.error('Error de red/API:', error);
+        throw error;
+      });
+  } catch (e) {
+    return Promise.reject(e);
+  }
 };
