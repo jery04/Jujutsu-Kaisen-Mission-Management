@@ -184,9 +184,41 @@ window.addEventListener('keydown', function (e) {
         throw new Error(data?.message || 'No fue posible registrar');
       }
       closeRegisterModal();
-      alert('Registro completado. Ahora puedes iniciar sesión.');
+      // Mostrar modal de confirmación de registro en lugar de alert
+      try {
+        const modal = document.getElementById('registerOkModal');
+        const title = document.getElementById('registerOkTitle');
+        const msg = document.getElementById('registerOkMessage');
+        if (title) title.textContent = 'Registro completado';
+        if (msg) msg.textContent = 'Tu cuenta fue creada correctamente. Ya puedes iniciar sesión.';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('register-ok-close');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert('Registro completado. Ahora puedes iniciar sesión.');
+      }
     } catch (err) {
-      alert(err.message || 'Error en el registro');
+      // Mostrar modal de error de registro en lugar de alert
+      try {
+        const modal = document.getElementById('errorModal');
+        const title = document.getElementById('errorModalTitle');
+        const msg = document.getElementById('errorModalMessage');
+        if (title) title.textContent = 'No se pudo registrar';
+        if (msg) msg.textContent = err?.message || 'Error en el registro';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('error-close-btn');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert(err.message || 'Error en el registro');
+      }
     }
   });
 
