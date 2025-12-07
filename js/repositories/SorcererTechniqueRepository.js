@@ -56,6 +56,22 @@ class SorcererTechniqueRepository extends BaseRepository {
     const rows = await qb.getRawMany();
     return rows.map(r => r.nombre).filter(Boolean);
   }
+
+  async listBySorcerer(sorcererId) {
+    return await this.find({ where: { sorcerer_id: Number(sorcererId) }, relations: ['technique'] });
+  }
+
+  async ensureNivelDominio(sorcererId, techniqueId, base, isPrincipal) {
+    const nivel = Math.max(1, Math.min(100, Math.round(base)));
+    // save actúa como upsert sobre la PK compuesta
+    await this.save({
+      sorcerer_id: Number(sorcererId),
+      technique_id: Number(techniqueId),
+      es_principal: isPrincipal ? 1 : 0,
+      nivel_dominio: nivel
+    });
+    return nivel;
+  }
 }
 
 module.exports = SorcererTechniqueRepository;

@@ -1,5 +1,15 @@
 const BaseRepository = require('./BaseRepository');
 
+function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function biasForJJK(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('dominio')) return 8;
+  if (n.includes('infinito') || n.includes('ilimitado') || n.includes('seis ojos')) return 10;
+  if (n.includes('corte') || n.includes('sangre')) return 4;
+  return 0;
+}
+
 class AdvancedQueryRepository extends BaseRepository {
   constructor(db) {
     super(db, null); // No entidad fija
@@ -115,6 +125,71 @@ class AdvancedQueryRepository extends BaseRepository {
       GROUP BY s.grado, s.id
     `);
     return rows;
+  }
+
+  // 4 (re-imagined): Promedio de efectividad de técnicas por hechicero con dominancia inspirada en JJK
+  async computeSorcererTechniqueEffectiveness(connection) {
+    const sorcRepo = require('../repositories').getRepository(connection, 'Sorcerer');
+    const stRepo = require('../repositories').getRepository(connection, 'SorcererTechnique');
+
+    const sorcerers = await sorcRepo.getAll();
+    const reports = [];
+
+    for (const sor of sorcerers) {
+      const links = await stRepo.listBySorcerer(sor.id);
+      if (!links || links.length === 0) continue;
+
+      // Identificar principal
+      const principal = links.find(l => Number(l.es_principal) === 1) || links[0];
+      const extras = links.filter(l => Number(l.es_principal) === 0);
+
+      const mainName = principal.technique?.nombre || 'Desconocida';
+      const mainBase = Math.max(principal.nivel_dominio || 0, randInt(88, 100) + biasForJJK(mainName));
+      principal.nivel_dominio = await stRepo.ensureNivelDominio(sor.id, principal.technique_id, mainBase, true);
+
+      // Extras: asignar dominio si falta
+      for (const ex of extras) {
+        const exName = ex.technique?.nombre || 'Técnica secundaria';
+        const bias = biasForJJK(exName);
+        const base = ex.nivel_dominio && ex.nivel_dominio > 0 ? ex.nivel_dominio : randInt(48, 86) + bias;
+        ex.nivel_dominio = await stRepo.ensureNivelDominio(sor.id, ex.technique_id, base, false);
+      }
+
+      // Calcular efectividad ponderada
+      const weights = [];
+      const values = [];
+      const detail = [];
+
+      const jitter = () => randInt(-10, 10);
+      const pushVal = (name, dominio, weight) => {
+        const eff = clamp(dominio + jitter(), 25, 100);
+        values.push(eff * weight);
+        weights.push(weight);
+        detail.push({ tecnica: name, efectividad: Math.round(eff) });
+      };
+
+      pushVal(mainName, principal.nivel_dominio, 1.5);
+      for (const ex of extras) {
+        const exName = ex.technique?.nombre || 'Técnica secundaria';
+        pushVal(exName, ex.nivel_dominio, 1);
+      }
+
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / weights.reduce((a, b) => a + b, 0) : 0;
+      const clasificacion = avg >= 85 ? 'Alta' : avg >= 60 ? 'Media' : 'Baja';
+
+      reports.push({
+        hechicero: sor.nombre,
+        grado: sor.grado,
+        tecnica_principal: mainName,
+        tecnicas_adicionales: detail.filter(d => d.tecnica !== mainName).map(d => d.tecnica),
+        promedio_efectividad: Math.round(avg),
+        clasificacion,
+        detalle: detail
+      });
+    }
+
+    // Ordenar por promedio desc
+    return reports.sort((a, b) => b.promedio_efectividad - a.promedio_efectividad);
   }
 }
 

@@ -1,3 +1,6 @@
+// Leer banderas de sesión antes de que el DOM esté listo, para usarlas en toda la carga
+const EFFECTIVENESS_MODE = sessionStorage.getItem('showEfectividadTitle') === 'true';
+
 document.addEventListener('DOMContentLoaded', () => {
   const titleDiv = document.querySelector('.title');
 
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Nuevo bloque para el botón 4: reporte de efectividad de técnicas
-  else if (sessionStorage.getItem('showEfectividadTitle') === 'true') {
+  else if (EFFECTIVENESS_MODE) {
     titleDiv.innerHTML = `
       <h1>Reporte de Efectividad de Técnicas</h1>
       <p>Mostrar un reporte para cada hechicero que calcule el promedio de efectividad de sus técnicas utilizadas en combate, clasificando el resultado como Alta, Media o Baja según el promedio.</p>
@@ -69,10 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Limpiar la bandera para futuras visitas
     sessionStorage.removeItem('missionsBySorcerer');
   }
+
 });
 
 (function () {
   'use strict';
+
+  // Usar la bandera leída antes de DOMContentLoaded
+  const effectivenessMode = EFFECTIVENESS_MODE;
 
   // API base minimal: usa `window.API_BASE` si está definido, si no usa origin
   const API_BASE = (typeof window !== 'undefined' && window.API_BASE)
@@ -228,6 +235,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 'recursos');
   }
 
+  function renderEffectivenessReport(data) {
+    const list = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
+    renderPaginated(list, function (r) {
+      const badgeColor = r.clasificacion === 'Alta' ? '#28a745' : (r.clasificacion === 'Media' ? '#f0ad4e' : '#dc3545');
+      const detailHtml = Array.isArray(r.detalle)
+        ? r.detalle.map(d => `<div>${d.tecnica}: <strong>${d.efectividad}%</strong></div>`).join('')
+        : '';
+      const extras = Array.isArray(r.tecnicas_adicionales) && r.tecnicas_adicionales.length
+        ? r.tecnicas_adicionales.join(', ')
+        : 'Ninguna';
+      const item = document.createElement('div');
+      item.className = 'query-item';
+      item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+          <h3 style="margin:0;">${r.hechicero || '-'}</h3>
+          <span style="background:${badgeColor};color:#fff;padding:4px 10px;border-radius:14px;font-size:0.9rem;">${r.clasificacion || '-'}</span>
+        </div>
+        <p style="margin:6px 0 0 0;font-size:0.95rem;">
+          Grado: <strong>${r.grado || '-'}</strong><br>
+          Técnica principal: <strong>${r.tecnica_principal || '-'}</strong><br>
+          Técnicas adicionales: <strong>${extras}</strong><br>
+          Promedio de efectividad: <strong>${r.promedio_efectividad || 0}%</strong>
+        </p>
+        <div style="margin-top:6px;font-size:0.92rem;">${detailHtml}</div>
+      `;
+      results.appendChild(item);
+    }, 'reportes');
+  }
+
   // helper de carga simple: captura errores y muestra mensaje
   async function loadList(path, renderer) {
     clearResults();
@@ -245,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadTechniques() { return loadList('/technique', renderTechniques); }
   function loadCurses() { return loadList('/curses', renderCurses); }
   function loadResources() { return loadList('/resources', renderResources); }
+  function loadEffectiveness() { return loadList('/advanced/effectiveness', renderEffectivenessReport); }
 
   // Buscar entidades por nombre (igual o substring, case-insensitive)
   async function searchEntities(entity, query) {
@@ -300,9 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Al salir de esta sección, limpiar el modo especial
     try {
       window.addEventListener('beforeunload', function () {
-        try { sessionStorage.removeItem('mode'); } catch (_) {}
+        try { sessionStorage.removeItem('mode'); } catch (_) { }
       });
-    } catch (_) {}
+    } catch (_) { }
 
     // flash corto (si existe)
     try {
@@ -395,11 +432,33 @@ document.addEventListener('DOMContentLoaded', () => {
           results.appendChild(tip);
         }
       }
+      // Modo especial: reporte de efectividad de técnicas (botón 4 avanzado)
+      if (effectivenessMode) {
+        // Remover select y formulario de búsqueda para mostrar solo el reporte
+        if (entitySelect && entitySelect.parentNode) {
+          try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
+        }
+        const searchForm = document.getElementById('search-form');
+        if (searchForm && searchForm.parentNode) {
+          try { searchForm.parentNode.removeChild(searchForm); } catch (_) { }
+        }
+
+        clearResults();
+        if (results) {
+          const tip = document.createElement('div');
+          tip.className = 'query-item';
+          tip.innerHTML = '<h3>Calculando niveles de dominio...</h3><p>Se asignan niveles de dominio y se calcula la efectividad promedio por hechicero.</p>';
+          results.appendChild(tip);
+        }
+
+        // Disparar la carga del reporte
+        loadEffectiveness();
+      }
       // Modo especial: misiones exitosas por rango de fechas
       if (specialMode === 'exitosasByDateRange') {
         // Remover el select para evitar confusión
         if (entitySelect && entitySelect.parentNode) {
-          try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) {}
+          try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
         }
 
         // Preparar UI de rango de fechas dentro del área de búsqueda existente
@@ -538,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
           results.innerHTML = '<div class="query-item"><h3>Sin resultados iniciales</h3><p>Usa el buscador o selecciona una opción para listar.</p></div>';
         }
         // Consumir la bandera para que no afecte futuras visitas
-        try { sessionStorage.removeItem('noInitialList'); } catch (_) {}
+        try { sessionStorage.removeItem('noInitialList'); } catch (_) { }
       }
 
       const params = new URLSearchParams(window.location.search);
@@ -843,7 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             directBack.addEventListener('click', function (e) {
               e.preventDefault();
               // Al salir por el botón de regreso, apagar el modo
-              try { sessionStorage.removeItem('mode'); } catch (_) {}
+              try { sessionStorage.removeItem('mode'); } catch (_) { }
               const primary = directBack.getAttribute('href') || '/index.html';
               window.location.href = primary;
             });

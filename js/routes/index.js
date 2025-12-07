@@ -13,6 +13,7 @@ module.exports = function registerRoutes(app, db) {
   const resourceController = require('../controllers/resourceController')(db);
   const transferController = require('../controllers/transferController')(db);
   const adminController = require('../controllers/adminController')(db);
+  const advancedQueryController = db ? require('../controllers/advancedQueryController')(db) : null;
   // Optional auth middleware from Josue_Capas (not applied globally here)
   try { require('../middleware/authMiddleware'); } catch (_) { }
   // Validation
@@ -39,6 +40,10 @@ module.exports = function registerRoutes(app, db) {
   app.put('/technique/:id', validateBody(schemas.techniqueUpdate), techniqueController.update);
   app.delete('/technique/:id', techniqueController.remove);
 
+  // Advanced Queries (solo si hay conexión a DB)
+  if (advancedQueryController) {
+    app.get('/advanced/effectiveness', advancedQueryController.getSorcererTechniqueEffectiveness);
+  }
   // Curses
   app.get('/missions/:id/sorcerers', missionController.getSorcerersForMission);
   app.get('/curses', curseController.list);

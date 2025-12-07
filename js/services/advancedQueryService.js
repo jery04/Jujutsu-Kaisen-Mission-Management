@@ -1,8 +1,9 @@
 const AdvancedQueryRepository = require('../repositories/AdvancedQueryRepository');
-const db = require('../../database'); // Ajusta la ruta según tu estructura
 
 class AdvancedQueryService {
-  constructor() {
+  constructor(db) {
+    if (!db) throw new Error('DB connection requerido para AdvancedQueryService');
+    this.db = db;
     this.advancedQueryRepository = new AdvancedQueryRepository(db);
   }
 
@@ -19,7 +20,8 @@ class AdvancedQueryService {
   }
 
   async getSorcererTechniqueEffectiveness() {
-    return await this.advancedQueryRepository.getSorcererTechniqueEffectiveness();
+    // Utiliza un cálculo enriquecido que asigna niveles de dominio y devuelve promedios por hechicero
+    return await this.advancedQueryRepository.computeSorcererTechniqueEffectiveness(this.db);
   }
 
   async getTopSorcerersByMissionLevelAndRegion(region) {
@@ -34,5 +36,4 @@ class AdvancedQueryService {
     return await this.advancedQueryRepository.getEffectivenessComparisonCriticalSpecial();
   }
 }
-
-module.exports = new AdvancedQueryService();
+module.exports = (db) => new AdvancedQueryService(db);
