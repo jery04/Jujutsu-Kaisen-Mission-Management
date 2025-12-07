@@ -46,7 +46,23 @@ window.addEventListener('keydown', function (e) {
         try { window.location.assign('/index.html'); } catch { window.location.href = '/index.html'; }
       }, DURATION);
     } catch (err) {
-      alert(err.message || 'Error al iniciar sesión');
+      // Mostrar modal de error en lugar de alert
+      try {
+        const modal = document.getElementById('errorModal');
+        const title = document.getElementById('errorModalTitle');
+        const msg = document.getElementById('errorModalMessage');
+        title.textContent = 'Credenciales inválidas';
+        msg.textContent = err?.message || 'Error al iniciar sesión';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        const closeBtn = document.getElementById('error-close-btn');
+        closeBtn?.addEventListener('click', () => {
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+        }, { once: true });
+      } catch (_) {
+        alert(err.message || 'Error al iniciar sesión');
+      }
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -95,14 +111,14 @@ window.addEventListener('keydown', function (e) {
     try {
       const value = adminPasswordInput?.value || '';
       if (value === '1234') {
-        try { localStorage.setItem('isAdmin', '1'); } catch (_) {}
-        try { sessionStorage.setItem('isAdmin', '1'); } catch (_) {}
+        try { localStorage.setItem('isAdmin', '1'); } catch (_) { }
+        try { sessionStorage.setItem('isAdmin', '1'); } catch (_) { }
         // opcional: guardar nombre de usuario como 'Administrador'
-        try { localStorage.setItem('username', 'Administrador'); } catch (_) {}
-        try { sessionStorage.setItem('username', 'Administrador'); } catch (_) {}
+        try { localStorage.setItem('username', 'Administrador'); } catch (_) { }
+        try { sessionStorage.setItem('username', 'Administrador'); } catch (_) { }
         closeAdminModal();
         // marcar flujo y navegar a index
-        try { sessionStorage.setItem('flowFromHome', '1'); } catch (_) {}
+        try { sessionStorage.setItem('flowFromHome', '1'); } catch (_) { }
         document.body.classList.add('leaving');
         setTimeout(() => { window.location.assign('/index.html'); }, 300);
         return;

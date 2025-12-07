@@ -115,7 +115,7 @@ if (process.env.NODE_ENV === 'test') {
       ProjectTime,
       // ...existing code...
     ],
-    synchronize: true // Habilitar sincronización automática para desarrollo
+    synchronize: false // Evitar cambios automáticos en producción/BD existente
   }).then(async (dbConn) => {
     console.log('Conectado a la base de datos jujutsu_misiones_db');
     // Registrar rutas desacopladas (N-capas) y preparar Socket.IO

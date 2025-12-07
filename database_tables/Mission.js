@@ -39,7 +39,7 @@ module.exports = new EntitySchema({
     { columns: ['ubicacion'] },
     { columns: ['fecha_inicio', 'fecha_fin'] },
     { columns: ['closed_by'] },
-    // Keep legacy index name used by existing FK to avoid drop attempts
-    { name: 'IDX_7b92eb2351056f9505374aa256', columns: ['curse_id'] }
+    // Keep legacy index name; reference relation property to satisfy metadata
+    { name: 'IDX_7b92eb2351056f9505374aa256', columns: ['curse'] }
   ]
 });
