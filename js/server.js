@@ -94,7 +94,7 @@ if (process.env.NODE_ENV === 'test') {
     port: Number(process.env.DB_PORT) || 3306,
     username: process.env.DB_USER || 'root',
     // Ensure password is a string to satisfy mysql2 auth
-    password: String(process.env.DB_PASSWORD || '1234'),
+    password: String(process.env.DB_PASSWORD || 'Alexby9511*'),
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
@@ -133,6 +133,8 @@ if (process.env.NODE_ENV === 'test') {
 
       // Suscribirse a eventos del bus y reenviar por Socket.IO
       const events = require('./utils/events');
+      // Mutex ligero en memoria para evitar creación doble por misma maldición
+      const _creatingByCurse = new Set();
       // Scheduler: on time advanced, evaluate missions progression in batch (lightweight placeholder)
       events.on('time:advanced', async ({ from, to }) => {
         try {
@@ -172,32 +174,7 @@ if (process.env.NODE_ENV === 'test') {
               if (tick <= lastEval) continue;
               if (tick > end) break;
 
-              // Comprobar si todos los hechiceros están muertos -> cancelar
-              try {
-                const { createQueryBuilder } = missionRepo;
-                const qb = createQueryBuilder.call(missionRepo, 'ms')
-                  .innerJoin('mission_participant', 'mp', 'mp.mission_id = ms.id')
-                  .innerJoin('sorcerer', 's', 's.id = mp.sorcerer_id')
-                  .select(['s.fecha_fallecimiento AS fecha_fallecimiento'])
-                  .where('ms.id = :mid', { mid: m.id });
-                const rows = await qb.getRawMany();
-                const allDead = rows.length > 0 && rows.every(r => r.fecha_fallecimiento);
-                if (allDead) {
-                  // Cancelar misión actual
-                  await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
-                  // Crear nueva misión para la misma maldición
-                  try {
-                    await missionService.createForCurse(dbConn, m.curse || { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion, fecha_aparicion: tick });
-                  } catch (_) { }
-                  app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
-                  break; // misión terminada
-                }
-              } catch (_) { }
-
-              // Decidir resultado del día
-              const roll = Math.random();
-
-              // Evento de muerte diaria (máximo uno por día)
+              // Primero: Evento de muerte diaria (máximo uno por día)
               if (!deathApplied && Math.random() < P_DEATH) {
                 try {
                   const mpRepo = getRepository(dbConn, 'MissionParticipant');
@@ -216,6 +193,81 @@ if (process.env.NODE_ENV === 'test') {
                   }
                 } catch (_) {}
               }
+
+              // Segundo: si tras la muerte no queda ningún participante vivo -> cancelar
+              try {
+                const { createQueryBuilder } = missionRepo;
+                const qb2 = createQueryBuilder.call(missionRepo, 'ms')
+                  .innerJoin('mission_participant', 'mp', 'mp.mission_id = ms.id')
+                  .innerJoin('sorcerer', 's', 's.id = mp.sorcerer_id')
+                  .select(['s.fecha_fallecimiento AS fecha_fallecimiento'])
+                  .where('ms.id = :mid', { mid: m.id });
+                const rows2 = await qb2.getRawMany();
+                const allDeadNow = rows2.length > 0 && rows2.every(r => r.fecha_fallecimiento);
+                if (allDeadNow) {
+                  await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
+                  try {
+                    // Asegurar que obtenemos el curse_id cargando la relación
+                    let cursePayload = m.curse;
+                    if (!cursePayload || !cursePayload.id) {
+                      try {
+                        const mFull = await missionRepo.findOne({ where: { id: Number(m.id) }, relations: ['curse'] });
+                        if (mFull && mFull.curse) cursePayload = mFull.curse;
+                      } catch (_) {}
+                    }
+                    // Fallback: si aún no tenemos la entidad, construir con datos mínimos
+                    if (!cursePayload || !cursePayload.id) {
+                      cursePayload = { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion, fecha_aparicion: tick };
+                    }
+                    if (!cursePayload || !cursePayload.id) {
+                      console.warn(`[Scheduler] No se pudo recrear misión: curse_id ausente para misión ${m.id}`);
+                    } else {
+                      // Evitar duplicados: si ya existe una misión pendiente/en ejecución para la misma maldición creada recientemente, no crear otra
+                      try {
+                        const cid = Number(cursePayload.id);
+                        if (_creatingByCurse.has(cid)) {
+                          console.log(`[Scheduler] Creación en curso para curse ${cid}, se omite intento concurrente.`);
+                        } else {
+                          _creatingByCurse.add(cid);
+                          try {
+                            const existingForCurse = await missionRepo.find({ where: [
+                              { estado: 'pendiente', curse: { id: cid } },
+                              { estado: 'en_ejecucion', curse: { id: cid } }
+                            ] });
+                            if (existingForCurse && existingForCurse.length > 0) {
+                              console.log(`[Scheduler] Misiones activas/pending ya existen para curse ${cid}, se omite creación duplicada.`);
+                            } else {
+                              const created = await missionService.createForCurse(dbConn, cursePayload);
+                              if (!created || !created.ok) {
+                                console.warn(`[Scheduler] Falló crear nueva misión para curse ${cid} tras cancelación de misión ${m.id}`);
+                              } else {
+                                console.log(`[Scheduler] Nueva misión ${created.mission.id} creada para curse ${cid} tras cancelación de misión ${m.id}`);
+                              }
+                            }
+                          } finally {
+                            _creatingByCurse.delete(cid);
+                          }
+                        }
+                      } catch (e) {
+                        console.warn('[Scheduler] Error comprobando duplicados de misión pendiente:', e.message);
+                        const created = await missionService.createForCurse(dbConn, cursePayload);
+                        if (!created || !created.ok) {
+                          console.warn(`[Scheduler] Falló crear nueva misión para curse ${cursePayload.id} tras cancelación de misión ${m.id}`);
+                        } else {
+                          console.log(`[Scheduler] Nueva misión ${created.mission.id} creada para curse ${cursePayload.id} tras cancelación de misión ${m.id}`);
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('[Scheduler] Error creando nueva misión tras cancelación:', e.message);
+                  }
+                  app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
+                  break;
+                }
+              } catch (_) {}
+
+              // Tercero: decidir continuar o completar
+              const roll = Math.random();
               if (roll < P_SUCCESS) {
                 // Terminar siempre en vía neutral (sin éxito/fracaso)
                 await missionService.closeMission(dbConn, m.id, { descripcion_evento: 'Cierre automático por progreso diario' }, { id: null, role: 'admin' });

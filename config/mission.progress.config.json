@@ -2,7 +2,7 @@
   "probabilities": {
     "daily": {
       "success": 0.4,
-      "death": 0.2
+      "death": 0.05
     }
   },
   "delay": {

@@ -32,7 +32,18 @@ function makeRepo(initial = []) {
             })) || null;
         },
         delete: async (id) => { const idx = data.findIndex(d => d.id === Number(id)); if (idx >= 0) { data.splice(idx, 1); return { affected: 1 }; } return { affected: 0 }; },
-        createQueryBuilder: () => { throw new Error('QB not implemented in test'); }
+        createQueryBuilder: () => {
+            // Stub simple QueryBuilder used in startMission rechequeo
+            const qb = {
+                _joins: [],
+                innerJoin: function() { return this; },
+                where: function() { return this; },
+                andWhere: function() { return this; },
+                select: function() { return this; },
+                getRawMany: async () => []
+            };
+            return qb;
+        }
     };
     // Provide BaseRepository-like helpers expected in tests
     return {
@@ -73,14 +84,13 @@ describe('missionService flujo', () => {
         events.removeAllListeners('mission:closed');
     });
 
-    test('createForCurse genera misión y participants y emite evento', async () => {
+    test('createForCurse genera misión y emite evento (sin participantes hasta start)', async () => {
         const emitted = [];
         events.on('mission:created', (p) => emitted.push(p));
         const curse = await curseRepo.getById(1);
         const out = await missionService.createForCurse(db, curse);
         expect(out.ok).toBe(true);
         expect(out.mission).toBeTruthy();
-        expect(mpRepo._data.length).toBeGreaterThanOrEqual(1);
         expect(emitted.length).toBe(1);
         expect(emitted[0].mission_id).toBe(out.mission.id);
     });
@@ -95,14 +105,14 @@ describe('missionService flujo', () => {
         expect(startedEvents.length).toBe(1);
     });
 
-    test('closeMission establece estado final fracaso por defecto y emite evento (requiere rol soporte)', async () => {
+    test('closeMission establece estado final neutral y emite evento (requiere rol soporte)', async () => {
         const curse = await curseRepo.getById(1);
         const { mission } = await missionService.createForCurse(db, curse);
         await missionService.startMission(db, mission.id);
         const closedEvents = [];
         events.on('mission:closed', (p) => closedEvents.push(p));
-        const res = await missionService.closeMission(db, mission.id, { resultado: 'fracaso', descripcion_evento: 'Detalles', danos_colaterales: 'Ninguno' }, { id: 99, role: 'soporte' });
-        expect(res.mission.estado).toBe('completada_fracaso');
+        const res = await missionService.closeMission(db, mission.id, { descripcion_evento: 'Detalles', danos_colaterales: 'Ninguno' }, { id: 99, role: 'soporte' });
+        expect(res.mission.estado).toBe('completada');
         expect(closedEvents.length).toBe(1);
     });
 });

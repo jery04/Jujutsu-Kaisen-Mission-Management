@@ -104,6 +104,17 @@ module.exports = {
     // Asegurar entidad Curse administrada por TypeORM
     const curseRepo = getRepository(db, 'Curse');
     const curseEntity = await curseRepo.getById(curse.id);
+    // Guardar contra duplicados: si ya existe una misión pendiente o en ejecución para esta maldición, devolverla
+    try {
+      const existing = await missionRepo.find({ where: [
+        { estado: 'pendiente', curse: { id: Number(curse.id) } },
+        { estado: 'en_ejecucion', curse: { id: Number(curse.id) } }
+      ] });
+      if (Array.isArray(existing) && existing.length > 0) {
+        const latest = existing.sort((a,b) => Number(b.id) - Number(a.id))[0];
+        return { ok: true, mission: latest, duplicate: true };
+      }
+    } catch (_) { /* si falla la comprobación, continuar creación */ }
     // Tomar reloj virtual del servidor para cualquier fallback de fecha
     const timeService = new TimeService(db);
     const virtualNow = await timeService.getNow();
@@ -155,8 +166,14 @@ module.exports = {
           .andWhere('m.estado = :estado', { estado: 'en_ejecucion' });
         const busyRows = await qb.getRawMany();
         if (busyRows && busyRows.length > 0) continue; // ya ocupado, saltar
+        // Verificar estado de vida actual justo antes de asignar
+        const sorcRepo = getRepository(db, 'Sorcerer');
+        const current = await sorcRepo.getById(Number(s.id));
+        if (!current) continue;
+        const lowered = String(current.estado_operativo || '').toLowerCase();
+        if (current.fecha_fallecimiento || lowered === 'dado_de_baja') continue; // muerto o dado de baja
         const rol = (principal?.id === s.id ? 'principal' : 'miembro');
-        await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol });
+          await mpRepo.add({ mission_id: Number(missionId), sorcerer_id: s.id, rol });
         actuallyAdded.push(s.id);
       } catch (e) {
         // Ignorar duplicados por clave primaria compuesta (mission_id, sorcerer_id)
