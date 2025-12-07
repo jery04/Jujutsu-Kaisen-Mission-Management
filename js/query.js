@@ -510,31 +510,75 @@
         // simple modal para mostrar aviso de permiso denegado
         function showForbiddenModal(msg) {
           try {
-            let modal = document.getElementById('forbid-modal');
-            if (!modal) {
-              modal = document.createElement('div');
-              modal.id = 'forbid-modal';
-              modal.style.position = 'fixed';
-              modal.style.left = '0';
-              modal.style.top = '0';
-              modal.style.width = '100%';
-              modal.style.height = '100%';
-              modal.style.display = 'flex';
-              modal.style.alignItems = 'center';
-              modal.style.justifyContent = 'center';
-              modal.style.background = 'rgba(0,0,0,0.45)';
-              modal.innerHTML = `
-                <div style="background:#fff;padding:18px;border-radius:8px;max-width:520px;width:92%;box-shadow:0 6px 18px rgba(0,0,0,0.12);">
-                  <h3 style="margin:0 0 8px 0;">Acción no permitida</h3>
-                  <div id="forbid-modal-msg" style="margin-bottom:12px;color:#333"></div>
-                  <div style="text-align:right"><button id="forbid-close" style="padding:8px 12px;border-radius:6px;background:#2d7ef7;color:#fff;border:0;cursor:pointer">Cerrar</button></div>
-                </div>`;
-              document.body.appendChild(modal);
-              modal.querySelector('#forbid-close').addEventListener('click', function () { if (modal && modal.parentNode) modal.parentNode.removeChild(modal); });
+            let overlay = document.getElementById('forbid-overlay');
+            if (!overlay) {
+              overlay = document.createElement('div');
+              overlay.id = 'forbid-overlay';
+              overlay.style.position = 'fixed';
+              overlay.style.inset = '0';
+              overlay.style.background = 'rgba(0,0,0,.55)';
+              overlay.style.display = 'flex';
+              overlay.style.alignItems = 'center';
+              overlay.style.justifyContent = 'center';
+              overlay.style.zIndex = '9999';
+              overlay.style.padding = '16px';
+              overlay.style.backdropFilter = 'blur(2px)';
+
+              const box = document.createElement('div');
+              box.style.width = '100%';
+              box.style.maxWidth = '440px';
+              box.style.background = 'linear-gradient(180deg, rgba(26,28,32,.96), rgba(22,24,28,.96))';
+              box.style.border = '1px solid rgba(255,255,255,0.08)';
+              box.style.borderRadius = '16px';
+              box.style.boxShadow = '0 14px 40px rgba(0,0,0,.45)';
+              box.style.padding = '18px 16px 14px';
+              box.style.color = '#e5e7eb';
+
+              const titleEl = document.createElement('h3');
+              titleEl.textContent = 'Acción no permitida';
+              titleEl.style.margin = '0 0 8px 0';
+              titleEl.style.fontSize = '1.12rem';
+              titleEl.style.color = '#f9fafb';
+
+              const msgEl = document.createElement('p');
+              msgEl.id = 'forbid-modal-msg';
+              msgEl.style.margin = '0 0 14px 0';
+              msgEl.style.color = '#cbd5e1';
+              msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
+
+              const actions = document.createElement('div');
+              actions.style.display = 'flex';
+              actions.style.justifyContent = 'flex-end';
+              actions.style.marginTop = '6px';
+
+              const closeBtn = document.createElement('button');
+              closeBtn.id = 'forbid-close';
+              closeBtn.type = 'button';
+              closeBtn.textContent = 'Cerrar';
+              closeBtn.style.appearance = 'none';
+              closeBtn.style.border = 'none';
+              closeBtn.style.minHeight = '34px';
+              closeBtn.style.padding = '8px 14px';
+              closeBtn.style.borderRadius = '10px';
+              closeBtn.style.background = 'linear-gradient(135deg, #3b82f6, #06b6d4)';
+              closeBtn.style.color = '#ffffff';
+              closeBtn.style.fontWeight = '600';
+              closeBtn.style.boxShadow = '0 6px 16px rgba(6,182,212,.35)';
+
+              actions.appendChild(closeBtn);
+              box.appendChild(titleEl);
+              box.appendChild(msgEl);
+              box.appendChild(actions);
+              overlay.appendChild(box);
+              document.body.appendChild(overlay);
+
+              closeBtn.addEventListener('click', function () { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }, { once: true });
+              overlay.addEventListener('click', function (ev) { if (ev.target === overlay) { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); } });
+              window.addEventListener('keydown', function escHandler(e) { if (e.key === 'Escape') { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); window.removeEventListener('keydown', escHandler); } });
+            } else {
+              const msgEl = overlay.querySelector('#forbid-modal-msg');
+              if (msgEl) msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
             }
-            const msgEl = modal.querySelector('#forbid-modal-msg');
-            if (msgEl) msgEl.textContent = msg || 'No tienes permisos para realizar esta acción.';
-            modal.style.display = 'flex';
           } catch (e) { alert(msg || 'No tienes permisos para realizar esta acción.'); }
         }
 
