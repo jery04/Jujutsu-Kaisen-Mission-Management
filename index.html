@@ -20,6 +20,15 @@
     </header>
 
     <main id="main-content">
+        <!-- Modal personalizado para advertencia de fecha no seleccionada -->
+        <div id="date-modal" class="custom-modal" style="display:none;">
+            <div class="custom-modal-content">
+                <h2>Seleccione una fecha</h2>
+                <p>Por favor, seleccione una fecha para continuar.</p>
+                <button id="date-modal-btn" class="custom-modal-btn">Entendido</button>
+            </div>
+        </div>
+
         <section class="user-center" aria-label="Usuario y sesión">
             <div class="user-badge" id="user-badge" aria-live="polite">
                 <div class="avatar" id="user-avatar" aria-hidden="true">U</div>

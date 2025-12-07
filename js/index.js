@@ -133,7 +133,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!advanceInput) return;
       // Convertir el valor local del input a ISO
       const val = advanceInput.value; // 'YYYY-MM-DDTHH:mm' (hora local)
-      if (!val) { alert('Seleccione una fecha'); return; }
+      if (!val) {
+        // Mostrar modal personalizado en vez de alert
+        const dateModal = document.getElementById('date-modal');
+        const dateModalBtn = document.getElementById('date-modal-btn');
+        if (dateModal) {
+          dateModal.style.display = 'flex';
+          // Cerrar modal al hacer click en el botón
+          if (dateModalBtn) {
+            dateModalBtn.onclick = () => {
+              dateModal.style.display = 'none';
+            };
+          }
+        } else {
+          alert('Seleccione una fecha');
+        }
+        return;
+      }
       // Enviar tal cual como fecha local para que el backend la interprete en la zona local
       // Evitamos convertir a ISO (UTC) para no desplazar el día por huso horario
       const payloadDate = val;
