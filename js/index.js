@@ -164,7 +164,22 @@ document.addEventListener('DOMContentLoaded', () => {
               alert('Tiempo virtual avanzado correctamente');
             }
           } else {
-            alert('No se pudo avanzar el tiempo: ' + (d && d.message ? d.message : 'error'));
+            // Mostrar modal de error estilizado
+            try {
+              const modal = document.getElementById('timeErrorModal');
+              const title = document.getElementById('timeErrorTitle');
+              const msg = document.getElementById('timeErrorMessage');
+              const closeBtn = document.getElementById('time-error-close');
+              if (title) title.textContent = 'No se pudo avanzar el tiempo';
+              if (msg) msg.textContent = d && d.message ? d.message : 'Solo se permite avanzar hacia el futuro';
+              if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden', 'false'); }
+              closeBtn?.addEventListener('click', () => {
+                modal?.classList.remove('is-open');
+                modal?.setAttribute('aria-hidden', 'true');
+              }, { once: true });
+            } catch (_) {
+              alert('No se pudo avanzar el tiempo: ' + (d && d.message ? d.message : 'error'));
+            }
           }
         })
         .catch(err => {
