@@ -5,6 +5,7 @@ module.exports = new EntitySchema({
   tableName: 'mission',
   columns: {
     id: { type: 'int', primary: true, generated: true },
+    curse_id: { type: 'int' },
     estado: { type: 'varchar', length: 100 },
     descripcion_evento: { type: 'text', nullable: true },
     fecha_inicio: { type: 'datetime' },
@@ -37,7 +38,7 @@ module.exports = new EntitySchema({
     { columns: ['ubicacion'] },
     { columns: ['fecha_inicio', 'fecha_fin'] },
     { columns: ['closed_by'] },
-    // Keep index consistent with existing DB index used by FK on curse
-    { name: 'IDX_7b92eb2351056f9505374aa256', columns: ['curse'] }
+    // Keep legacy index name used by existing FK to avoid drop attempts
+    { name: 'IDX_7b92eb2351056f9505374aa256', columns: ['curse_id'] }
   ]
 });
