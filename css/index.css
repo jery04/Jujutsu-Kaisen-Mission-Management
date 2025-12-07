@@ -59,18 +59,25 @@
 /* Empty state message centered */
 #advance-btn {
     padding: 8px 16px;
-    background: #2d2d2d;
-    color: #c8c8c8;
-    font-weight: bold;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    /* azul bonito estilo Gojo */
+    color: #ffffff;
+    font-weight: 700;
     border: none;
     border-radius: 12px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.2s;
+    box-shadow: 0 6px 16px rgba(6, 182, 212, .35);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
 
 #advance-btn:hover {
-    background: #444;
+    filter: brightness(1.06);
+    box-shadow: 0 8px 20px rgba(6, 182, 212, .45);
+}
+
+#advance-btn:active {
+    transform: translateY(1px);
 }
 
 .advance-block {

@@ -106,8 +106,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Usar utilidad común para mostrar el tiempo virtual
   try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch (_) { }
 
+  // Determinar si es administrador desde almacenamiento
+  let isAdmin = false;
+  try {
+    isAdmin = (localStorage.getItem('isAdmin') === '1' || sessionStorage.getItem('isAdmin') === '1');
+  } catch (_) { }
+
+  // Mostrar/ocultar controles de avance según rol
+  try {
+    if (!isAdmin) {
+      // Usuario normal: solo mostrar el texto del tiempo virtual (imagen 1)
+      if (advanceInput) advanceInput.style.display = 'none';
+      if (advanceBtn) advanceBtn.style.display = 'none';
+    } else {
+      // Admin: mostrar input y botón Adelantar (imagen 2)
+      if (advanceInput) advanceInput.style.display = '';
+      if (advanceBtn) advanceBtn.style.display = '';
+      if (advanceLabel) advanceLabel.textContent = advanceLabel.textContent || 'Tiempo virtual actual';
+    }
+  } catch (_) { }
+
   if (advanceBtn) {
     advanceBtn.addEventListener('click', () => {
+      // Solo administradores pueden adelantar el tiempo
+      if (!isAdmin) { return; }
       if (!advanceInput) return;
       // Convertir el valor local del input a ISO
       const val = advanceInput.value; // 'YYYY-MM-DDTHH:mm' (hora local)
