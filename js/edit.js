@@ -265,6 +265,10 @@ function isAdmin() {
         if (danosText) danosText.value = record.danos_colaterales || '';
         const curseId = record.curse_id || (record.curse && record.curse.id);
         if (curseInput) curseInput.value = curseId != null ? curseId : '';
+        // Mantener campos no editables como bloqueados por seguridad
+        [estadoSelect, urgenciaSelect, ubicacionInput, fechaInicioInput, fechaFinInput, curseInput].forEach((el) => {
+          if (el) el.disabled = true;
+        });
         prefillDatalists().catch((e) => { console.debug('prefill datalists mission failed', e); });
       }
       // Mark editing mode
@@ -323,15 +327,10 @@ function isAdmin() {
         estado_actual: raw.estado
       };
     } else if (fsKey === 'mision') {
+      // Solo se permite editar descripción y daños colaterales
       return {
-        estado: raw.estado || undefined,
         descripcion_evento: raw.descripcion_evento || '',
-        fecha_inicio: raw.fecha_inicio || undefined,
-        fecha_fin: raw.fecha_fin || null,
-        danos_colaterales: raw.danos_colaterales || '',
-        nivel_urgencia: raw.nivel_urgencia || undefined,
-        ubicacion: raw.ubicacion || undefined,
-        curse_id: raw.curse_id ? Number(raw.curse_id) : undefined
+        danos_colaterales: raw.danos_colaterales || ''
       };
     }
     return null;

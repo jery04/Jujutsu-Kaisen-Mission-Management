@@ -188,7 +188,7 @@
                 <h2>Reformula los Atributos de Misión</h2>
 
                 <label for="ms_estado">Estado</label>
-                <select id="ms_estado" name="estado">
+                <select id="ms_estado" name="estado" disabled>
                     <option value="pendiente">Pendiente</option>
                     <option value="en_ejecucion">En ejecución</option>
                     <option value="completada_exito">Completada con éxito</option>
@@ -197,23 +197,23 @@
                 </select>
 
                 <label for="ms_nivel_urgencia">Nivel de urgencia</label>
-                <select id="ms_nivel_urgencia" name="nivel_urgencia">
+                <select id="ms_nivel_urgencia" name="nivel_urgencia" disabled>
                     <option value="planificada">Planificada</option>
                     <option value="urgente">Urgente</option>
                     <option value="emergencia_critica">Emergencia crítica</option>
                 </select>
 
                 <label for="ms_ubicacion">Ubicación</label>
-                <input id="ms_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones">
+                <input id="ms_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones" disabled>
 
                 <div class="row">
                     <div class="col">
                         <label for="ms_fecha_inicio">Fecha y hora de inicio</label>
-                        <input id="ms_fecha_inicio" name="fecha_inicio" type="datetime-local">
+                        <input id="ms_fecha_inicio" name="fecha_inicio" type="datetime-local" disabled>
                     </div>
                     <div class="col">
                         <label for="ms_fecha_fin">Fecha y hora de fin</label>
-                        <input id="ms_fecha_fin" name="fecha_fin" type="datetime-local">
+                        <input id="ms_fecha_fin" name="fecha_fin" type="datetime-local" disabled>
                     </div>
                 </div>
 
@@ -224,7 +224,7 @@
                 <textarea id="ms_danos_colaterales" name="danos_colaterales" rows="3"></textarea>
 
                 <label for="ms_curse_id">ID de la maldición asociada</label>
-                <input id="ms_curse_id" name="curse_id" type="number" min="1" step="1">
+                <input id="ms_curse_id" name="curse_id" type="number" min="1" step="1" disabled>
 
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>

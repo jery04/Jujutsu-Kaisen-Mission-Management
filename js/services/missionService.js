@@ -267,31 +267,10 @@ module.exports = {
     const found = await missionRepo.getById(missionId);
     if (!found) { const err = new Error('Misión no encontrada'); err.status = 404; throw err; }
     const upd = {};
-    const {
-      estado,
-      descripcion_evento,
-      fecha_inicio,
-      fecha_fin,
-      danos_colaterales,
-      nivel_urgencia,
-      ubicacion,
-      curse_id
-    } = payload || {};
+    const { descripcion_evento, danos_colaterales } = payload || {};
 
-    if (estado) upd.estado = estado;
-    if (nivel_urgencia) upd.nivel_urgencia = nivel_urgencia;
-    if (ubicacion) upd.ubicacion = ubicacion;
     if (descripcion_evento !== undefined) upd.descripcion_evento = descripcion_evento || null;
     if (danos_colaterales !== undefined) upd.danos_colaterales = danos_colaterales || null;
-    if (fecha_inicio !== undefined) upd.fecha_inicio = fecha_inicio ? new Date(fecha_inicio) : null;
-    if (fecha_fin !== undefined) upd.fecha_fin = fecha_fin ? new Date(fecha_fin) : null;
-
-    if (curse_id !== undefined) {
-      const curseRepo = getRepository(db, 'Curse');
-      const curse = await curseRepo.getById(curse_id);
-      if (!curse) { const err = new Error('Maldición asociada no encontrada'); err.status = 404; throw err; }
-      upd.curse = curse;
-    }
 
     if (Object.keys(upd).length === 0) return { ok: true, mission: found };
     const saved = await missionRepo.update(missionId, upd);
