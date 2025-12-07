@@ -68,6 +68,13 @@
     will-change: transform;
 }
 
+/* Ajuste específico: en el modo rango de fechas, quitar el espacio extra a la derecha
+   SOLO en el primer campo de fecha (el de la izquierda) para que el icono de calendario
+   no deje un hueco adicional. */
+#search-form input[type="date"]:first-of-type.search-input {
+    padding-right: 0.8em; /* igual que el padding izquierdo */
+}
+
 /* Hover: sombra suave y borde con color agradable */
 .search-input:hover {
     border-color: #3b82f6; /* azul agradable */

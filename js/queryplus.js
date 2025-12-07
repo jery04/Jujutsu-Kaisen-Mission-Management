@@ -3,6 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const botones = document.querySelectorAll('button.btn');
     botones.forEach((btn, idx) => {
         btn.addEventListener('click', () => {
+            // Asegurar que inicialmente no se liste ninguna entidad en query.html
+            try {
+                sessionStorage.setItem('noInitialList', 'true');
+            } catch (e) {
+                console.warn('No se pudo establecer noInitialList en sessionStorage', e);
+            }
 
             if (idx === 0) {
                 // Bloque para el botón 1
