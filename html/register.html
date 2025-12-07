@@ -141,8 +141,23 @@
                 </select>
 
                 <label for="m_ubicacion">Ubicación</label>
-                <input id="m_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones" autocomplete="off" required>
-                <datalist id="dl_ubicaciones"></datalist>
+                <select id="m_ubicacion" name="ubicacion" required>
+                    <option value="" selected disabled>-- Selecciona ubicación --</option>
+                    <option>Hospitales</option>
+                    <option>Escuelas</option>
+                    <option>Estaciones de tren</option>
+                    <option>Cruces peatonales congestionados</option>
+                    <option>Alcantarillas</option>
+                    <option>Puentes donde ocurren suicidios</option>
+                    <option>Centros de rehabilitación</option>
+                    <option>Cementerios</option>
+                    <option>Templos en ruinas</option>
+                    <option>Centros comerciales abarrotados</option>
+                    <option>Hoteles antiguos</option>
+                    <option>Callejones</option>
+                    <option>Zonas industriales abandonadas</option>
+                    <option>Barrios marginales</option>
+                </select>
 
                 <div class="row">
                     <div class="col">

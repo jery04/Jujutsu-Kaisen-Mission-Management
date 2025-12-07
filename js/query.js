@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <p>Obtener el listado de todas las misiones en las que ha participado un hechicero específico, mostrando la fecha y el resultado de la misión.</p>
     `;
     // Limpiar la bandera para futuras visitas
-    sessionStorage.removeItem('mode');
+    sessionStorage.removeItem('missionsBySorcerer');
   }
 });
 
@@ -297,6 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Al salir de esta sección, limpiar el modo especial
+    try {
+      window.addEventListener('beforeunload', function () {
+        try { sessionStorage.removeItem('mode'); } catch (_) {}
+      });
+    } catch (_) {}
+
     // flash corto (si existe)
     try {
       const raw = sessionStorage.getItem('flash');
@@ -386,6 +393,81 @@ document.addEventListener('DOMContentLoaded', () => {
           tip.className = 'query-item';
           tip.innerHTML = '<h3>Buscar misiones por hechicero</h3><p>Escribe el nombre del hechicero y presiona Enter para ver sus misiones.</p>';
           results.appendChild(tip);
+        }
+      }
+      // Modo especial: misiones exitosas por rango de fechas
+      if (specialMode === 'exitosasByDateRange') {
+        // Remover el select para evitar confusión
+        if (entitySelect && entitySelect.parentNode) {
+          try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) {}
+        }
+
+        // Preparar UI de rango de fechas dentro del área de búsqueda existente
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+          // Reemplazar contenido del formulario por campos de fecha y botón
+          searchForm.innerHTML = `
+            <input type="date" id="date-from" class="search-input" aria-label="Fecha inicio">
+            <input type="date" id="date-to" class="search-input" aria-label="Fecha fin" style="margin-left:8px;">
+            <button type="submit" id="date-submit" class="search-btn" aria-label="Buscar rango">
+              <img src="/img/search.svg" alt="Buscar" class="search-icon">
+            </button>
+          `;
+
+          // Mostrar ayuda en resultados
+          clearResults();
+          if (results) {
+            const tip = document.createElement('div');
+            tip.className = 'query-item';
+            tip.innerHTML = '<h3>Misiones exitosas por rango</h3><p>Selecciona fecha inicio y fin, luego presiona Buscar.</p>';
+            results.appendChild(tip);
+          }
+
+          // Manejar submit para consultar el rango
+          searchForm.addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            const fromEl = document.getElementById('date-from');
+            const toEl = document.getElementById('date-to');
+            const from = fromEl && fromEl.value ? fromEl.value : '';
+            const to = toEl && toEl.value ? toEl.value : '';
+            if (!from || !to) {
+              clearResults();
+              if (results) results.innerHTML = '<div class="query-item"><h3>Completa ambas fechas</h3></div>';
+              return;
+            }
+            clearResults();
+            try {
+              const url = `${API_BASE}/missions/success-range?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+              const r = await fetch(url);
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              const payload = await r.json();
+              // Normalizar
+              let missions = [];
+              if (Array.isArray(payload)) missions = payload;
+              else if (payload && Array.isArray(payload.missions)) missions = payload.missions;
+
+              if (!missions.length) {
+                if (results) results.innerHTML = '<div class="query-item"><h3>No hay misiones exitosas en el rango</h3></div>';
+                return;
+              }
+
+              // Renderizar misiones exitosas con datos clave
+              renderPaginated(missions, function (m) {
+                const titulo = m.nombre || m.titulo || ('Misión #' + (m.id != null ? m.id : ''));
+                const lines = [
+                  `Fecha: <strong>${m.fecha_fin || m.fecha || '-'}</strong>`,
+                  `Ubicación: <strong>${m.lugar || m.ubicacion || '-'}</strong>`,
+                  `Maldición: <strong>${(m.curse && (m.curse.nombre || m.curse.name)) || m.maldicion || '-'}</strong>`
+                ];
+                const item = makeItem(titulo, lines);
+                item.dataset.entity = 'mission';
+                if (m.id != null) item.dataset.id = String(m.id);
+                results.appendChild(item);
+              }, 'misiones');
+            } catch (err) {
+              if (results) results.innerHTML = `<div class="query-item"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
+            }
+          });
         }
       }
     } catch (e) { console.warn('No se pudo aplicar filtro de estados', e); }
@@ -746,6 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (directBack) {
             directBack.addEventListener('click', function (e) {
               e.preventDefault();
+              // Al salir por el botón de regreso, apagar el modo
+              try { sessionStorage.removeItem('mode'); } catch (_) {}
               const primary = directBack.getAttribute('href') || '/index.html';
               window.location.href = primary;
             });

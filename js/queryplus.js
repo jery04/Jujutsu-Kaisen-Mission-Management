@@ -17,13 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (e) {
                     console.warn('No se pudo guardar estadoOptions en sessionStorage', e);
                 }
-                                    // Señalar que se debe mostrar el título y descripción personalizados en query.html
-                                    sessionStorage.setItem('showEstadoTitle', 'true');
+                // Señalar que se debe mostrar el título y descripción personalizados en query.html
+                sessionStorage.setItem('showEstadoTitle', 'true');
             } else if (idx === 1) {
                 // Bloque para el botón 2
                 // Objetivo: consultar misiones en las que participó un hechicero específico.
                 // Estrategia: señalamos un "modo" para que query.html muestre buscador de hechicero
                 // y, al ingresar el nombre, haga la consulta de misiones por hechicero.
+                
                 try {
                     sessionStorage.setItem('mode', 'missionsBySorcerer');
                 } catch (e) {
@@ -33,7 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Bloque para el botón 3
                     // Señalar que se debe mostrar el título y descripción personalizados en query.html para misiones exitosas por rango de fechas
                     try {
+                        // Activar modo de rango de fechas para misiones exitosas
+                        sessionStorage.setItem('mode', 'exitosasByDateRange');
+                        // Opcional: flag para título descriptivo
                         sessionStorage.setItem('showExitosasTitle', 'true');
+                        // Limpiar posibles flags de otros modos de query
+                        sessionStorage.removeItem('estadoOptions');
                     } catch (e) {
                         console.warn('No se pudo guardar showExitosasTitle en sessionStorage', e);
                     }

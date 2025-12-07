@@ -17,19 +17,21 @@
             <label data-virtual-time>...</label>
         </div>
     </header>
-    
+    <main>
+
     <div class="title">
         <h2>Consulta de Entidades</h2>
         <p>Aquí podrás visualizar, modificar y administrar integralmente las entidades registradas en el sistema.</p>
     </div>
 
     <div class="container">
-        <h2>Reformula los Atributos</h2>
 
     <!-- Un solo formulario visible a la vez -->
         <form id="registroForm">
             <!-- Hechicero -->
             <fieldset data-for="hechicero">
+                <h2>Reformula los Atributos de Hechicero</h2>
+
                 <label for="h_nombre">Nombre</label>
                 <input id="h_nombre" name="nombre" type="text" required>
 
@@ -73,6 +75,8 @@
 
             <!-- Recurso -->
             <fieldset data-for="recurso" style="display:none">
+                <h2>Reformula los Atributos de Recurso</h2>
+                
                 <label for="r_nombre">Nombre</label>
                 <input id="r_nombre" name="nombre" type="text" required>
 
@@ -86,6 +90,8 @@
 
             <!-- Técnica maldita -->
             <fieldset data-for="tecnica" style="display:none">
+                <h2>Reformula los Atributos de Técnica Maldita</h2>
+                
                 <label for="t_nombre">Nombre</label>
                 <input id="t_nombre" name="nombre" type="text" required>
 
@@ -113,6 +119,8 @@
 
             <!-- Maldición -->
             <fieldset data-for="maldicion" style="display:none">
+                <h2>Reformula los Atributos de Maldición</h2>
+
                 <label for="m_nombre">Nombre</label>
                 <input id="m_nombre" name="nombre" type="text" required>
 
@@ -134,8 +142,23 @@
                 </select>
 
                 <label for="m_ubicacion">Ubicación</label>
-                <input id="m_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones" autocomplete="off" required>
-                <datalist id="dl_ubicaciones"></datalist>
+                <select id="m_ubicacion" name="ubicacion" required>
+                    <option value="" selected disabled>-- Selecciona ubicación --</option>
+                    <option>Hospitales</option>
+                    <option>Escuelas</option>
+                    <option>Estaciones de tren</option>
+                    <option>Cruces peatonales congestionados</option>
+                    <option>Alcantarillas</option>
+                    <option>Puentes donde ocurren suicidios</option>
+                    <option>Centros de rehabilitación</option>
+                    <option>Cementerios</option>
+                    <option>Templos en ruinas</option>
+                    <option>Centros comerciales abarrotados</option>
+                    <option>Hoteles antiguos</option>
+                    <option>Callejones</option>
+                    <option>Zonas industriales abandonadas</option>
+                    <option>Barrios marginales</option>
+                </select>
 
                 <div class="row">
                     <div class="col">
@@ -169,6 +192,7 @@
 
         <div id="result" class="result" style="display:none"></div>
     </div>
+    </main>
 
     <!-- inline scripts migrated to /js/edit.js (uses window.location.origin as fallback) -->
     <script src="/js/utils/auth.js"></script>
