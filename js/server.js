@@ -93,7 +93,8 @@ if (process.env.NODE_ENV === 'test') {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 3306,
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'Alexby9511*',
+    // Ensure password is a string to satisfy mysql2 auth
+    password: String(process.env.DB_PASSWORD || '1234'),
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
@@ -156,7 +157,7 @@ if (process.env.NODE_ENV === 'test') {
           for (const m of candidates) {
             // Si está pendiente y ya llegó su fecha de inicio, iniciarla
             if (m.estado === 'pendiente' && new Date(m.fecha_inicio) <= end) {
-              try { await missionService.startMission(dbConn, m.id); } catch (_) {}
+              try { await missionService.startMission(dbConn, m.id); } catch (_) { }
             }
           }
 
@@ -186,11 +187,11 @@ if (process.env.NODE_ENV === 'test') {
                   // Crear nueva misión para la misma maldición
                   try {
                     await missionService.createForCurse(dbConn, m.curse || { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion, fecha_aparicion: tick });
-                  } catch (_) {}
+                  } catch (_) { }
                   app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
                   break; // misión terminada
                 }
-              } catch (_) {}
+              } catch (_) { }
 
               // Decidir resultado del día
               const roll = Math.random();
