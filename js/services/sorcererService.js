@@ -130,6 +130,18 @@ module.exports = {
         const err = new Error('No autorizado: solo el creador puede eliminar'); err.status = 403; throw err;
       }
     }
+    // Bloquear eliminación si participa en misiones activas (pendiente o en_ejecucion)
+    const missionRepo = getRepository(db, 'Mission');
+    const qb = missionRepo.createQueryBuilder('m')
+      .innerJoin('mission_participant', 'mp', 'mp.mission_id = m.id')
+      .where('mp.sorcerer_id = :sid', { sid: Number(id) })
+      .andWhere("m.estado IN ('pendiente','en_ejecucion')");
+    const active = await qb.getMany();
+    if (active && active.length > 0) {
+      const err = new Error('No se puede eliminar: el hechicero participa en misiones activas');
+      err.status = 409;
+      throw err;
+    }
     const res = await repo.delete(id);
     return { ok: true, deleted: Number(id), affected: res?.affected };
   }

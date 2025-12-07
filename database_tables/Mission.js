@@ -13,6 +13,8 @@ module.exports = new EntitySchema({
     danos_colaterales: { type: 'text', nullable: true },
     nivel_urgencia: { type: 'varchar', length: 60 },
     ubicacion: { type: 'varchar', length: 150 },
+    // Última fecha evaluada por el motor de progreso diario
+    last_evaluated_at: { type: 'datetime', nullable: true },
     // Usuario que cierra la misión (trazabilidad)
     closed_by: { type: 'int', nullable: true }
   },

@@ -125,16 +125,6 @@ html{
     text-align: center;
 }
 
-/* Reduce the default margins so the heading and paragraph sit closer */
-/* .title h2 */
-.title h2 {
-    margin-bottom: 6px;
-}
-/* .title p */
-.title p {
-    margin: 0;
-}
-
 /* .query-section .btn-group */
 .query-section .btn-group{
     margin-top: 20px;

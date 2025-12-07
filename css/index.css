@@ -1,3 +1,18 @@
+/* Centrado y estilo para el bloque de descripción del tutorial */
+.tutorial-description {
+    max-width: 700px;
+    margin: 2rem auto;
+    text-align: center;
+    background: #f8f8fc;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 2rem 1.5rem;
+}
+.tutorial-description ul {
+    text-align: left;
+    display: inline-block;
+    margin: 1rem auto;
+}
 /* Tables: generic styling used across entity views */
 .table-wrapper {
     overflow-x: auto;
@@ -37,6 +52,31 @@
 }
 
 /* Empty state message centered */
+#advance-btn {
+    padding: 8px 16px;
+    background: #2d2d2d;
+    color: #c8c8c8;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#advance-btn:hover {
+    background: #444;
+}
+.advance-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+.advance-block label {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #c8c8c8;
+}
 #assigned-sorcerers-empty {
     text-align: center;
 }
@@ -63,7 +103,7 @@ header {
     width: 100%;
     z-index: 1000;
     text-align: center;
-    min-height: 120px;
+    min-height: 150px;
 }
 /* header h1 */
 header h1 {
@@ -98,6 +138,7 @@ main {
     gap: 14px;
     margin: 10px auto 4px;
     padding: 0 16px;
+    margin-top: 40px;
 }
 
 /* Reduce el espacio superior de la lista de botones cuando sigue al user-center */
@@ -358,4 +399,18 @@ main {
     main {
         transition: none;
     }
+}
+.title {
+    text-align: center;
+    margin-top: 40px;
+}
+/* .title h2 */
+.title h2 {
+    margin: 0 0 6px 0;
+}
+
+/* .title p */
+.title p {
+    margin: 0;
+    margin-bottom: 6px;
 }

@@ -32,6 +32,9 @@
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+  const advanceBtn = document.getElementById('advance-btn');
+  const advanceLabel = document.getElementById('virtual-time-label');
+  const advanceInput = document.getElementById('advance-target');
   const signupBtn = document.getElementById('open-signup');
   const addBtn = document.getElementById('open-add');
   const queryBtn = document.getElementById('open-query');
@@ -39,8 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const userNameEl = document.getElementById('user-name');
   const userAvatarEl = document.getElementById('user-avatar');
   const queryplusBtn = document.getElementById('open-queryplus');
-
-
+  const tutorialBtn = document.getElementById('open-tutorial');
 
   if (signupBtn) {
     signupBtn.addEventListener('click', () => {
@@ -49,12 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (addBtn) {
-    addBtn.addEventListener('click', () => {
-      // Navigate to the add page (relative to index.html)
-      window.location.href = 'html/register.html';
-    });
-  }
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        // Navigate to the add page (relative to index.html)
+        window.location.href = 'html/register.html';
+      });
+    }
+
+    if (tutorialBtn) {
+      tutorialBtn.addEventListener('click', () => {
+        // Navigate to the tutorial page (relative to index.html)
+        window.location.href = 'html/tutorial.html';
+      });
+    }
 
   if (queryplusBtn) {
     queryplusBtn.addEventListener('click', () => {
@@ -91,6 +100,39 @@ document.addEventListener('DOMContentLoaded', () => {
         keys.forEach(k => { try { localStorage.removeItem(k); } catch(_) {} try { sessionStorage.removeItem(k); } catch(_) {} });
       } catch(_) {}
       window.location.href = 'home.html';
+    });
+  }
+
+  // Usar utilidad común para mostrar el tiempo virtual
+  try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch(_) {}
+
+  if (advanceBtn) {
+    advanceBtn.addEventListener('click', () => {
+      if (!advanceInput) return;
+      // Convertir el valor local del input a ISO
+      const val = advanceInput.value; // 'YYYY-MM-DDTHH:mm' (hora local)
+      if (!val) { alert('Seleccione una fecha'); return; }
+      // Enviar tal cual como fecha local para que el backend la interprete en la zona local
+      // Evitamos convertir a ISO (UTC) para no desplazar el día por huso horario
+      const payloadDate = val;
+      fetch('/admin/time/advance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-role': 'super_admin' },
+        body: JSON.stringify({ to: payloadDate })
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.ok) {
+          // Refrescar reloj común
+          try { if (window.refreshVirtualTime) window.refreshVirtualTime(); } catch(_) {}
+          alert('Tiempo virtual avanzado correctamente');
+        } else {
+          alert('No se pudo avanzar el tiempo: ' + (d && d.message ? d.message : 'error'));
+        }
+      })
+      .catch(err => {
+        alert('Error de red: ' + err.message);
+      });
     });
   }
 });
