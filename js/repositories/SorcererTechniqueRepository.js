@@ -22,6 +22,21 @@ class SorcererTechniqueRepository extends BaseRepository {
       nivel_dominio: Number(nivel_dominio) || 0
     });
   }
+
+  async addNonPrincipal(sorcererId, techniqueId, nivel_dominio = 0) {
+    // Inserta ignorando duplicados para evitar errores si ya existe
+    const qb = this.createQueryBuilder()
+      .insert()
+      .into('sorcerer_technique')
+      .values({
+        sorcerer_id: Number(sorcererId),
+        technique_id: Number(techniqueId),
+        es_principal: 0,
+        nivel_dominio: Number(nivel_dominio) || 0
+      })
+      .orIgnore();
+    return await qb.execute();
+  }
 }
 
 module.exports = SorcererTechniqueRepository;

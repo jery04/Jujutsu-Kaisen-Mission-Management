@@ -18,6 +18,46 @@
     const resetBtn = document.getElementById('resetBtn');
     const goBackBtn = document.getElementById('goBackBtn');
     const submitBtn = form.querySelector('button[type="submit"]');
+    // Gestión de técnicas adicionales (hechicero)
+    const extraTechInput = document.getElementById('h_tecnica_extra');
+    const addTechBtn = document.getElementById('add_tecnica_btn');
+    const techListEl = document.getElementById('tecnicas_list');
+    const principalTechInput = document.getElementById('h_tecnica');
+    let extraTechs = [];
+
+    function renderExtraTechs() {
+        if (!techListEl) return;
+        techListEl.innerHTML = '';
+        extraTechs.forEach((name, idx) => {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.style.cssText = 'background:#eee;border-radius:16px;padding:4px 10px;display:inline-flex;align-items:center;gap:6px;';
+            const txt = document.createElement('span');
+            txt.textContent = name;
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.setAttribute('aria-label', `Quitar ${name}`);
+            rm.textContent = '×';
+            rm.style.cssText = 'border:none;background:transparent;font-weight:700;cursor:pointer;';
+            rm.addEventListener('click', () => {
+                extraTechs.splice(idx, 1);
+                renderExtraTechs();
+            });
+            chip.appendChild(txt);
+            chip.appendChild(rm);
+            techListEl.appendChild(chip);
+        });
+    }
+
+    function addExtraTech(name) {
+        const v = String(name || '').trim();
+        if (!v) return;
+        const principal = String(principalTechInput && principalTechInput.value || '').trim().toLowerCase();
+        if (v.toLowerCase() === principal) return; // no duplicar la principal
+        if (extraTechs.find(t => t.toLowerCase() === v.toLowerCase())) return; // evitar duplicados
+        extraTechs.push(v);
+        renderExtraTechs();
+    }
 
     // Muestra/oculta fieldsets según la entidad activa
     function showFor(value) {
@@ -58,6 +98,11 @@
         entitySelect.addEventListener('change', e => {
             clearResult();
             showFor(e.target.value);
+            // Al cambiar de entidad, limpiar técnicas adicionales
+            if (e.target.value !== 'hechicero') {
+                extraTechs = [];
+                renderExtraTechs();
+            }
         });
         showFor(entitySelect.value);
     }
@@ -96,6 +141,24 @@
             const inputs = Array.from(activeFs.querySelectorAll('input, select, textarea'));
             inputs.forEach(i => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; });
             clearResult();
+            // Si estamos en hechicero, también limpiar técnicas adicionales
+            if (activeFs.getAttribute('data-for') === 'hechicero') {
+                extraTechs = [];
+                renderExtraTechs();
+            }
+        });
+    }
+
+    // Wire botón Añadir para técnicas adicionales
+    if (addTechBtn && extraTechInput) {
+        addTechBtn.addEventListener('click', () => {
+            addExtraTech(extraTechInput.value);
+            extraTechInput.value = '';
+            extraTechInput.focus();
+        });
+        // Enter en el input añade también
+        extraTechInput.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); addExtraTech(extraTechInput.value); extraTechInput.value = ''; }
         });
     }
 
@@ -133,6 +196,7 @@
         if (entityType === 'hechicero') {
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
+            if (extraTechs.length) payload.tecnicas_adicionales = [...extraTechs];
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
             // Enviamos el nombre de campo igual que el esquema/backend: 'condiciones_de_uso'

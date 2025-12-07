@@ -14,7 +14,9 @@ const sorcererCreate = z.object({
   causa_muerte: z.string().trim().max(255).optional().nullable(),
   fecha_fallecimiento: z.string().trim().optional().nullable(),
   // Nombre de la técnica principal a vincular (opcional)
-  tecnica: z.string().trim().min(1).optional()
+  tecnica: z.string().trim().min(1).optional(),
+  // Lista opcional de técnicas adicionales por nombre
+  tecnicas_adicionales: z.array(z.string().trim().min(1)).optional()
 });
 
 const sorcererUpdate = sorcererCreate.partial();

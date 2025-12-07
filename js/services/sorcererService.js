@@ -5,7 +5,7 @@ module.exports = {
     const sorcererRepo = getRepository(db, 'Sorcerer');
     const techniqueRepo = getRepository(db, 'Technique');
     const linkRepo = getRepository(db, 'SorcererTechnique');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica } = payload || {};
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica, tecnicas_adicionales } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
     // Validaciones previas: la técnica principal es obligatoria y debe existir
@@ -39,6 +39,21 @@ module.exports = {
       await linkRepo.setPrincipal(saved.id, tech.id, 0);
       // Incluir referencia ligera en respuesta para conveniencia
       result = { ...saved, tecnica_principal: nombreTec };
+    }
+    // Vincular técnicas adicionales (no principales)
+    if (saved && Array.isArray(tecnicas_adicionales) && tecnicas_adicionales.length) {
+      for (const tname of tecnicas_adicionales) {
+        const nm = String(tname || '').trim();
+        if (!nm) continue;
+        if (nm.toLowerCase() === nombreTec.toLowerCase()) continue; // no duplicar principal
+        const t = await techniqueRepo.findOne({ where: { nombre: nm } });
+        if (!t) {
+          const err = new Error(`Técnica adicional no encontrada: ${nm}`);
+          err.status = 400;
+          throw err;
+        }
+        await linkRepo.addNonPrincipal(saved.id, t.id, 0);
+      }
     }
     // Ya no se vincula con UserSorcerer, el campo createBy lo registra
     return result;
