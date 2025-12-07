@@ -5,15 +5,25 @@ module.exports = (db) => ({
         try { const out = await service.getBySorcerer(db, req.params.id); res.json(out); }
         catch (err) { console.error(err); res.status(500).json({ ok: false, message: 'Error consultando misiones' }); }
     },
-        getById: async (req, res) => {
-            try {
-                const out = await service.getById(db, req.params.id);
-                res.json(out);
-            } catch (err) {
-                const code = err.status || 500;
-                res.status(code).json({ ok: false, message: err.message });
-            }
-        },
+    getById: async (req, res) => {
+        try {
+            const out = await service.getById(db, req.params.id);
+            res.json(out);
+        } catch (err) {
+            const code = err.status || 500;
+            res.status(code).json({ ok: false, message: err.message });
+        }
+    },
+    update: async (req, res) => {
+        try {
+            const user = { id: req.headers['x-user-id'] || null, role: req.headers['x-user-role'] || null };
+            const out = await service.updateMission(db, req.params.id, req.body, user);
+            res.json(out);
+        } catch (err) {
+            const code = err.status || 500;
+            res.status(code).json({ ok: false, message: err.message });
+        }
+    },
     successRange: async (req, res) => {
         try { const { from, to } = req.query; const out = await service.successRange(db, from, to); res.json(out); }
         catch (err) { console.error(err); res.status(500).json({ ok: false, message: 'Error en consulta rango' }); }

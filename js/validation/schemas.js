@@ -53,6 +53,8 @@ const missionCreate = z.object({
   curse_id: intId
 });
 
+const missionUpdate = missionCreate.partial();
+
 // Mission start/close minimal schemas
 const missionStart = z.object({});
 const missionClose = z.object({
@@ -87,6 +89,7 @@ module.exports = {
   curseCreate,
   curseUpdate,
   missionCreate,
+  missionUpdate,
   missionStart,
   missionClose,
   userRegister,

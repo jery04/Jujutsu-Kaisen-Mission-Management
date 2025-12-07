@@ -39,7 +39,9 @@ function isAdmin() {
     sorcerer: '/sorcerer',
     technique: '/technique',
     curses: '/curses',
-    resource: '/resources'
+    resource: '/resources',
+    mission: '/missions',
+    missions: '/missions'
 
   };
 
@@ -55,7 +57,7 @@ function isAdmin() {
         fs.disabled = !active;
       }
     });
-    if (value === 'maldicion') { prefillDatalists().catch((e) => { console.debug('prefill datalists (maldicion) failed', e); }); }
+    if (value === 'maldicion' || value === 'mision') { prefillDatalists().catch((e) => { console.debug('prefill datalists (prefill) failed', e); }); }
   }
 
   function clearResult() {
@@ -76,6 +78,7 @@ function isAdmin() {
     if (e === 'sorcerer') return 'hechicero';
     if (e === 'technique') return 'tecnica';
     if (e === 'curses') return 'maldicion';
+    if (e === 'mission' || e === 'missions') return 'mision';
     return e;
   }
 
@@ -145,7 +148,8 @@ function isAdmin() {
     if (!base) { return; }
     try {
       const r = await fetch(`${API_BASE}${base}/${encodeURIComponent(id)}`);
-      const record = await r.json();
+      let record = await r.json();
+      if (record && record.mission) record = record.mission;
       if (!r.ok || !record) {
         if (resultEl) {
           resultEl.style.display = 'block';
@@ -241,6 +245,27 @@ function isAdmin() {
           estadoSelect.value = foundEstado ? estadoValue : '';
         }
         prefillDatalists().catch((e) => { console.debug('prefill datalists in loadExisting failed', e); });
+      } else if (fsKey === 'mision') {
+        // Precarga de misión
+        const estadoSelect = document.getElementById('ms_estado');
+        const urgenciaSelect = document.getElementById('ms_nivel_urgencia');
+        const ubicacionInput = document.getElementById('ms_ubicacion');
+        const fechaInicioInput = document.getElementById('ms_fecha_inicio');
+        const fechaFinInput = document.getElementById('ms_fecha_fin');
+        const descText = document.getElementById('ms_descripcion_evento');
+        const danosText = document.getElementById('ms_danos_colaterales');
+        const curseInput = document.getElementById('ms_curse_id');
+
+        if (estadoSelect) estadoSelect.value = record.estado || 'pendiente';
+        if (urgenciaSelect) urgenciaSelect.value = record.nivel_urgencia || 'planificada';
+        if (ubicacionInput) ubicacionInput.value = record.ubicacion || record.lugar || '';
+        if (fechaInicioInput) fechaInicioInput.value = formatLocalDateTime(record.fecha_inicio);
+        if (fechaFinInput) fechaFinInput.value = formatLocalDateTime(record.fecha_fin);
+        if (descText) descText.value = record.descripcion_evento || '';
+        if (danosText) danosText.value = record.danos_colaterales || '';
+        const curseId = record.curse_id || (record.curse && record.curse.id);
+        if (curseInput) curseInput.value = curseId != null ? curseId : '';
+        prefillDatalists().catch((e) => { console.debug('prefill datalists mission failed', e); });
       }
       // Mark editing mode
       if (submitBtn) submitBtn.textContent = 'Actualizar';
@@ -296,6 +321,17 @@ function isAdmin() {
         ubicacion: raw.ubicacion,
         fecha_aparicion: raw.fecha,
         estado_actual: raw.estado
+      };
+    } else if (fsKey === 'mision') {
+      return {
+        estado: raw.estado || undefined,
+        descripcion_evento: raw.descripcion_evento || '',
+        fecha_inicio: raw.fecha_inicio || undefined,
+        fecha_fin: raw.fecha_fin || null,
+        danos_colaterales: raw.danos_colaterales || '',
+        nivel_urgencia: raw.nivel_urgencia || undefined,
+        ubicacion: raw.ubicacion || undefined,
+        curse_id: raw.curse_id ? Number(raw.curse_id) : undefined
       };
     }
     return null;
@@ -402,7 +438,7 @@ function isAdmin() {
       // En creación (modo fallback), usar modal de éxito
       const prettyEntity = (function () {
         const e = entity || fsKey;
-        const map = { sorcerer: 'Hechicero', tecnica: 'Técnica', technique: 'Técnica', curses: 'Maldición', maldicion: 'Maldición', recurso: 'Recurso', resource: 'Recurso' };
+        const map = { sorcerer: 'Hechicero', tecnica: 'Técnica', technique: 'Técnica', curses: 'Maldición', maldicion: 'Maldición', recurso: 'Recurso', resource: 'Recurso', mission: 'Misión', missions: 'Misión', mision: 'Misión' };
         return map[e] || (e ? e.charAt(0).toUpperCase() + e.slice(1) : 'Entidad');
       })();
       const creator = headers['x-user-id'] || (localStorage.getItem('username') || sessionStorage.getItem('username') || 'desconocido');
