@@ -1,7 +1,7 @@
 {
   "probabilities": {
     "daily": {
-      "success": 0.4,
+      "success": 0.6,
       "death": 0.05
     }
   },

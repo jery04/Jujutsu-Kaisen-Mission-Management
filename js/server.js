@@ -150,31 +150,28 @@ if (process.env.NODE_ENV === 'test') {
           const end = new Date(to);
           const days = Math.max(1, Math.ceil((end - start) / dayMs));
 
-          // Candidatas: todas pendientes o en ejecución que tengan fecha_inicio <= end
-          const pending = await missionRepo.find({ where: { estado: 'pendiente' } });
-          const running = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
-          const candidates = [...pending, ...running];
-
           const missionService = require('./services/missionService');
-          let deathApplied = false;
-          for (const m of candidates) {
-            // Si está pendiente y ya llegó su fecha de inicio, iniciarla
-            if (m.estado === 'pendiente' && new Date(m.fecha_inicio) <= end) {
-              try { await missionService.startMission(dbConn, m.id); } catch (_) { }
-            }
-          }
+          // Recorrer día por día para incluir misiones nuevas creadas dentro del mismo avance
+          for (let d = 0; d < days; d++) {
+            const tick = new Date(start.getTime() + d * dayMs);
+            let deathApplied = false; // máximo una muerte por día total
 
-          // Reconsultar las en ejecucion tras posibles inicios
-          const executing = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
-          for (const m of executing) {
-            let lastEval = m.last_evaluated_at ? new Date(m.last_evaluated_at) : new Date(m.fecha_inicio);
-            // Avanzar día a día dentro del rango
-            for (let d = 0; d < days; d++) {
-              const tick = new Date(start.getTime() + d * dayMs);
+            // 1) Iniciar todas las pendientes cuyo inicio <= tick
+            try {
+              const pendList = await missionRepo.find({ where: { estado: 'pendiente' } });
+              for (const p of pendList) {
+                const fi = new Date(p.fecha_inicio);
+                if (fi <= tick) { try { await missionService.startMission(dbConn, p.id); } catch (_) {} }
+              }
+            } catch (_) {}
+
+            // 2) Evaluar las en ejecución para este tick
+            const executingToday = await missionRepo.find({ where: { estado: 'en_ejecucion' } });
+            for (const m of executingToday) {
+              const lastEval = m.last_evaluated_at ? new Date(m.last_evaluated_at) : new Date(m.fecha_inicio);
               if (tick <= lastEval) continue;
-              if (tick > end) break;
 
-              // Primero: Evento de muerte diaria (máximo uno por día)
+              // 2.a) Muerte diaria (máx 1 por día)
               if (!deathApplied && Math.random() < P_DEATH) {
                 try {
                   const mpRepo = getRepository(dbConn, 'MissionParticipant');
@@ -194,7 +191,7 @@ if (process.env.NODE_ENV === 'test') {
                 } catch (_) {}
               }
 
-              // Segundo: si tras la muerte no queda ningún participante vivo -> cancelar
+              // 2.b) Cancelar si no quedan vivos y crear sucesora
               try {
                 const { createQueryBuilder } = missionRepo;
                 const qb2 = createQueryBuilder.call(missionRepo, 'ms')
@@ -207,7 +204,6 @@ if (process.env.NODE_ENV === 'test') {
                 if (allDeadNow) {
                   await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
                   try {
-                    // Asegurar que obtenemos el curse_id cargando la relación
                     let cursePayload = m.curse;
                     if (!cursePayload || !cursePayload.id) {
                       try {
@@ -215,14 +211,13 @@ if (process.env.NODE_ENV === 'test') {
                         if (mFull && mFull.curse) cursePayload = mFull.curse;
                       } catch (_) {}
                     }
-                    // Fallback: si aún no tenemos la entidad, construir con datos mínimos
                     if (!cursePayload || !cursePayload.id) {
-                      cursePayload = { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion, fecha_aparicion: tick };
+                      cursePayload = { id: m.curse_id, nombre: m.descripcion_evento, ubicacion: m.ubicacion };
                     }
+                    try { const nextDay = new Date(tick); nextDay.setDate(nextDay.getDate() + 2); cursePayload.fecha_aparicion = nextDay; } catch (_) {}
                     if (!cursePayload || !cursePayload.id) {
                       console.warn(`[Scheduler] No se pudo recrear misión: curse_id ausente para misión ${m.id}`);
                     } else {
-                      // Evitar duplicados: si ya existe una misión pendiente/en ejecución para la misma maldición creada recientemente, no crear otra
                       try {
                         const cid = Number(cursePayload.id);
                         if (_creatingByCurse.has(cid)) {
@@ -244,9 +239,7 @@ if (process.env.NODE_ENV === 'test') {
                                 console.log(`[Scheduler] Nueva misión ${created.mission.id} creada para curse ${cid} tras cancelación de misión ${m.id}`);
                               }
                             }
-                          } finally {
-                            _creatingByCurse.delete(cid);
-                          }
+                          } finally { _creatingByCurse.delete(cid); }
                         }
                       } catch (e) {
                         console.warn('[Scheduler] Error comprobando duplicados de misión pendiente:', e.message);
@@ -258,28 +251,23 @@ if (process.env.NODE_ENV === 'test') {
                         }
                       }
                     }
-                  } catch (e) {
-                    console.warn('[Scheduler] Error creando nueva misión tras cancelación:', e.message);
-                  }
+                  } catch (e) { console.warn('[Scheduler] Error creando nueva misión tras cancelación:', e.message); }
                   app.get('io')?.emit('mission:closed', { mission_id: m.id, estado: 'cancelada' });
-                  break;
+                  continue;
                 }
               } catch (_) {}
 
-              // Tercero: decidir continuar o completar
+              // 2.c) Decidir continuar o completar
               const roll = Math.random();
               if (roll < P_SUCCESS) {
-                // Terminar siempre en vía neutral (sin éxito/fracaso)
                 await missionService.closeMission(dbConn, m.id, { descripcion_evento: 'Cierre automático por progreso diario' }, { id: null, role: 'admin' });
-                break;
               } else {
-                // Continúa
                 await missionRepo.update(m.id, { last_evaluated_at: tick });
                 app.get('io')?.emit('mission:progress', { mission_id: m.id, date: tick });
               }
             }
           }
-          console.log(`[Time] Evaluación diaria completada. Pendientes: ${pending.length}, Iniciadas: ${executing.length}.`);
+          console.log(`[Time] Evaluación diaria completada hasta ${end.toISOString()}`);
         } catch (e) {
           console.warn('[Time] Error evaluando misiones:', e.message);
         }
