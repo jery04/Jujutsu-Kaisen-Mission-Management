@@ -21,16 +21,15 @@
     <main>
     <div class="title">
         <h2>Consulta de Entidades</h2>
-        <p>Aquí podrás visualizar, modificar y administrar integralmente las entidades registradas en el sistema.</p>
+        <p>Aquí podrás visualizar los detalles completos de cada entidad para su posterior análisis.</p>
     </div>
 
     <div class="container">
-        <h2>Explora esta Entidad</h2>
-
     <!-- Un solo formulario visible a la vez -->
         <form id="registroForm">
             <!-- Hechicero -->
             <fieldset data-for="hechicero">
+                <h2>Explora este Hechicero</h2>
 
                 <label for="h_nombre">Nombre</label>
                 <label id="h_nombre" aria-label="nombre" class="entity-label"></label>
@@ -63,6 +62,7 @@
 
             <!-- Técnica maldita -->
             <fieldset data-for="tecnica" style="display:none">
+                <h2>Explora esta Técnica Maldita</h2>
 
                 <label for="t_nombre">Nombre</label>
                 <label id="t_nombre" aria-label="nombre" class="entity-label"></label>
@@ -86,6 +86,7 @@
 
             <!-- Maldición -->
             <fieldset data-for="maldicion" style="display:none">
+                <h2>Explora esta Maldición</h2>
 
                 <label for="m_nombre">Nombre</label>
                 <label id="m_nombre" aria-label="nombre" class="entity-label"></label>
@@ -120,6 +121,7 @@
 
             <!-- Recursos -->
             <fieldset data-for="recurso">
+                <h2>Explora este Recurso</h2>
 
                 <label for="r_nombre">Nombre</label>
                 <label id="r_nombre" aria-label="nombre-recurso" class="entity-label"></label>
@@ -134,7 +136,8 @@
 
             <!-- Misiones -->
             <fieldset data-for="mision" style="display:none">
-
+                <h2>Explora esta Misión</h2>
+                
                 <label for="mi_nombre">Nombre de la misión</label>
                 <label id="mi_nombre" aria-label="nombre-mision" class="entity-label"></label>
 
