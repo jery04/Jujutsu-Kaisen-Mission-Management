@@ -115,32 +115,47 @@ document.addEventListener('DOMContentLoaded', () => {
     clearResults();
     if (!Array.isArray(list) || list.length === 0) {
       if (results) results.innerHTML = `<div class="query-item"><h3>No hay ${entityType}</h3></div>`;
+      window.paginationState = null;
       return;
     }
-    let page = 1;
-    const pageSize = 10;
-    const total = Math.ceil(list.length / pageSize);
 
-    function show(p) {
+    const state = {
+      list: [...list],
+      renderFn,
+      entityType,
+      pageSize: 10,
+      page: 1,
+      renderPage: null
+    };
+
+    state.renderPage = function (p) {
       clearResults();
-      const start = (p - 1) * pageSize;
-      list.slice(start, start + pageSize).forEach(renderFn);
-      // controles simples
+      if (!state.list.length) {
+        if (results) results.innerHTML = `<div class="query-item"><h3>No hay ${state.entityType}</h3></div>`;
+        return;
+      }
+      const total = Math.max(1, Math.ceil(state.list.length / state.pageSize));
+      state.page = Math.min(Math.max(1, p), total);
+      const start = (state.page - 1) * state.pageSize;
+      state.list.slice(start, start + state.pageSize).forEach(state.renderFn);
+
       const nav = document.createElement('div');
       nav.className = 'pagination-controls';
       nav.style.textAlign = 'center';
       nav.style.marginTop = '12px';
       nav.innerHTML = `
         <button class="btn-action" id="prev">Anterior</button>
-        <span style="margin:0 10px;">Página ${p} / ${total}</span>
+        <span style="margin:0 10px;">Página ${state.page} / ${total}</span>
         <button class="btn-action" id="next">Siguiente</button>`;
       results.appendChild(nav);
-      nav.querySelector('#prev').disabled = p <= 1;
-      nav.querySelector('#next').disabled = p >= total;
-      nav.querySelector('#prev').onclick = () => { if (page > 1) { page--; show(page); } };
-      nav.querySelector('#next').onclick = () => { if (page < total) { page++; show(page); } };
-    }
-    show(page);
+      nav.querySelector('#prev').disabled = state.page <= 1;
+      nav.querySelector('#next').disabled = state.page >= total;
+      nav.querySelector('#prev').onclick = () => { if (state.page > 1) { state.page--; state.renderPage(state.page); } };
+      nav.querySelector('#next').onclick = () => { if (state.page < total) { state.page++; state.renderPage(state.page); } };
+    };
+
+    window.paginationState = state;
+    state.renderPage(state.page);
   }
 
   function renderSorcerers(list) {
@@ -888,9 +903,26 @@ document.addEventListener('DOMContentLoaded', () => {
               alert('No se pudo eliminar: ' + msg);
               return;
             }
-            // animación y eliminación del DOM
-            item.classList.add('fade-out');
-            setTimeout(() => { if (item && item.parentNode) item.parentNode.removeChild(item); }, 380);
+            // Reacomodar paginación: quitar del estado y re-render
+            const state = window.paginationState;
+            const matchRow = (row) => {
+              const candidates = [row && row.id, row && row.sorcerer_id, row && row.technique_id, row && row.resource_id, row && row.mission_id];
+              return candidates.some(v => v != null && String(v) === String(id));
+            };
+
+            if (state && state.list && typeof state.renderPage === 'function' && state.entityType) {
+              const before = state.list.length;
+              state.list = state.list.filter(row => !matchRow(row));
+              const total = state.list.length > 0 ? Math.ceil(state.list.length / state.pageSize) : 1;
+              state.page = Math.min(state.page, total);
+              if (state.page < 1) state.page = 1;
+              // Si no hay elementos, mostrar vacío; si hay, re-render mantiene página llenando huecos
+              state.renderPage(state.page);
+            } else {
+              // fallback: animación y retirada del DOM
+              item.classList.add('fade-out');
+              setTimeout(() => { if (item && item.parentNode) item.parentNode.removeChild(item); }, 380);
+            }
           } catch (err) {
             alert('Error de conexión: ' + (err && err.message ? err.message : err));
           }
