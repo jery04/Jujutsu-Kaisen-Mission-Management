@@ -12,7 +12,9 @@ function biasForJJK(name) {
 
 class AdvancedQueryRepository extends BaseRepository {
   constructor(db) {
-    if (!db) throw new Error('DB connection requerido');
+    // Llamar al constructor base antes de acceder a 'this'
+    super(db);
+    // Mantener compatibilidad con código existente que usa this.db
     this.db = db;
   }
 
