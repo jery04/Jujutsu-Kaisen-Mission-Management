@@ -13,7 +13,7 @@ class MissionRepository extends BaseRepository {
     return await qb.getMany();
   }
     async getById(id) {
-      return await this.findOne({ where: { id: Number(id) } });
+      return await this.findOne({ where: { id: Number(id) }, relations: ['curse'] });
     }
     
     async getSorcerersForMission(missionId) {

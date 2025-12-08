@@ -116,7 +116,7 @@ if (process.env.NODE_ENV === 'test') {
       ProjectTime,
       // ...existing code...
     ],
-    synchronize: true // Habilitar sincronización automática para desarrollo
+    synchronize: false // Evitar cambios automáticos en producción/BD existente
   }).then(async (dbConn) => {
     console.log('Conectado a la base de datos jujutsu_misiones_db');
     // Registrar rutas desacopladas (N-capas) y preparar Socket.IO
@@ -136,6 +136,8 @@ if (process.env.NODE_ENV === 'test') {
       const events = require('./utils/events');
       // Mutex ligero en memoria para evitar creación doble por misma maldición
       const _creatingByCurse = new Set();
+      // Mutex para inicio de misión por id (evitar doble start concurrente)
+      const _startingMissionIds = new Set();
       // Scheduler: on time advanced, evaluate missions progression in batch (lightweight placeholder)
       events.on('time:advanced', async ({ from, to }) => {
         try {
@@ -161,6 +163,8 @@ if (process.env.NODE_ENV === 'test') {
             try {
               const pendList = await missionRepo.find({ where: { estado: 'pendiente' } });
               for (const p of pendList) {
+                // No intentar iniciar pendientes con fecha_fin ya definida (inconsistentes)
+                if (p.fecha_fin) continue;
                 const fi = new Date(p.fecha_inicio);
                 if (fi <= tick) { try { await missionService.startMission(dbConn, p.id); } catch (_) { } }
               }
@@ -205,6 +209,13 @@ if (process.env.NODE_ENV === 'test') {
                 if (allDeadNow) {
                   await missionRepo.update(m.id, { estado: 'cancelada', fecha_fin: tick, last_evaluated_at: tick });
                   try {
+                    // Al cancelar, la maldición vuelve a 'activa' (hasta que la sucesora inicie)
+                    try {
+                      const { getRepository } = require('./repositories');
+                      const curseRepoX = getRepository(dbConn, 'Curse');
+                      const curIdX = m.curse?.id || m.curse_id;
+                      if (curIdX) await curseRepoX.update(Number(curIdX), { estado_actual: 'activa' });
+                    } catch (_) { }
                     let cursePayload = m.curse;
                     if (!cursePayload || !cursePayload.id) {
                       try {
