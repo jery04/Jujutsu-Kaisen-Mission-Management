@@ -141,7 +141,7 @@ module.exports = {
       const cid = Number(curse.id);
       console.log('[missionService] Curse', cid, '-> estado_actual=activa (creación de misión)');
       await curseRepo2.update(cid, { estado_actual: 'activa' });
-    } catch (_) {}
+    } catch (_) { }
     const payload = { mission_id: mission.id, curse_id: curse.id, ubicacion: mission.ubicacion, nivel_urgencia, estado: mission.estado };
     try { events.emit('mission:created', payload); } catch (_) { }
     return { ok: true, mission };
@@ -169,7 +169,7 @@ module.exports = {
         if (baseStart < new Date(virtualNow)) baseStart = new Date(virtualNow);
         const newStart = new Date(baseStart); newStart.setDate(newStart.getDate() + delayDays);
         const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
-        try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays, reason: 'lock_conflict' }); } catch (_) {}
+        try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays, reason: 'lock_conflict' }); } catch (_) { }
         return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
       }
       // Adquirir cerrojo por cada hechicero del equipo
@@ -228,9 +228,9 @@ module.exports = {
       const newStart = new Date(baseStart);
       newStart.setDate(newStart.getDate() + delayDays);
       const updDelay = await missionRepo.update(missionId, { estado: MISSION_STATES.pendiente, fecha_inicio: newStart });
-      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) {}
+      try { events.emit('mission:delayed', { mission_id: Number(missionId), delay_days: delayDays }); } catch (_) { }
       // Liberar cerrojos de asignación si se difiere el inicio
-      try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) {}
+      try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) { }
       return { ok: true, delayed: true, delay_days: delayDays, mission: updDelay };
     }
     // Mantener la fecha de inicio planificada cuando pasa a ejecución
@@ -244,8 +244,8 @@ module.exports = {
         console.log('[missionService] Curse', Number(curseId), "-> estado_actual='en proceso de exorcismo' (inicio de misión)");
         await curseRepo.update(Number(curseId), { estado_actual: 'en proceso de exorcismo' });
       }
-    } catch (_) {}
-    try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) {}
+    } catch (_) { }
+    try { for (const sid of (team || []).map(s => Number(s.id))) _assigningSorcerers.delete(sid); } catch (_) { }
     try { events.emit('mission:started', { mission_id: Number(missionId) }); } catch (_) { }
     return { ok: true, mission: upd };
   },
@@ -313,7 +313,7 @@ module.exports = {
         console.log('[missionService] Curse', Number(curseId), "-> estado_actual='exorcizada' (cierre de misión)");
         await curseRepo.update(Number(curseId), { estado_actual: 'exorcizada' });
       }
-    } catch (_) {}
+    } catch (_) { }
     return { ok: true, mission: upd };
   },
 
