@@ -1,8 +1,6 @@
-const BaseRepository = require('./BaseRepository');
-
-class AdvancedQueryRepository extends BaseRepository {
+class AdvancedQueryRepository {
   constructor(db) {
-    super(db, null); // No entidad fija
+    if (!db) throw new Error('DB connection requerido');
     this.db = db;
   }
 
@@ -64,21 +62,20 @@ class AdvancedQueryRepository extends BaseRepository {
     return rows;
   }
 
-  // 5. Top 3 hechiceros por nivel de misión y región
-  async getTopSorcerersByMissionLevelAndRegion(region) {
+  // 5. Top 3 hechiceros por nivel de misión (filtra por nivel)
+  async getTopSorcerersByMissionLevel(nivel) {
     const [rows] = await this.db.query(`
-      SELECT m.nivel, s.nombre AS hechicero,
+      SELECT m.nivel_urgencia AS nivel, s.nombre AS hechicero,
         COUNT(*) AS total_misiones,
-        SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) AS exitos,
-        ROUND(SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS porcentaje_exito
-      FROM Mission m
-      INNER JOIN MissionParticipant mp ON mp.missionId = m.id
-      INNER JOIN Sorcerer s ON s.id = mp.sorcererId
-      WHERE m.region = ?
-      GROUP BY m.nivel, s.id
-      ORDER BY m.nivel, porcentaje_exito DESC
+        SUM(CASE WHEN m.estado = 'completada' THEN 1 ELSE 0 END) AS exitos
+      FROM mission m
+      INNER JOIN mission_participant mp ON mp.mission_id = m.id
+      INNER JOIN sorcerer s ON s.id = mp.sorcerer_id
+      WHERE m.estado = 'completada' AND m.nivel_urgencia = ?
+      GROUP BY m.nivel_urgencia, s.id, s.nombre
+      ORDER BY exitos DESC
       LIMIT 3
-    `, [region]);
+    `, [nivel]);
     return rows;
   }
 

@@ -1,8 +1,7 @@
 const AdvancedQueryRepository = require('../repositories/AdvancedQueryRepository');
-const db = require('../../database'); // Ajusta la ruta según tu estructura
 
 class AdvancedQueryService {
-  constructor() {
+  constructor(db) {
     this.advancedQueryRepository = new AdvancedQueryRepository(db);
   }
 
@@ -22,8 +21,8 @@ class AdvancedQueryService {
     return await this.advancedQueryRepository.getSorcererTechniqueEffectiveness();
   }
 
-  async getTopSorcerersByMissionLevelAndRegion(region) {
-    return await this.advancedQueryRepository.getTopSorcerersByMissionLevelAndRegion(region);
+  async getTopSorcerersByMissionLevel(nivel) {
+    return await this.advancedQueryRepository.getTopSorcerersByMissionLevel(nivel);
   }
 
   async getSorcererTeamPerformance() {
@@ -35,4 +34,6 @@ class AdvancedQueryService {
   }
 }
 
-module.exports = new AdvancedQueryService();
+module.exports = function createAdvancedQueryService(db) {
+  return new AdvancedQueryService(db);
+};

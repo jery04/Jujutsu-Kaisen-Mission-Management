@@ -349,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const estadoRaw = sessionStorage.getItem('estadoOptions');
       const specialMode = sessionStorage.getItem('mode');
+      const nivelRaw = sessionStorage.getItem('nivelOptions');
+      const hideSearch = sessionStorage.getItem('hideSearchForm') === 'true';
       if (estadoRaw) {
         const allowed = JSON.parse(estadoRaw);
         if (entitySelect) {
@@ -394,6 +396,48 @@ document.addEventListener('DOMContentLoaded', () => {
           tip.innerHTML = '<h3>Buscar misiones por hechicero</h3><p>Escribe el nombre del hechicero y presiona Enter para ver sus misiones.</p>';
           results.appendChild(tip);
         }
+      }
+      // Modo especial: Top hechiceros por nivel de misión
+      if (specialMode === 'topSorcerersByMissionLevel') {
+        // Ocultar formulario de búsqueda si corresponde
+        const searchForm = document.getElementById('search-form');
+        if (hideSearch && searchForm) {
+          try { searchForm.style.display = 'none'; } catch (_) {}
+        }
+
+        // Reemplazar el select por opciones de nivel
+        if (entitySelect) {
+          entitySelect.innerHTML = '';
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.disabled = true;
+          placeholder.selected = true;
+          placeholder.textContent = 'Selecciona nivel...';
+          entitySelect.appendChild(placeholder);
+
+          const niveles = nivelRaw ? JSON.parse(nivelRaw) : ['planificada','urgente','emergencia crítica'];
+          (Array.isArray(niveles) ? niveles : []).forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            entitySelect.appendChild(opt);
+          });
+          entitySelect.setAttribute('aria-label', 'Nivel de misión');
+          entitySelect.dataset.mode = 'nivel';
+        }
+
+        // Ayuda inicial
+        clearResults();
+        if (results) {
+          const tip = document.createElement('div');
+          tip.className = 'query-item';
+          tip.innerHTML = '<h3>Selecciona un nivel</h3><p>Elige planificada, urgente o emergencia crítica para ver el Top 3.</p>';
+          results.appendChild(tip);
+        }
+
+        // Consumir flags para no afectar futuras visitas
+        try { sessionStorage.removeItem('nivelOptions'); } catch (_) {}
+        try { sessionStorage.removeItem('hideSearchForm'); } catch (_) {}
       }
       // Modo especial: misiones exitosas por rango de fechas
       if (specialMode === 'exitosasByDateRange') {
@@ -485,6 +529,61 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           loadList('/curses?estado=' + encodeURIComponent(val), renderCurses);
         } catch (e) { console.warn('Error al cargar maldiciones por estado', e); }
+        return;
+      }
+
+      // Si el select está en modo nivel (Top hechiceros por nivel)
+      if (entitySelect.dataset && entitySelect.dataset.mode === 'nivel') {
+        const nivel = entitySelect.value;
+        console.log('Nivel seleccionado:', nivel);
+        if (!nivel) return;
+        (async function () {
+          clearResults();
+          try {
+            const url = `${API_BASE}/advanced/top-sorcerers?nivel=${encodeURIComponent(nivel)}`;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const payload = await r.json(); 
+            console.log('Datos payload:', payload.data);
+            console.log('nivel:', Array.isArray(payload.data));
+
+            // Normalizar payload en varios formatos: array plano, {data: []}, {rows: []}, {results: []}, {items: []}
+            let data = [];
+            if (Array.isArray(payload)) {
+              data = payload;
+            } else if (payload && Array.isArray(payload.data)) {
+              data = payload.data;
+            } else if (payload && Array.isArray(payload.rows)) {
+              data = payload.rows;
+            } else if (payload && Array.isArray(payload.results)) {
+              data = payload.results;
+            } else if (payload && Array.isArray(payload.items)) {
+              data = payload.items;
+            } else if (payload && payload.data && Array.isArray(payload.data && payload.data.rows)) {
+              // Caso anidado: { data: { rows: [...] } }
+              data = payload.data.rows;
+            } else if (payload && typeof payload === 'object' && Object.keys(payload).length) {
+              // Si vino un solo objeto (una fila), envolverlo para render
+              data = [payload];
+            }
+            console.log('Datos recibidos:', data);
+            if (!data.length) {
+              if (results) results.innerHTML = '<div class="query-item"><h3>Sin resultados para el nivel seleccionado</h3></div>';
+              return;
+            }
+            renderPaginated(data, function (row) {
+              const item = makeItem(row.hechicero || '-', [
+                `Nivel: <strong>${row.nivel || nivel}</strong>`,
+                `Misiones: <strong>${row.total_misiones || 0}</strong>`,
+                `Éxitos: <strong>${row.exitos || 0}</strong>`
+              ]);
+              item.dataset.entity = 'sorcerer';
+              results.appendChild(item);
+            }, 'hechiceros');
+          } catch (err) {
+            if (results) results.innerHTML = `<div class="query-item"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
+          }
+        }());
         return;
       }
 

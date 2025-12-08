@@ -13,6 +13,8 @@ module.exports = function registerRoutes(app, db) {
   const resourceController = require('../controllers/resourceController')(db);
   const transferController = require('../controllers/transferController')(db);
   const adminController = require('../controllers/adminController')(db);
+  // Advanced queries
+  const advancedQueryController = require('../controllers/advancedQueryController')(db);
   // Optional auth middleware from Josue_Capas (not applied globally here)
   try { require('../middleware/authMiddleware'); } catch (_) { }
   // Validation
@@ -79,4 +81,7 @@ module.exports = function registerRoutes(app, db) {
   // Admin Time Controls
   app.get('/admin/time', adminController.getCurrentTime);
   app.post('/admin/time/advance', adminController.advanceTime);
+
+  // Advanced query endpoints
+  app.get('/advanced/top-sorcerers', advancedQueryController.getTopSorcerersByMissionLevel);
 };

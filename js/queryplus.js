@@ -59,11 +59,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
             } else if (idx === 4) {
                     // Bloque para el botón 5
-                    // Señalar que se debe mostrar el título y descripción personalizados en query.html para top hechiceros por nivel de misión
+                    // Modo: Top hechiceros por nivel de misión
                     try {
+                        // Mostrar título y descripción personalizados en query.html
                         sessionStorage.setItem('showTopHechicerosTitle', 'true');
+                        // Activar modo especial para esta vista
+                        sessionStorage.setItem('mode', 'topSorcerersByMissionLevel');
+                        // Ocultar el buscador de texto
+                        sessionStorage.setItem('hideSearchForm', 'true');
+                        // Sustituir el select por niveles de misión
+                        sessionStorage.setItem('nivelOptions', JSON.stringify([
+                            'planificada',
+                            'urgente',
+                            'emergencia crítica'
+                        ]));
                     } catch (e) {
-                        console.warn('No se pudo guardar showTopHechicerosTitle en sessionStorage', e);
+                        console.warn('No se pudo configurar el modo Top Hechiceros', e);
                     }
             } else if (idx === 5) {
                 // Bloque para el botón 6
