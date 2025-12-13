@@ -61,7 +61,10 @@ function isAdmin() {
         fs.disabled = !active;
       }
     });
-    if (value === 'maldicion' || value === 'mision') { prefillDatalists().catch((e) => { console.debug('prefill datalists (prefill) failed', e); }); }
+    if (value === 'maldicion' || value === 'mision' || value === 'hechicero') {
+      // También precargar lista de hechiceros para el datalist del campo 'superior'
+      prefillDatalists().catch((e) => { console.debug('prefill datalists (prefill) failed', e); });
+    }
   }
 
   function clearResult() {
@@ -90,6 +93,7 @@ function isAdmin() {
   async function prefillDatalists() {
     // Prefill both hechiceros and ubicaciones datalists when present.
     const dlHech = document.getElementById('dl_hechiceros');
+    // Eliminado dl_superior_edit y scroll de edición; usamos dl_hechiceros
     const dlUbi = document.getElementById('dl_ubicaciones');
     const dlTech = document.getElementById('dl_techniques');
 
@@ -102,14 +106,18 @@ function isAdmin() {
     };
 
     // Fetch hechiceros
-    if (dlHech && dlHech.children.length === 0) {
+    if ((dlHech && dlHech.children.length === 0)) {
       try {
         const r = await fetch(API_BASE + '/sorcerer');
         if (r.ok) {
           const list = await r.json();
           // controller returns array of sorcerers
           if (Array.isArray(list)) {
-            list.forEach(s => { if (s && s.nombre) appendUnique(dlHech, s.nombre); });
+            list.forEach(s => {
+              if (s && s.nombre) {
+                appendUnique(dlHech, s.nombre);
+              }
+            });
           }
         }
       } catch (e) { console.debug('prefill datalists (hechiceros) error', e); }
