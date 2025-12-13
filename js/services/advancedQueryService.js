@@ -32,8 +32,8 @@ class AdvancedQueryService {
     return await this.advancedQueryRepository.getSorcererTeamPerformance();
   }
 
-  async getEffectivenessComparisonCriticalSpecial() {
-    return await this.advancedQueryRepository.getEffectivenessComparisonCriticalSpecial();
+  async getEffectivenessComparisonCriticalSpecial(grado) {
+    return await this.advancedQueryRepository.getEffectivenessComparisonCriticalSpecial(grado);
   }
 }
 

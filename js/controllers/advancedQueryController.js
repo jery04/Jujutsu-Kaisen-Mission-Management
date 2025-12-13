@@ -61,7 +61,10 @@ module.exports = (db) => {
 
   const getEffectivenessComparisonCriticalSpecial = async (req, res, next) => {
     try {
-      const result = await advancedQueryService.getEffectivenessComparisonCriticalSpecial();
+      console.log('(SIUUU) Received request for effectiveness comparison with query:', req.query);
+      const { grado } = req.query;
+      if (!grado) return res.status(400).json({ error: 'Falta el parámetro grado' });
+      const result = await advancedQueryService.getEffectivenessComparisonCriticalSpecial(grado);
       res.json(result);
     } catch (err) {
       next(err);

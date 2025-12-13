@@ -129,7 +129,41 @@
     exportBtn.addEventListener('click', function () {
       const container = document.getElementById('results');
       if (!container) { alert('No hay resultados para exportar.'); return; }
-      const items = Array.from(container.querySelectorAll('.query-item')).filter(it => !it.classList.contains('pagination-controls'));
+
+      // By default, collect currently rendered items
+      let items = Array.from(container.querySelectorAll('.query-item')).filter(it => !it.classList.contains('pagination-controls'));
+
+      // If we have a pagination state with the full list, iterate all pages off-DOM
+      try {
+        const state = window.paginationState;
+        if (state && Array.isArray(state.list) && state.pageSize && state.list.length > state.pageSize) {
+          const total = Math.max(1, Math.ceil(state.list.length / state.pageSize));
+          const originalPage = state.page || 1;
+
+          // Detach the results container from the DOM so we can render pages without flashing UI
+          const parent = container.parentNode;
+          const placeholder = document.createElement('div');
+          parent.replaceChild(placeholder, container);
+
+          const all = [];
+          try {
+            for (let p = 1; p <= total; p++) {
+              state.renderPage(p);
+              const pageItems = Array.from(container.querySelectorAll('.query-item')).filter(it => !it.classList.contains('pagination-controls'));
+              pageItems.forEach(it => all.push(it.cloneNode(true)));
+            }
+          } finally {
+            // restore the visible page and reattach container
+            try { state.renderPage(originalPage); } catch (e) { /* noop */ }
+            parent.replaceChild(container, placeholder);
+          }
+
+          if (all.length) items = all;
+        }
+      } catch (e) {
+        console.warn('No se pudo recopilar todas las páginas para exportar', e);
+      }
+
       if (!items.length) { alert('No hay resultados para exportar.'); return; }
 
       var modal = document.getElementById('export-modal');

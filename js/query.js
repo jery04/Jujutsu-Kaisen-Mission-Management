@@ -418,7 +418,45 @@ document.addEventListener('DOMContentLoaded', () => {
       const specialMode = sessionStorage.getItem('mode');
       const nivelRaw = sessionStorage.getItem('nivelOptions');
       const hideSearch = sessionStorage.getItem('hideSearchForm') === 'true';
-      if (estadoRaw) {
+      const replaceEntitySelect = sessionStorage.getItem('replaceEntitySelect') === 'true';
+      const gradoOptionsRaw = sessionStorage.getItem('gradoOptions');
+      const didReplaceEntitySelect = Boolean(replaceEntitySelect && gradoOptionsRaw && entitySelect);
+
+      // Si se debe reemplazar el select por uno especial de grados
+      if (replaceEntitySelect && gradoOptionsRaw && entitySelect) {
+        // Limpiar el select y poner solo las opciones de grado
+        entitySelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = 'Selecciona grado...';
+        entitySelect.appendChild(placeholder);
+        const gradoOptions = JSON.parse(gradoOptionsRaw);
+        Object.entries(gradoOptions).forEach(([val, label]) => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = label;
+          entitySelect.appendChild(opt);
+        });
+        entitySelect.setAttribute('aria-label', 'Grado');
+        entitySelect.dataset.mode = 'grado';
+        // Limpiar flags para futuras visitas
+        sessionStorage.removeItem('replaceEntitySelect');
+        sessionStorage.removeItem('gradoOptions');
+        // Limpiar otros modos para evitar sobrescritura posterior
+        sessionStorage.removeItem('mode');
+        sessionStorage.removeItem('estadoOptions');
+        sessionStorage.removeItem('nivelOptions');
+        // Forzar el evento change para que el select se inicialice correctamente
+        setTimeout(() => {
+          entitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }, 0);
+        // NO retornar: si retornamos aquí, nunca se registran los event listeners (change/submit/etc.)
+      }
+      // Si la página fue invocada con una lista específica de estados, adaptar
+      // el select existente `#entity-select` para mostrar solo esos estados.
+      else if (estadoRaw) {
         const allowed = JSON.parse(estadoRaw);
         if (entitySelect) {
           // Reemplazar las opciones del select ya existente
@@ -446,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('estadoOptions');
       }
       // Si venimos en modo especial de "misiones por hechicero"
-      if (specialMode === 'missionsBySorcerer') {
+      if (!didReplaceEntitySelect && specialMode === 'missionsBySorcerer') {
         // Remover el select de entidad para evitar confusión en este modo
         if (entitySelect && entitySelect.parentNode) {
           try {
@@ -465,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       // Modo especial: Top hechiceros por nivel de misión
-      if (specialMode === 'topSorcerersByMissionLevel') {
+      if (!didReplaceEntitySelect && specialMode === 'topSorcerersByMissionLevel') {
         // Ocultar formulario de búsqueda si corresponde
         const searchForm = document.getElementById('search-form');
         if (hideSearch && searchForm) {
@@ -506,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try { sessionStorage.removeItem('hideSearchForm'); } catch (_) {}
       }
       // Modo especial: reporte de efectividad de técnicas (botón 4 avanzado)
-      if (effectivenessMode) {
+      if (!didReplaceEntitySelect && effectivenessMode) {
         // Remover select y formulario de búsqueda para mostrar solo el reporte
         if (entitySelect && entitySelect.parentNode) {
           try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
@@ -526,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadEffectiveness();
       }
       // Modo especial: misiones exitosas por rango de fechas
-      if (specialMode === 'exitosasByDateRange') {
+      if (!didReplaceEntitySelect && specialMode === 'exitosasByDateRange') {
         // Remover el select para evitar confusión
         if (entitySelect && entitySelect.parentNode) {
           try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
@@ -608,6 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnTec) btnTec.addEventListener('click', loadTechniques);
     if (btnCur) btnCur.addEventListener('click', loadCurses);
     if (entitySelect) entitySelect.addEventListener('change', function () {
+
       // Si el select fue adaptado para estados, tratar la selección como filtro de maldiciones
       if (entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
         const val = entitySelect.value;
@@ -621,7 +660,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Si el select está en modo nivel (Top hechiceros por nivel)
       if (entitySelect.dataset && entitySelect.dataset.mode === 'nivel') {
         const nivel = entitySelect.value;
-        console.log('Nivel seleccionado:', nivel);
         if (!nivel) return;
         (async function () {
           clearResults();
@@ -630,9 +668,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = await fetch(url);
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const payload = await r.json(); 
-            console.log('Datos payload:', payload.data);
-            console.log('nivel:', Array.isArray(payload.data));
-
             // Normalizar payload en varios formatos: array plano, {data: []}, {rows: []}, {results: []}, {items: []}
             let data = [];
             if (Array.isArray(payload)) {
@@ -646,13 +681,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (payload && Array.isArray(payload.items)) {
               data = payload.items;
             } else if (payload && payload.data && Array.isArray(payload.data && payload.data.rows)) {
-              // Caso anidado: { data: { rows: [...] } }
               data = payload.data.rows;
             } else if (payload && typeof payload === 'object' && Object.keys(payload).length) {
-              // Si vino un solo objeto (una fila), envolverlo para render
               data = [payload];
             }
-            console.log('Datos recibidos:', data);
             if (!data.length) {
               if (results) results.innerHTML = '<div class="query-item"><h3>Sin resultados para el nivel seleccionado</h3></div>';
               return;
@@ -668,6 +700,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 'hechiceros');
           } catch (err) {
             if (results) results.innerHTML = `<div class="query-item"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
+          }
+        }());
+        return;
+      }
+
+      // Si el select está en modo grado (efectividad emergencias críticas)
+      if (entitySelect.dataset && entitySelect.dataset.mode === 'grado') {
+        const grado = entitySelect.value;
+        if (!grado) return;
+        (async function () {
+          clearResults();
+          try {
+            const url = `${API_BASE}/advanced/effectiveness-critical?grado=${encodeURIComponent(grado)}`;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const payload = await r.json();
+            // Normalizar payload: array plano, {data: []}, {results: []}, etc.
+            let data = [];
+            if (Array.isArray(payload)) data = payload;
+            else if (payload && Array.isArray(payload.data)) data = payload.data;
+            else if (payload && Array.isArray(payload.results)) data = payload.results;
+            else if (payload && typeof payload === 'object' && Object.keys(payload).length) data = [payload];
+            if (!data.length) {
+              if (results) results.innerHTML = '<div class="query-item"><h3>Sin resultados para el grado seleccionado</h3></div>';
+              return;
+            }
+            // Renderizar resultados (puedes personalizar la visualización)
+            renderPaginated(data, function (row) {
+              const item = makeItem(row.hechicero || row.nombre || '-', [
+                `Grado: <strong>${row.grado || grado}</strong>`,
+                `Efectividad: <strong>${row.efectividad != null ? row.efectividad + '%' : '-'}</strong>`
+              ]);
+              item.dataset.entity = 'sorcerer';
+              results.appendChild(item);
+            }, 'hechiceros');
+          } catch (err) {
+            if (results) results.innerHTML = `<div class=\"query-item\"><h3>Error conectando a la API</h3><p>${err.message}</p></div>`;
           }
         }());
         return;

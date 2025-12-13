@@ -96,8 +96,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Señalar que se debe mostrar el título y descripción personalizados en query.html para efectividad en emergencias críticas
                 try {
                     sessionStorage.setItem('showEfectividadEmergenciasTitle', 'true');
+                    // Indicar que se debe sustituir el select por uno especial de grados
+                    sessionStorage.setItem('replaceEntitySelect', 'true');
+                    sessionStorage.setItem('gradoOptions', JSON.stringify({
+                        'grado_medio': 'grado medio',
+                        'grado_alto': 'grado alto'
+                    }));
+                    // Limpiar otros modos que puedan interferir
+                    sessionStorage.removeItem('mode');
+                    sessionStorage.removeItem('estadoOptions');
+                    sessionStorage.removeItem('nivelOptions');
                 } catch (e) {
-                    console.warn('No se pudo guardar showEfectividadEmergenciasTitle en sessionStorage', e);
+                    console.warn('No se pudo guardar showEfectividadEmergenciasTitle o gradoOptions en sessionStorage', e);
                 }
             }
 

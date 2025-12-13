@@ -112,20 +112,27 @@ class AdvancedQueryRepository extends BaseRepository {
     return rows;
   }
 
-  // 7. Porcentaje de efectividad de hechiceros de grado medio y alto en misiones críticas con maldiciones especiales
-  async getEffectivenessComparisonCriticalSpecial() {
+  // 7. Porcentaje de efectividad de hechiceros de grado parametrizable en misiones de emergencia crítica con maldiciones especiales
+  async getEffectivenessComparisonCriticalSpecial(grado) {
     const rows = await this.db.query(`
-      SELECT s.grado, s.nombre AS hechicero,
-        COUNT(*) AS total_misiones,
-        SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) AS exitos,
-        ROUND(SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS porcentaje_efectividad
-      FROM Sorcerer s
-      INNER JOIN MissionParticipant mp ON mp.sorcererId = s.id
-      INNER JOIN Mission m ON m.id = mp.missionId
-      INNER JOIN Curse c ON c.id = m.curseId
-      WHERE m.tipo = 'Emergencia Critica' AND c.grado = 'Especial' AND s.grado IN ('Medio', 'Alto')
-      GROUP BY s.grado, s.id
-    `);
+      SELECT
+        s.id AS sorcerer_id,
+        s.nombre,
+        COUNT(DISTINCT m.id) AS total_misiones,
+        AVG(mtu.efectividad) AS promedio_efectividad
+      FROM sorcerer s
+      JOIN mission_participant mp ON mp.sorcerer_id = s.id
+      JOIN mission m ON m.id = mp.mission_id
+      JOIN curse c ON c.id = m.curse_id
+      LEFT JOIN mission_technique_usage mtu
+        ON mtu.mission_id = m.id AND mtu.sorcerer_id = s.id
+      WHERE
+        s.grado = ?
+        AND m.nivel_urgencia = 'emergencia_critica'
+        AND c.grado = 'especial'
+      GROUP BY s.id, s.nombre
+      ORDER BY promedio_efectividad DESC
+    `, [grado]);
     return rows;
   }
 

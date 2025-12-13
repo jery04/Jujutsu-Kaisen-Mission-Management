@@ -44,6 +44,9 @@ module.exports = function registerRoutes(app, db) {
   if (advancedQueryController) {
     app.get('/advanced/effectiveness', advancedQueryController.getSorcererTechniqueEffectiveness);
     app.get('/advanced/top-sorcerers', advancedQueryController.getTopSorcerersByMissionLevel);
+    app.get('/advanced/effectiveness-critical', advancedQueryController.getEffectivenessComparisonCriticalSpecial);
+    // Alias por compatibilidad con frontends antiguos
+    app.get('/advanced/getEffectivenessComparisonCriticalSpecial', advancedQueryController.getEffectivenessComparisonCriticalSpecial);
   }
   // Curses
   app.get('/missions/:id/sorcerers', missionController.getSorcerersForMission);
