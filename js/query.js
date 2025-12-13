@@ -248,9 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const item = document.createElement('div');
       item.className = 'query-item';
       item.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-          <h3 style="margin:0;">${r.hechicero || '-'}</h3>
+        <div style="display:flex;justify-content:flex-start;align-items:center;gap:8px;flex-wrap:wrap;">
           <span style="background:${badgeColor};color:#fff;padding:4px 10px;border-radius:14px;font-size:0.9rem;">${r.clasificacion || '-'}</span>
+          <h3 style="margin:0;">${r.hechicero || '-'}</h3>
         </div>
         <p style="margin:6px 0 0 0;font-size:0.95rem;">
           Grado: <strong>${r.grado || '-'}</strong><br>
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Ocultar formulario de búsqueda si corresponde
         const searchForm = document.getElementById('search-form');
         if (hideSearch && searchForm) {
-          try { searchForm.style.display = 'none'; } catch (_) {}
+          try { searchForm.style.display = 'none'; } catch (_) { }
         }
 
         // Reemplazar el select por opciones de nivel
@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
           placeholder.textContent = 'Selecciona nivel...';
           entitySelect.appendChild(placeholder);
 
-          const niveles = nivelRaw ? JSON.parse(nivelRaw) : ['planificada','urgente','emergencia crítica'];
+          const niveles = nivelRaw ? JSON.parse(nivelRaw) : ['planificada', 'urgente', 'emergencia crítica'];
           (Array.isArray(niveles) ? niveles : []).forEach(n => {
             const opt = document.createElement('option');
             opt.value = n;
@@ -472,8 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
           results.appendChild(tip);
         }
         // Consumir flags para no afectar futuras visitas
-        try { sessionStorage.removeItem('nivelOptions'); } catch (_) {}
-        try { sessionStorage.removeItem('hideSearchForm'); } catch (_) {}
+        try { sessionStorage.removeItem('nivelOptions'); } catch (_) { }
+        try { sessionStorage.removeItem('hideSearchForm'); } catch (_) { }
       }
       // Modo especial: reporte de efectividad de técnicas (botón 4 avanzado)
       if (effectivenessMode) {
@@ -599,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = `${API_BASE}/advanced/top-sorcerers?nivel=${encodeURIComponent(nivel)}`;
             const r = await fetch(url);
             if (!r.ok) throw new Error('HTTP ' + r.status);
-            const payload = await r.json(); 
+            const payload = await r.json();
             console.log('Datos payload:', payload.data);
             console.log('nivel:', Array.isArray(payload.data));
 
