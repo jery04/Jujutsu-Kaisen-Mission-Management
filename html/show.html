@@ -52,6 +52,24 @@
                 <label for="h_fecha_fallecimiento">Fecha de fallecimiento (si aplica)</label>
                 <label id="h_fecha_fallecimiento" aria-label="fecha_fallecimiento" class="entity-label"></label>
 
+                <!-- Mini query: Técnicas adicionales del hechicero -->
+                <fieldset data-for="hechicero-tecnicas" style="display:none">
+                    <legend>Técnicas adicionales</legend>
+                    <div id="sorcerer-techniques-empty" class="entity-label" style="display:none">No hay técnicas adicionales.</div>
+                    <div class="table-wrapper" id="sorcerer-techniques-wrapper">
+                        <table id="sorcerer-techniques-table" class="table" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="sorcerer-techniques-error" class="error" style="display:none"></div>
+                </fieldset>
+
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
                     <p>

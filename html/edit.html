@@ -47,6 +47,17 @@
                 <label for="h_tecnica">Técnica maldita principal</label>
                 <input id="h_tecnica" name="tecnica" type="text" required>
 
+                <div class="multi-tech-block">
+                    <label for="h_tecnica_extra">Técnicas adicionales</label>
+                    <div class="row" style="gap:8px; align-items:center;">
+                        <select id="h_tecnica_extra" aria-label="Técnicas adicionales">
+                            <option value="" selected>-- Selecciona una técnica --</option>
+                        </select>
+                        <button type="button" id="add_tecnica_btn" class="btn-register" style="padding:8px 12px">Añadir</button>
+                    </div>
+                    <div id="tecnicas_list" class="chips" aria-live="polite" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                </div>
+
                 <label for="h_experiencia">Años de experiencia</label>
                 <input id="h_experiencia" name="experiencia" type="number" min="0">
 
@@ -64,14 +75,6 @@
 
                 <label for="h_fecha_fallecimiento">Fecha de fallecimiento (si aplica)</label>
                 <input id="h_fecha_fallecimiento" name="fecha_fallecimiento" type="date">
-
-                <label for="h_tecnica_extra">Técnicas adicionales</label>
-                <div class="chip-input-row">
-                    <input id="h_tecnica_extra" type="text" list="dl_techniques" placeholder="Ej: Expansión de Dominio">
-                    <button type="button" id="addExtraTechBtn" class="btn-register" style="width:auto; padding:8px 12px;">Agregar</button>
-                </div>
-                <div id="extraTechList" class="chip-list"></div>
-                <small class="hint">Se puede eliminar una técnica extra desde la lista.</small>
 
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>
@@ -196,20 +199,10 @@
                 <h2>Reformula los Atributos de Misión</h2>
 
                 <label for="ms_estado">Estado</label>
-                <select id="ms_estado" name="estado" disabled>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en_ejecucion">En ejecución</option>
-                    <option value="completada_exito">Completada con éxito</option>
-                    <option value="completada_fracaso">Completada con fracaso</option>
-                    <option value="cancelada">Cancelada</option>
-                </select>
+                <label id="ms_estado" aria-label="estado" class="entity-label"></label>
 
                 <label for="ms_nivel_urgencia">Nivel de urgencia</label>
-                <select id="ms_nivel_urgencia" name="nivel_urgencia" disabled>
-                    <option value="planificada">Planificada</option>
-                    <option value="urgente">Urgente</option>
-                    <option value="emergencia_critica">Emergencia crítica</option>
-                </select>
+                <label id="ms_nivel_urgencia" aria-label="nivel_urgencia" class="entity-label"></label>
 
                 <label for="ms_ubicacion">Ubicación</label>
                 <input id="ms_ubicacion" name="ubicacion" type="text" list="dl_ubicaciones" disabled>
@@ -231,8 +224,8 @@
                 <label for="ms_danos_colaterales">Daños colaterales</label>
                 <textarea id="ms_danos_colaterales" name="danos_colaterales" rows="3"></textarea>
 
-                <label for="ms_curse_id">ID de la maldición asociada</label>
-                <input id="ms_curse_id" name="curse_id" type="number" min="1" step="1" disabled>
+                <label for="ms_curse_id">Nombre de la maldición asignada</label>
+                <input id="ms_curse_id" name="curse_id" type="text" disabled>
 
                 <div class="info-box">
                     <span style="color:#d00000; font-weight:700;">Info:</span>

@@ -74,7 +74,9 @@ module.exports = {
     const linkRepo = getRepository(db, 'SorcererTechnique');
     const base = await repo.getWithPrincipalById(id);
     try {
-      const extras = await linkRepo.listNonPrincipalNames(id);
+      const extras = typeof linkRepo.listNonPrincipalDetails === 'function'
+        ? await linkRepo.listNonPrincipalDetails(id)
+        : await linkRepo.listNonPrincipalNames(id);
       base.tecnicas_adicionales = extras;
     } catch (_) { /* noop */ }
     return base;

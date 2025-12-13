@@ -4,6 +4,36 @@ const EFFECTIVENESS_MODE = sessionStorage.getItem('showEfectividadTitle') === 't
 document.addEventListener('DOMContentLoaded', () => {
   const titleDiv = document.querySelector('.title');
 
+  // Botón volver: si venimos desde consulta avanzada (queryplus.html), regresar allí.
+  // IMPORTANTE: este handler debe registrarse al cargar la página, no dentro de otros listeners.
+  try {
+    const directBack = document.getElementById('go-back');
+    if (directBack) {
+      const isAdvancedQuery = sessionStorage.getItem('advancedQuery') === 'true';
+      if (isAdvancedQuery) {
+        // Ajustar href visible/real por si el usuario abre en nueva pestaña
+        directBack.setAttribute('href', '/html/queryplus.html');
+      }
+
+      directBack.addEventListener('click', function (e) {
+        e.preventDefault();
+        // Al salir por el botón de regreso, apagar el modo
+        try { sessionStorage.removeItem('mode'); } catch (_) { }
+
+        const fromAdvanced = sessionStorage.getItem('advancedQuery') === 'true';
+        try { sessionStorage.removeItem('advancedQuery'); } catch (_) { }
+
+        if (fromAdvanced) {
+          window.location.href = '/html/queryplus.html';
+          return;
+        }
+
+        const primary = directBack.getAttribute('href') || '/index.html';
+        window.location.href = primary;
+      });
+    }
+  } catch (_) { }
+
   // Nuevo bloque para el botón 7: efectividad en emergencias críticas
   if (sessionStorage.getItem('showEfectividadEmergenciasTitle') === 'true') {
     titleDiv.innerHTML = `
@@ -990,20 +1020,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Borrar: petición DELETE + animación de salida
-
-        // robust go-back handler para el enlace con id 'go-back'
-        try {
-          const directBack = document.getElementById('go-back');
-          if (directBack) {
-            directBack.addEventListener('click', function (e) {
-              e.preventDefault();
-              // Al salir por el botón de regreso, apagar el modo
-              try { sessionStorage.removeItem('mode'); } catch (_) { }
-              const primary = directBack.getAttribute('href') || '/index.html';
-              window.location.href = primary;
-            });
-          }
-        } catch (e) { }
 
         // ...existing code...
         // Click en el item (fuera de botones) -> ver detalle

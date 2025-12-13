@@ -126,6 +126,23 @@ textarea:focus {
     border-color: #1e90ff;
 }
 
+/* Keep disabled controls visually consistent (avoid browser default gray) */
+input:disabled,
+select:disabled,
+textarea:disabled {
+    color: #222;
+    background: #fafafa;
+    opacity: 1;
+    -webkit-text-fill-color: #222;
+    cursor: not-allowed;
+}
+
+input:disabled:hover,
+select:disabled:hover,
+textarea:disabled:hover {
+    box-shadow: none;
+}
+
 /* textarea */
 textarea {
     resize: vertical;
@@ -143,8 +160,21 @@ textarea {
     align-items: center;
 }
 
-.multi-tech-block input[type="text"]#h_tecnica_extra {
+.multi-tech-block #h_tecnica_extra {
+    flex: 1;
     margin-bottom: 0; /* avoid extra vertical space inside the row */
+}
+
+/* edit.html uses this row for extra techniques */
+.chip-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.chip-input-row #h_tecnica_extra {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 /* .row .col */

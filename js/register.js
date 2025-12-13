@@ -25,6 +25,48 @@
     const principalTechInput = document.getElementById('h_tecnica');
     let extraTechs = [];
 
+    async function prefillTechniqueSelect() {
+        if (!extraTechInput || extraTechInput.tagName !== 'SELECT') return;
+
+        // Si ya tiene más que el placeholder, no volver a cargar.
+        if (extraTechInput.options && extraTechInput.options.length > 1) return;
+
+        try {
+            const r = await fetch(`${API_BASE}/technique`);
+            if (!r.ok) return;
+            const payload = await r.json();
+            const list = Array.isArray(payload)
+                ? payload
+                : (payload && Array.isArray(payload.data) ? payload.data : []);
+            if (!Array.isArray(list) || list.length === 0) return;
+
+            const names = list
+                .map(t => (t && (t.nombre || t.name)) ? String(t.nombre || t.name).trim() : '')
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b, 'es'));
+
+            const existing = new Set(Array.from(extraTechInput.options).map(o => String(o.value || '').toLowerCase()));
+            names.forEach(name => {
+                if (!name) return;
+                const key = name.toLowerCase();
+                if (existing.has(key)) return;
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                extraTechInput.appendChild(opt);
+                existing.add(key);
+            });
+        } catch (_) {
+            // no-op
+        }
+    }
+
+    function clearExtraTechs() {
+        extraTechs = [];
+        if (extraTechInput) extraTechInput.value = '';
+        renderExtraTechs();
+    }
+
     function renderExtraTechs() {
         if (!techListEl) return;
         techListEl.innerHTML = '';
@@ -68,6 +110,10 @@
             // y evita "An invalid form control is not focusable"
             fs.disabled = !active;
         });
+        if (value === 'hechicero') {
+            // Cargar técnicas de la BD para el select de técnicas adicionales
+            prefillTechniqueSelect();
+        }
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
             prefillDatalists().catch(() => { /* no locations now; only sorcerers list if exists */ });
@@ -100,8 +146,7 @@
             showFor(e.target.value);
             // Al cambiar de entidad, limpiar técnicas adicionales
             if (e.target.value !== 'hechicero') {
-                extraTechs = [];
-                renderExtraTechs();
+                clearExtraTechs();
             }
         });
         showFor(entitySelect.value);
@@ -143,8 +188,7 @@
             clearResult();
             // Si estamos en hechicero, también limpiar técnicas adicionales
             if (activeFs.getAttribute('data-for') === 'hechicero') {
-                extraTechs = [];
-                renderExtraTechs();
+                clearExtraTechs();
             }
         });
     }
@@ -156,11 +200,11 @@
             extraTechInput.value = '';
             extraTechInput.focus();
         });
-        // Enter en el input añade también
-        extraTechInput.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Enter') { ev.preventDefault(); addExtraTech(extraTechInput.value); extraTechInput.value = ''; }
-        });
+        // Si fuera un input de texto, Enter añadiría. Ahora es select, así que no hace falta.
     }
+
+    // Precargar opciones de técnicas para el select de técnicas adicionales
+    prefillTechniqueSelect();
 
     // Envío del formulario activo
     if (form) form.addEventListener('submit', async e => {
@@ -279,6 +323,10 @@
             });
 
             form.reset();
+            // Si se registró un hechicero, limpiar también las técnicas adicionales (chips)
+            if (entityType === 'hechicero') {
+                clearExtraTechs();
+            }
             // No llamamos a showFor() aquí para no tocar el mensaje ni estilos.
             console.log('Registro guardado:', result);
 

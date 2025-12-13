@@ -57,6 +57,22 @@ class SorcererTechniqueRepository extends BaseRepository {
     return rows.map(r => r.nombre).filter(Boolean);
   }
 
+  async listNonPrincipalDetails(sorcererId) {
+    const qb = this.createQueryBuilder('st')
+      .innerJoin('technique', 't', 't.id = st.technique_id')
+      .select([
+        't.nombre AS nombre',
+        't.tipo AS tipo'
+      ])
+      .where('st.sorcerer_id = :sid', { sid: Number(sorcererId) })
+      .andWhere('st.es_principal = 0')
+      .orderBy('t.nombre', 'ASC');
+    const rows = await qb.getRawMany();
+    return rows
+      .map(r => ({ nombre: r.nombre, tipo: r.tipo }))
+      .filter(r => r && r.nombre);
+  }
+
   async listBySorcerer(sorcererId) {
     return await this.find({ where: { sorcerer_id: Number(sorcererId) }, relations: ['technique'] });
   }

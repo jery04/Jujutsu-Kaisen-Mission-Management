@@ -60,7 +60,9 @@
                 <div class="multi-tech-block">
                     <label for="h_tecnica_extra">Técnicas adicionales</label>
                     <div class="row" style="gap:8px; align-items:center;">
-                        <input id="h_tecnica_extra" type="text" placeholder="Escribe una técnica y pulsa Añadir">
+                        <select id="h_tecnica_extra" aria-label="Técnicas adicionales">
+                            <option value="" selected>-- Selecciona una técnica --</option>
+                        </select>
                         <button type="button" id="add_tecnica_btn" class="btn-register" style="padding:8px 12px">Añadir</button>
                     </div>
                     <div id="tecnicas_list" class="chips" aria-live="polite" style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;"></div>

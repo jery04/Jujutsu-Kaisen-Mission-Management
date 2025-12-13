@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn('No se pudo establecer noInitialList en sessionStorage', e);
             }
 
+            // Marcar que estamos en modo consulta avanzada para que el botón volver regrese a queryplus.html
+            try {
+                sessionStorage.setItem('advancedQuery', 'true');
+            } catch (e) {
+                console.warn('No se pudo establecer advancedQuery en sessionStorage', e);
+            }
+
             if (idx === 0) {
                 // Bloque para el botón 1
                 try {

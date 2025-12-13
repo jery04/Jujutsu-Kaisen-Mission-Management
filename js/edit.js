@@ -29,9 +29,76 @@ function isAdmin() {
   const goBackBtn = document.getElementById('goBackBtn');
   const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
   const extraTechInput = document.getElementById('h_tecnica_extra');
-  const addExtraTechBtn = document.getElementById('addExtraTechBtn');
-  const extraTechList = document.getElementById('extraTechList');
+  const principalTechInput = document.getElementById('h_tecnica');
+  const addExtraTechBtn = document.getElementById('add_tecnica_btn') || document.getElementById('addExtraTechBtn');
+  const extraTechList = document.getElementById('tecnicas_list') || document.getElementById('extraTechList');
   const additionalTechs = [];
+
+  function norm(s) {
+    return String(s || '').trim().toLowerCase();
+  }
+
+  function techName(v) {
+    if (typeof v === 'string') return v.trim();
+    if (v == null) return '';
+    if (typeof v === 'object') {
+      const direct = v.nombre ?? v.name ?? v.tecnica ?? v.technique ?? v.nombre_tecnica ?? v.technique_name;
+      if (direct != null) return String(direct).trim();
+      const nested = v.technique;
+      if (nested && (nested.nombre || nested.name)) return String(nested.nombre || nested.name).trim();
+    }
+    return String(v).trim();
+  }
+
+  function normalizeAdditionalTechs() {
+    const principalLower = norm(principalTechInput && principalTechInput.value);
+    const seen = new Set();
+    const normalized = additionalTechs
+      .map(techName)
+      .map(s => String(s || '').trim())
+      .filter(Boolean)
+      .filter(s => !principalLower || norm(s) !== principalLower)
+      .filter((s) => {
+        const key = norm(s);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    additionalTechs.splice(0, additionalTechs.length, ...normalized);
+  }
+
+  function updateExtraTechSelectDisabledOptions() {
+    if (!extraTechInput || extraTechInput.tagName !== 'SELECT') return;
+    const principalLower = norm(principalTechInput && principalTechInput.value);
+    const used = new Set(additionalTechs.map(t => norm(techName(t))).filter(Boolean));
+    const opts = Array.from(extraTechInput.options);
+    opts.forEach((opt, idx) => {
+      if (idx === 0) {
+        opt.disabled = false;
+        return;
+      }
+      const v = norm(opt.value);
+      opt.disabled = (!v) || (v === principalLower) || used.has(v);
+    });
+    const selectedLower = norm(extraTechInput.value);
+    if (selectedLower && (selectedLower === principalLower || used.has(selectedLower))) {
+      extraTechInput.value = '';
+    }
+  }
+
+  function setTechniqueSelectOptions(names) {
+    if (!extraTechInput || extraTechInput.tagName !== 'SELECT') return;
+    const placeholder = extraTechInput.options[0];
+    extraTechInput.innerHTML = '';
+    if (placeholder) extraTechInput.appendChild(placeholder);
+    for (const n of names) {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      extraTechInput.appendChild(opt);
+    }
+    updateExtraTechSelectDisabledOptions();
+  }
 
   // Parse params (entity, id)
   const params = new URLSearchParams(window.location.search);
@@ -46,7 +113,6 @@ function isAdmin() {
     resource: '/resources',
     mission: '/missions',
     missions: '/missions'
-
   };
 
   function showFor(value) {
@@ -61,7 +127,9 @@ function isAdmin() {
         fs.disabled = !active;
       }
     });
-    if (value === 'maldicion' || value === 'mision') { prefillDatalists().catch((e) => { console.debug('prefill datalists (prefill) failed', e); }); }
+    if (value === 'maldicion' || value === 'mision' || value === 'hechicero') {
+      prefillDatalists().catch((e) => { console.debug('prefill datalists (prefill) failed', e); });
+    }
   }
 
   function clearResult() {
@@ -92,6 +160,7 @@ function isAdmin() {
     const dlHech = document.getElementById('dl_hechiceros');
     const dlUbi = document.getElementById('dl_ubicaciones');
     const dlTech = document.getElementById('dl_techniques');
+    const techSelect = document.getElementById('h_tecnica_extra');
 
     // Helper to append unique option
     const appendUnique = (dl, value) => {
@@ -99,6 +168,19 @@ function isAdmin() {
       // avoid duplicates
       for (const ch of dl.children) { if (ch.value === value) return; }
       const opt = document.createElement('option'); opt.value = value; dl.appendChild(opt);
+    };
+
+    const appendUniqueToSelect = (sel, value) => {
+      if (!sel || !value || sel.tagName !== 'SELECT') return;
+      const key = String(value).trim().toLowerCase();
+      if (!key) return;
+      for (const opt of sel.options) {
+        if (String(opt.value || '').trim().toLowerCase() === key) return;
+      }
+      const o = document.createElement('option');
+      o.value = value;
+      o.textContent = value;
+      sel.appendChild(o);
     };
 
     // Fetch hechiceros
@@ -128,14 +210,26 @@ function isAdmin() {
       } catch (e) { console.debug('prefill datalists (ubicaciones) error', e); }
     }
 
-    // Fetch técnicas para autocompletar
-    if (dlTech && dlTech.children.length === 0) {
+    // Fetch técnicas para autocompletar / select
+    const needsTechDatalist = dlTech && dlTech.children.length === 0;
+    const needsTechSelect = techSelect && techSelect.tagName === 'SELECT' && techSelect.options.length <= 1;
+    if (needsTechDatalist || needsTechSelect) {
       try {
         const r3 = await fetch(API_BASE + '/technique');
         if (r3.ok) {
-          const list = await r3.json();
+          const payload = await r3.json();
+          const list = Array.isArray(payload)
+            ? payload
+            : (payload && Array.isArray(payload.data) ? payload.data : []);
           if (Array.isArray(list)) {
-            list.forEach(t => { if (t && t.nombre) appendUnique(dlTech, t.nombre); });
+            list
+              .map(t => (t && (t.nombre || t.name)) ? String(t.nombre || t.name).trim() : '')
+              .filter(Boolean)
+              .sort((a, b) => a.localeCompare(b, 'es'))
+              .forEach((name) => {
+                appendUnique(dlTech, name);
+                appendUniqueToSelect(techSelect, name);
+              });
           }
         }
       } catch (e) { console.debug('prefill datalists (techniques) error', e); }
@@ -144,25 +238,26 @@ function isAdmin() {
 
   function renderAdditionalTechs() {
     if (!extraTechList) return;
+    normalizeAdditionalTechs();
     extraTechList.innerHTML = '';
-    additionalTechs.forEach((name) => {
+    additionalTechs.forEach((name, idx) => {
       const chip = document.createElement('span');
       chip.className = 'chip';
-      chip.textContent = name;
+      const txt = document.createElement('span');
+      txt.textContent = techName(name);
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = '×';
       btn.className = 'chip-remove';
       btn.addEventListener('click', () => {
-        const idx = additionalTechs.indexOf(name);
-        if (idx >= 0) {
-          additionalTechs.splice(idx, 1);
-          renderAdditionalTechs();
-        }
+        additionalTechs.splice(idx, 1);
+        renderAdditionalTechs();
       });
+      chip.appendChild(txt);
       chip.appendChild(btn);
       extraTechList.appendChild(chip);
     });
+    updateExtraTechSelectDisabledOptions();
   }
 
   function formatLocalDateTime(input) {
@@ -191,6 +286,7 @@ function isAdmin() {
       const r = await fetch(`${API_BASE}${base}/${encodeURIComponent(id)}`);
       let record = await r.json();
       if (record && record.mission) record = record.mission;
+      console.log('Registro precargado:', record.fecha_inicio, record.estado, record.nivel_urgencia);
       if (!r.ok || !record) {
         if (resultEl) {
           resultEl.style.display = 'block';
@@ -245,12 +341,11 @@ function isAdmin() {
         try { window._recordCurrent = { grado: record.grado, anios_experiencia: record.anios_experiencia, estado_operativo: record.estado_operativo || record.estado || 'activo' }; } catch (e) { /* noop */ }
         // Tecnicas adicionales si vienen del backend
         if (Array.isArray(record.tecnicas_adicionales)) {
-          additionalTechs.splice(0, additionalTechs.length, ...record.tecnicas_adicionales);
-          renderAdditionalTechs();
+          additionalTechs.splice(0, additionalTechs.length, ...record.tecnicas_adicionales.map(techName));
         } else {
           additionalTechs.splice(0, additionalTechs.length);
-          renderAdditionalTechs();
         }
+        renderAdditionalTechs();
         // Ocultar estado_operativo para usuarios no admin
         const estadoField = document.getElementById('h_estado_operativo');
         const estadoLabel = document.querySelector('label[for="h_estado_operativo"]');
@@ -305,17 +400,35 @@ function isAdmin() {
         const danosText = document.getElementById('ms_danos_colaterales');
         const curseInput = document.getElementById('ms_curse_id');
 
-        if (estadoSelect) estadoSelect.value = record.estado || 'pendiente';
-        if (urgenciaSelect) urgenciaSelect.value = record.nivel_urgencia || 'planificada';
+        // En edición, estado y urgencia se muestran como labels (solo lectura)
+        if (estadoSelect) estadoSelect.textContent = record.estado || 'pendiente';
+        if (urgenciaSelect) urgenciaSelect.textContent = record.nivel_urgencia || 'planificada';
         if (ubicacionInput) ubicacionInput.value = record.ubicacion || record.lugar || '';
         if (fechaInicioInput) fechaInicioInput.value = formatLocalDateTime(record.fecha_inicio);
         if (fechaFinInput) fechaFinInput.value = formatLocalDateTime(record.fecha_fin);
         if (descText) descText.value = record.descripcion_evento || '';
         if (danosText) danosText.value = record.danos_colaterales || '';
-        const curseId = record.curse_id || (record.curse && record.curse.id);
-        if (curseInput) curseInput.value = curseId != null ? curseId : '';
+        const curseId = (record.curse_id != null ? record.curse_id : (record.curse && record.curse.id));
+        // Mostrar el nombre de la maldición asignada (join vía relación `curse` o fallback a /curses/:id)
+        let curseName = '';
+        try {
+          if (record && record.curse) {
+            if (typeof record.curse.nombre === 'string') curseName = record.curse.nombre;
+            else if (typeof record.curse.name === 'string') curseName = record.curse.name;
+          }
+        } catch (e) { /* noop */ }
+        if (!curseName && curseId != null) {
+          try {
+            const rc = await fetch(`${API_BASE}/curses/${encodeURIComponent(curseId)}`);
+            if (rc.ok) {
+              const curseObj = await rc.json();
+              curseName = (curseObj && (curseObj.nombre || curseObj.name)) || '';
+            }
+          } catch (e) { console.debug('fetch curse name failed', e); }
+        }
+        if (curseInput) curseInput.value = curseName || (curseId != null ? String(curseId) : '');
         // Mantener campos no editables como bloqueados por seguridad
-        [estadoSelect, urgenciaSelect, ubicacionInput, fechaInicioInput, fechaFinInput, curseInput].forEach((el) => {
+        [ubicacionInput, fechaInicioInput, fechaFinInput, curseInput].forEach((el) => {
           if (el) el.disabled = true;
         });
         prefillDatalists().catch((e) => { console.debug('prefill datalists mission failed', e); });
@@ -353,13 +466,25 @@ function isAdmin() {
     addExtraTechBtn.addEventListener('click', () => {
       const val = String(extraTechInput.value || '').trim();
       if (!val) return;
+      const mainLower = norm(principalTechInput && principalTechInput.value);
+      if (mainLower && norm(val) === mainLower) {
+        extraTechInput.value = '';
+        updateExtraTechSelectDisabledOptions();
+        return;
+      }
       const lower = val.toLowerCase();
-      if (!additionalTechs.some(t => t.toLowerCase() === lower)) {
+      if (!additionalTechs.some(t => norm(techName(t)) === lower)) {
         additionalTechs.push(val);
         renderAdditionalTechs();
       }
       extraTechInput.value = '';
+      updateExtraTechSelectDisabledOptions();
     });
+  }
+
+  if (principalTechInput) {
+    principalTechInput.addEventListener('input', updateExtraTechSelectDisabledOptions);
+    principalTechInput.addEventListener('change', updateExtraTechSelectDisabledOptions);
   }
 
   function buildUpdatePayload(fsKey) {
@@ -381,7 +506,8 @@ function isAdmin() {
         // En creación, si no se especifica, usar 'estudiante' por defecto
         if (!grado) grado = 'estudiante';
       }
-      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.slice(), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
+      normalizeAdditionalTechs();
+      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.map(techName).filter(Boolean), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
     } else if (fsKey === 'tecnica') {
       // Enviar los campos como string, nunca null
       const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
@@ -545,6 +671,7 @@ function isAdmin() {
   // Initialization
   const fsKeyInit = normalizeEntity(entity);
   showFor(fsKeyInit);
+  prefillDatalists().catch((e) => { console.debug('prefill datalists init failed', e); });
   loadExisting().catch((e) => { console.debug('loadExisting failed', e); });
   // Helper modal success (copia ligera de register.js hasta refactor común)
   function showSuccessModal({ title, bodyHtml }) {

@@ -483,6 +483,25 @@ main {
     border-radius: 0 20px 20px 0;
 }
 
+/* queryplus.html: ajustes locales (no afectan otras páginas) */
+.queryplus-page .btn-illustration {
+    width: 45%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.queryplus-page #back-to-index {
+    box-sizing: border-box;
+    padding: 20px 35% 20px 26px;
+    min-height: 80px;
+}
+
+.queryplus-page #back-to-index .btn-illustration {
+    object-fit: contain;
+    padding: 18px;
+    opacity: 0.35;
+}
+
 /* Responsive: en teléfonos (ancho <= 767px) usar 55% para que la ilustración sea más grande */
 /* @media (max-width: 1200px) */
 @media (max-width: 1200px) {
@@ -592,12 +611,12 @@ html.flow-enter header,
 html.flow-enter main {
     opacity: 0;
     transform: translateY(-28px);
+    will-change: transform, opacity;
 }
 
 /* header, main */
 header,
 main {
-    will-change: transform, opacity;
     transition: transform 520ms cubic-bezier(.22, .61, .36, 1),
         opacity 520ms ease;
 }

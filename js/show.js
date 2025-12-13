@@ -38,6 +38,107 @@
         if (el) el.textContent = value != null && value !== '' ? String(value) : '—';
     }
 
+    function setLines(id, value) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        // Normalizar: permitir array de strings/objetos, string separada por comas o saltos de línea, o null.
+        const lines = normalizeToLines(value);
+
+        if (!lines.length) {
+            el.textContent = '—';
+            return;
+        }
+        el.innerHTML = lines.map(l => escapeHtml(l)).join('<br>');
+    }
+
+    function normalizeToLines(value) {
+        if (value == null) return [];
+
+        if (Array.isArray(value)) {
+            return value
+                .map(v => (v && typeof v === 'object') ? (v.nombre ?? v.name ?? '') : v)
+                .map(v => String(v ?? '').trim())
+                .filter(Boolean);
+        }
+
+        if (typeof value === 'string') {
+            const raw = value.trim();
+            if (!raw) return [];
+            const parts = raw.includes(',') ? raw.split(',') : raw.split(/\r?\n/);
+            return parts.map(p => String(p ?? '').trim()).filter(Boolean);
+        }
+
+        if (typeof value === 'object') {
+            const maybeName = value.nombre ?? value.name;
+            return maybeName ? [String(maybeName).trim()].filter(Boolean) : [];
+        }
+
+        return [String(value).trim()].filter(Boolean);
+    }
+
+    function normalizeToTechniqueRows(value) {
+        if (value == null) return [];
+
+        if (Array.isArray(value)) {
+            return value
+                .map(v => {
+                    if (v && typeof v === 'object') {
+                        const nombre = (v.nombre ?? v.name ?? '').toString().trim();
+                        const tipo = (v.tipo ?? v.type ?? '').toString().trim();
+                        return { nombre, tipo };
+                    }
+                    const nombre = String(v ?? '').trim();
+                    return { nombre, tipo: '' };
+                })
+                .filter(r => r.nombre);
+        }
+
+        if (typeof value === 'string') {
+            const raw = value.trim();
+            if (!raw) return [];
+            const parts = raw.includes(',') ? raw.split(',') : raw.split(/\r?\n/);
+            return parts.map(p => ({ nombre: String(p ?? '').trim(), tipo: '' })).filter(r => r.nombre);
+        }
+
+        if (typeof value === 'object') {
+            const nombre = (value.nombre ?? value.name ?? '').toString().trim();
+            const tipo = (value.tipo ?? value.type ?? '').toString().trim();
+            return nombre ? [{ nombre, tipo }] : [];
+        }
+
+        const nombre = String(value).trim();
+        return nombre ? [{ nombre, tipo: '' }] : [];
+    }
+
+    function renderSorcererSecondaryTechniques(value) {
+        const fs = document.querySelector('fieldset[data-for="hechicero-tecnicas"]');
+        const wrapper = document.getElementById('sorcerer-techniques-wrapper');
+        const tbody = document.querySelector('#sorcerer-techniques-table tbody');
+        const empty = document.getElementById('sorcerer-techniques-empty');
+        const errBox = document.getElementById('sorcerer-techniques-error');
+
+        if (!fs) return;
+        fs.style.display = '';
+        if (errBox) { errBox.textContent = ''; errBox.style.display = 'none'; }
+
+        const rows = normalizeToTechniqueRows(value);
+        if (!rows.length) {
+            if (empty) empty.style.display = '';
+            if (wrapper) wrapper.style.display = 'none';
+            if (tbody) tbody.innerHTML = '';
+            return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        if (wrapper) wrapper.style.display = '';
+        if (tbody) {
+            tbody.innerHTML = rows
+                .map(r => `<tr><td>${escapeHtml(r.nombre)}</td><td>${escapeHtml(r.tipo || '—')}</td></tr>`)
+                .join('');
+        }
+    }
+
     async function loadDetail() {
         if (!entity || !id) {
             resultEl.style.display = 'block';
@@ -91,6 +192,9 @@
                 } else {
                     setText('h_fecha_fallecimiento', null);
                 }
+
+                // Técnicas secundarias/adicionales: mostrarlas como tabla
+                renderSorcererSecondaryTechniques(ent && (ent.tecnicas_adicionales ?? ent.tecnicas_secundarias ?? ent.tecnicas ?? ent.tecnica_secundaria));
             } else if (fsKey === 'tecnica') {
                 setText('t_nombre', ent && ent.nombre);
                 setText('t_tipo', ent && ent.tipo);
@@ -126,7 +230,28 @@
                 const m = ent && ent.mission ? ent.mission : ent;
                 console.log('[show.js] mostrando misión:', m);
                 setText('mi_nombre', m && m.id ? `Misión #${m.id}` : 'Misión');
-                setText('mi_maldicion', m && m.descripcion_evento);
+                // Mostrar el nombre de la maldición asociada (curse)
+                if (m && m.curse && m.curse.nombre) {
+                    setText('mi_maldicion', m.curse.nombre);
+
+                setText('mi_descripcion', m && m.descripcion_evento);
+                } else if (m && m.curse_id) {
+                    // Si solo hay curse_id, buscar el nombre de la maldición
+                    try {
+                        const curseResp = await fetch(`${API_BASE}/curses/${encodeURIComponent(m.curse_id)}`);
+                        if (curseResp.ok) {
+                            const curseData = await curseResp.json();
+                            const curseEnt = curseData && curseData.data ? curseData.data : curseData;
+                            setText('mi_maldicion', curseEnt && curseEnt.nombre ? curseEnt.nombre : '—');
+                        } else {
+                            setText('mi_maldicion', '—');
+                        }
+                    } catch {
+                        setText('mi_maldicion', '—');
+                    }
+                } else {
+                    setText('mi_maldicion', m && m.descripcion_evento);
+                }
                 setText('mi_estado', m && m.estado);
                 // Fecha inicio
                 if (m && m.fecha_inicio) {
