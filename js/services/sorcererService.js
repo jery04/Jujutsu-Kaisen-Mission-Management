@@ -85,10 +85,16 @@ module.exports = {
   async getById(db, id) {
     const repo = getRepository(db, 'Sorcerer');
     const linkRepo = getRepository(db, 'SorcererTechnique');
+    const subRepo = getRepository(db, 'SorcererSubordination');
     const base = await repo.getWithPrincipalById(id);
     try {
       const extras = await linkRepo.listNonPrincipalNames(id);
       base.tecnicas_adicionales = extras;
+    } catch (_) { /* noop */ }
+    // Incluir nombre del superior si existe relación activa
+    try {
+      const supName = await subRepo.findCurrentSuperiorName(Number(id));
+      if (supName) base.superior = supName;
     } catch (_) { /* noop */ }
     return base;
   },

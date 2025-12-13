@@ -77,6 +77,7 @@
                 setText('h_grado', ent && ent.grado);
                 const mainTechName = ent && ent.tecnica_principal && ent.tecnica_principal.nombre ? ent.tecnica_principal.nombre : (ent && ent.tecnica_principal ? ent.tecnica_principal : '');
                 setText('h_tecnica', mainTechName);
+                setText('h_superior', ent && ent.superior);
                 setText('h_experiencia', ent && ent.anios_experiencia);
                 // Nuevos campos para visualización (solo mostrar, no inputs)
                 setText('h_estado_operativo', ent && (ent.estado_operativo ?? ent.estado));
