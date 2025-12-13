@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
           placeholder.textContent = 'Selecciona nivel...';
           entitySelect.appendChild(placeholder);
 
-          const niveles = nivelRaw ? JSON.parse(nivelRaw) : ['planificada','urgente','emergencia crítica'];
+          const niveles = nivelRaw ? JSON.parse(nivelRaw) : ['planificada','urgente','emergencia critica'];
           (Array.isArray(niveles) ? niveles : []).forEach(n => {
             const opt = document.createElement('option');
             opt.value = n;

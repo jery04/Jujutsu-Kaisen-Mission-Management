@@ -20,7 +20,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 1. Consultar maldiciones por estado
   async getCursesByState(estado) {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT c.nombre, c.ubicacion, c.grado, s.nombre AS hechicero_asignado
       FROM Curse c
       LEFT JOIN PrincipalAssignment pa ON pa.curseId = c.id
@@ -32,7 +32,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 2. Misiones de un hechicero
   async getMissionsBySorcerer(sorcererId) {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT m.fecha, m.resultado
       FROM Mission m
       INNER JOIN MissionParticipant mp ON mp.missionId = m.id
@@ -43,7 +43,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 3. Misiones exitosas en rango de fechas
   async getSuccessfulMissionsInRange(fechaInicio, fechaFin) {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT m.ubicacion, c.nombre AS maldicion_enfrentada,
         GROUP_CONCAT(DISTINCT s.nombre) AS hechiceros_participantes,
         GROUP_CONCAT(DISTINCT t.nombre) AS tecnicas_utilizadas
@@ -61,7 +61,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 4. Promedio de efectividad de técnicas por hechicero
   async getSorcererTechniqueEffectiveness() {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT s.nombre AS hechicero,
         AVG(mtu.efectividad) AS promedio_efectividad,
         CASE
@@ -78,7 +78,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 5. Top 3 hechiceros por nivel de misión (filtra por nivel)
   async getTopSorcerersByMissionLevel(nivel) {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT m.nivel_urgencia AS nivel, s.nombre AS hechicero,
         COUNT(*) AS total_misiones,
         SUM(CASE WHEN m.estado = 'completada' THEN 1 ELSE 0 END) AS exitos
@@ -90,12 +90,13 @@ class AdvancedQueryRepository extends BaseRepository {
       ORDER BY exitos DESC
       LIMIT 3
     `, [nivel]);
+    console.log('SIUUUUUUUUUUUUUU',rows, nivel);
     return rows;
   }
 
   // 6. Relación de hechicero y discípulos/equipo, conteo de misiones exitosas/fallidas
   async getSorcererTeamPerformance() {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT s.nombre AS hechicero,
         GROUP_CONCAT(sd.nombre) AS discipulos_equipo,
         SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) AS misiones_exitosas,
@@ -113,7 +114,7 @@ class AdvancedQueryRepository extends BaseRepository {
 
   // 7. Porcentaje de efectividad de hechiceros de grado medio y alto en misiones críticas con maldiciones especiales
   async getEffectivenessComparisonCriticalSpecial() {
-    const [rows] = await this.db.query(`
+    const rows = await this.db.query(`
       SELECT s.grado, s.nombre AS hechicero,
         COUNT(*) AS total_misiones,
         SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) AS exitos,

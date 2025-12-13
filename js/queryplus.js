@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         sessionStorage.setItem('nivelOptions', JSON.stringify([
                             'planificada',
                             'urgente',
-                            'emergencia crítica'
+                            'emergencia_critica'
                         ]));
                     } catch (e) {
                         console.warn('No se pudo configurar el modo Top Hechiceros', e);
