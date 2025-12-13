@@ -95,7 +95,7 @@ if (process.env.NODE_ENV === 'test') {
     username: process.env.DB_USER || 'root',
 
     // Ensure password is a string to satisfy mysql2 auth
-    password: String(process.env.DB_PASSWORD || '1234'),
+    password: String(process.env.DB_PASSWORD || 'Alexby9511*'),
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
@@ -278,6 +278,22 @@ if (process.env.NODE_ENV === 'test') {
               } else {
                 await missionRepo.update(m.id, { last_evaluated_at: tick });
                 app.get('io')?.emit('mission:progress', { mission_id: m.id, date: tick });
+
+                // Registrar técnicas usadas del día dentro del flujo de continuación
+                try {
+                  const { applyDailyTechniqueUsage } = require('./services/autoTechniqueUsageService');
+                  await applyDailyTechniqueUsage(dbConn, Number(m.id), tick);
+                } catch (e) {
+                  console.warn('[Scheduler] Error registrando técnicas diarias:', e.message);
+                }
+
+                // Traslado automático: refactorizado a servicio
+                try {
+                  const { applyAutoTransfers } = require('./services/autoTransferService');
+                  await applyAutoTransfers(dbConn, m, tick);
+                } catch (e) {
+                  console.warn('[Scheduler] Error aplicando traslado automático:', e.message);
+                }
               }
             }
           }
@@ -289,7 +305,8 @@ if (process.env.NODE_ENV === 'test') {
       events.on('mission:created', (payload) => io.emit('mission:created', payload));
       events.on('mission:closed', (payload) => io.emit('mission:closed', payload));
       events.on('mission:started', (payload) => io.emit('mission:started', payload));
-      events.on('transfer:updated', (payload) => io.emit('transfer:updated', payload));
+      // No emitir eventos de transfer al frontend según solicitud
+      // events.on('transfer:updated', (payload) => io.emit('transfer:updated', payload));
 
       // Reemplazar listen para usar httpServer
       app._httpServer = httpServer;
