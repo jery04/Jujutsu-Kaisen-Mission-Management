@@ -17,6 +17,9 @@ const sorcererCreate = z.object({
   tecnica: z.string().trim().min(1).optional(),
   // Lista opcional de técnicas adicionales por nombre
   tecnicas_adicionales: z.array(z.string().trim().min(1)).optional()
+  ,
+  // Superior opcional por nombre
+  superior: z.string().trim().min(1).optional()
 });
 
 const sorcererUpdate = sorcererCreate.partial();

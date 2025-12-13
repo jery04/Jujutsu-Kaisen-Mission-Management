@@ -57,6 +57,10 @@
                 <label for="h_tecnica">Técnica maldita principal</label>
                 <input id="h_tecnica" name="tecnica" type="text" required>
 
+                <label for="h_superior">Superior (opcional)</label>
+                <input id="h_superior" name="superior" type="text" placeholder="Selecciona superior" list="dl_superior" autocomplete="off">
+                <datalist id="dl_superior"><!-- opciones dinámicas --></datalist>
+
                 <div class="multi-tech-block">
                     <label for="h_tecnica_extra">Técnicas adicionales</label>
                     <div class="row" style="gap:8px; align-items:center;">
@@ -95,7 +99,7 @@
             <!-- Técnica maldita -->
             <fieldset data-for="tecnica" style="display:none">
                 <h2>Registra una Técnica Maldita</h2>
-                
+
                 <label for="t_nombre">Nombre</label>
                 <input id="t_nombre" name="nombre" type="text" required>
 
@@ -107,7 +111,7 @@
                     <option value="restriccion">Restricción</option>
                     <option value="soporte">Soporte</option>
                 </select>
-                
+
 
                 <label for="t_descripcion">Descripción</label>
                 <textarea id="t_descripcion" name="descripcion" rows="3" placeholder="Describe brevemente la técnica" required></textarea>

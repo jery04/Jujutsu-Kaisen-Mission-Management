@@ -5,7 +5,9 @@ module.exports = {
     const sorcererRepo = getRepository(db, 'Sorcerer');
     const techniqueRepo = getRepository(db, 'Technique');
     const linkRepo = getRepository(db, 'SorcererTechnique');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica, tecnicas_adicionales } = payload || {};
+    const subRepo = getRepository(db, 'SorcererSubordination');
+    const timeService = new (require('./TimeService'))(db);
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica, tecnicas_adicionales, superior } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
     // Validaciones previas: la técnica principal es obligatoria y debe existir
@@ -55,6 +57,17 @@ module.exports = {
         await linkRepo.addNonPrincipal(saved.id, t.id, 0);
       }
     }
+
+    // Relación de subordinación opcional
+    if (saved && typeof superior === 'string' && superior.trim() !== '') {
+      const supName = superior.trim();
+      const supEntity = await sorcererRepo.findOne({ where: { nombre: supName } });
+      if (!supEntity) { const err = new Error('Superior no encontrado'); err.status = 404; throw err; }
+      const fechaInicio = await timeService.getNow();
+      await subRepo.addRelation(supEntity.id, saved.id, fechaInicio);
+      // Añadir una vista ligera del superior en la respuesta
+      result = { ...result, superior: supName };
+    }
     // Ya no se vincula con UserSorcerer, el campo createBy lo registra
     return result;
   },
@@ -83,7 +96,8 @@ module.exports = {
     const repo = getRepository(db, 'Sorcerer');
     const linkRepo = getRepository(db, 'SorcererTechnique');
     const techniqueRepo = getRepository(db, 'Technique');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
+    const subRepo = getRepository(db, 'SorcererSubordination');
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, superior } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
     if (typeof grado === 'string' && grado.trim() !== '') partial.grado = grado;
@@ -141,6 +155,16 @@ module.exports = {
 
     // Actualizar campos base
     const updated = await repo.update(id, partial);
+
+    // Edición: sólo nombre del superior
+    if (typeof superior === 'string') {
+      const supName = superior.trim();
+      if (supName) {
+        const supEntity = await repo.findOne({ where: { nombre: supName } });
+        if (!supEntity) { const err = new Error('Superior no encontrado'); err.status = 404; throw err; }
+        await subRepo.updateSuperior(Number(id), supEntity.id);
+      }
+    }
 
     // Manejo de técnicas adicionales si se envían
     if (payload && Object.prototype.hasOwnProperty.call(payload, 'tecnicas_adicionales')) {

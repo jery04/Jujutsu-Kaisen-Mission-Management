@@ -23,6 +23,7 @@
     const addTechBtn = document.getElementById('add_tecnica_btn');
     const techListEl = document.getElementById('tecnicas_list');
     const principalTechInput = document.getElementById('h_tecnica');
+    const superiorInput = document.getElementById('h_superior');
     let extraTechs = [];
 
     function renderExtraTechs() {
@@ -71,6 +72,9 @@
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
             prefillDatalists().catch(() => { /* no locations now; only sorcerers list if exists */ });
+        }
+        if (value === 'hechicero') {
+            prefillSuperiorDatalist().catch(() => { });
         }
     }
 
@@ -196,6 +200,7 @@
         if (entityType === 'hechicero') {
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
+            if (raw.superior) payload.superior = raw.superior;
             if (extraTechs.length) payload.tecnicas_adicionales = [...extraTechs];
             endpoint += '/sorcerer';
         } else if (entityType === 'tecnica') {
@@ -312,6 +317,24 @@
                 }
             } catch (_) { /* no-op */ }
         }
+    }
+
+    // Precarga datalist de superiores (solo opciones para autocompletar)
+    async function prefillSuperiorDatalist() {
+        const dl = document.getElementById('dl_superior');
+        if (!dl) return;
+        if (dl.children.length > 0) return;
+        try {
+            const r = await fetch(`${API_BASE}/sorcerer`);
+            const list = await r.json();
+            if (!r.ok || !Array.isArray(list)) return;
+            list.forEach(s => {
+                if (!s || !s.nombre) return;
+                const opt = document.createElement('option');
+                opt.value = s.nombre;
+                dl.appendChild(opt);
+            });
+        } catch (_) { /* noop */ }
     }
     // Utilidad para mostrar modal de éxito (reutilizable)
     function showSuccessModal({ title, bodyHtml }) {

@@ -243,6 +243,7 @@ function isAdmin() {
         } catch (e) { console.debug('set fecha_fallecimiento failed', e); }
         // Guardar record actual para validaciones de mejora
         try { window._recordCurrent = { grado: record.grado, anios_experiencia: record.anios_experiencia, estado_operativo: record.estado_operativo || record.estado || 'activo' }; } catch (e) { /* noop */ }
+        // Superior is resolved via subordination; no direct field to preload from record
         // Tecnicas adicionales si vienen del backend
         if (Array.isArray(record.tecnicas_adicionales)) {
           additionalTechs.splice(0, additionalTechs.length, ...record.tecnicas_adicionales);
@@ -381,7 +382,7 @@ function isAdmin() {
         // En creación, si no se especifica, usar 'estudiante' por defecto
         if (!grado) grado = 'estudiante';
       }
-      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.slice(), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
+      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.slice(), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null, superior: raw.superior || undefined };
     } else if (fsKey === 'tecnica') {
       // Enviar los campos como string, nunca null
       const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
