@@ -23,7 +23,35 @@
     const addTechBtn = document.getElementById('add_tecnica_btn');
     const techListEl = document.getElementById('tecnicas_list');
     const principalTechInput = document.getElementById('h_tecnica');
+    const superiorSelect = document.getElementById('h_superior');
     let extraTechs = [];
+
+    // Cargar hechiceros existentes en el select de Superior
+    async function prefillSuperiorSelect() {
+        if (!superiorSelect || superiorSelect.tagName !== 'SELECT') return;
+        // Si ya tiene más que el placeholder, no volver a cargar.
+        if (superiorSelect.options && superiorSelect.options.length > 1) return;
+        try {
+            const r = await fetch(`${API_BASE}/sorcerer`);
+            if (!r.ok) return;
+            const payload = await r.json();
+            const list = Array.isArray(payload)
+                ? payload
+                : (payload && Array.isArray(payload.data) ? payload.data : []);
+            if (!Array.isArray(list) || list.length === 0) return;
+            const existing = new Set(Array.from(superiorSelect.options).map(o => String(o.value || '').toLowerCase()));
+            list.forEach(s => {
+                if (!s || !s.id || !s.nombre) return;
+                const key = String(s.id).toLowerCase();
+                if (existing.has(key)) return;
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.nombre;
+                superiorSelect.appendChild(opt);
+                existing.add(key);
+            });
+        } catch (_) { /* no-op */ }
+    }
 
     async function prefillTechniqueSelect() {
         if (!extraTechInput || extraTechInput.tagName !== 'SELECT') return;
@@ -113,6 +141,8 @@
         if (value === 'hechicero') {
             // Cargar técnicas de la BD para el select de técnicas adicionales
             prefillTechniqueSelect();
+            // Cargar hechiceros existentes para el select de Superior
+            prefillSuperiorSelect();
         }
         // Si cambiamos a "maldicion", intentamos precargar listas de apoyo
         if (value === 'maldicion') {
@@ -242,7 +272,8 @@
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
             if (extraTechs.length) payload.tecnicas_adicionales = [...extraTechs];
             endpoint += '/sorcerer';
-        } else if (entityType === 'tecnica') {
+        }
+        else if (entityType === 'tecnica') {
             // Enviamos el nombre de campo igual que el esquema/backend: 'condiciones_de_uso'
             payload = {
                 nombre: raw.nombre,
@@ -284,6 +315,7 @@
         clearResult();
         if (submitBtn) submitBtn.disabled = true;
 
+
         try {
             console.log('[register.js] sending to endpoint:', endpoint, 'payload:', payload);
             const response = await fetch(endpoint, {
@@ -298,6 +330,31 @@
             // Intenta parsear JSON; si falla, usa objeto vacío
             let result;
             try { result = await response.json(); } catch (_) { result = {}; }
+
+            // Si es hechicero y hay superior seleccionado, crear subordinación
+            if (entityType === 'hechicero' && raw.superior) {
+                // Obtener fecha virtual actual del label
+                let fecha_inicio = '';
+                const label = document.querySelector('[data-virtual-time]');
+                if (label && label.textContent) {
+                    // Intentar parsear a ISO, si no, usar como string
+                    const d = new Date(label.textContent);
+                    if (!isNaN(d.getTime())) fecha_inicio = d.toISOString().slice(0, 10); // yyyy-mm-dd
+                    else fecha_inicio = label.textContent;
+                }
+                // id del hechicero creado
+                const subordinate_id = result.id || result?.sorcerer?.id;
+                const superior_id = raw.superior;
+                if (subordinate_id && superior_id && fecha_inicio) {
+                    try {
+                        await fetch(`${API_BASE}/sorcerer_subordination`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', ...(userId ? { 'x-user-id': userId } : {}) },
+                            body: JSON.stringify({ superior_id, subordinate_id, fecha_inicio })
+                        });
+                    } catch (e) { console.error('Error creando subordinación:', e); }
+                }
+            }
 
             console.log('[register.js] response status:', response.status, 'body:', result);
             if (!response.ok) {
