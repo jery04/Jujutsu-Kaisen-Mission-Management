@@ -43,9 +43,12 @@ class BaseRepository {
     return await this._repo.save(ent);
   }
 
-  async delete(id) {
+  async delete(idOrFilter) {
     this._ensureRepo();
-    return await this._repo.delete(Number(id));
+    if (typeof idOrFilter === 'object' && idOrFilter !== null) {
+      return await this._repo.delete(idOrFilter);
+    }
+    return await this._repo.delete(Number(idOrFilter));
   }
 
   // Pasarelas a métodos comunes de TypeORM para conservar flexibilidad

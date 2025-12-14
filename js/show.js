@@ -181,6 +181,7 @@
                 setText('h_experiencia', ent && ent.anios_experiencia);
                 // Nuevos campos para visualización (solo mostrar, no inputs)
                 setText('h_estado_operativo', ent && (ent.estado_operativo ?? ent.estado));
+                setText('h_superior', ent && ent.superior ? ent.superior.nombre : '—');
                 setText('h_causa_muerte', ent && ent.causa_muerte);
                 if (ent && ent.fecha_fallecimiento) {
                     try {

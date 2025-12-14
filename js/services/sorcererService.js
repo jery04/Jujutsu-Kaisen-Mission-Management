@@ -102,7 +102,8 @@ module.exports = {
     const repo = getRepository(db, 'Sorcerer');
     const linkRepo = getRepository(db, 'SorcererTechnique');
     const techniqueRepo = getRepository(db, 'Technique');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento } = payload || {};
+    const subordinationHelper = require('../repositories/SubordinationHelperRepository');
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, superior_id } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
     if (typeof grado === 'string' && grado.trim() !== '') partial.grado = grado;
@@ -196,6 +197,10 @@ module.exports = {
       }
     }
 
+    // Actualizar relación de subordinación (superior)
+    if (typeof superior_id !== 'undefined') {
+      await subordinationHelper.upsertSubordination(db, id, superior_id);
+    }
     return updated;
   },
   async remove(db, id, userId) {

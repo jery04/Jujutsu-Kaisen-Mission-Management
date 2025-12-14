@@ -1,4 +1,5 @@
 const service = require('../services/sorcererService');
+const serviceWithSuperior = require('../services/sorcererServiceWithSuperior');
 
 module.exports = (db) => ({
     create: async (req, res) => {
@@ -34,8 +35,14 @@ module.exports = (db) => ({
         catch (error) { console.error('Error al obtener Hechiceros:', error); res.status(500).json({ message: 'Error al obtener la lista de hechiceros.', details: error.message }); }
     },
     getById: async (req, res) => {
-        try { const ent = await service.getById(db, req.params.id); res.json(ent); }
-        catch (error) { console.error('Error obteniendo Hechicero:', error); const status = error.status || 500; res.status(status).json({ message: status === 500 ? 'Error obteniendo hechicero' : error.message, details: error.message }); }
+        try {
+            const ent = await serviceWithSuperior.getWithSuperiorById(db, req.params.id);
+            res.json(ent);
+        } catch (error) {
+            console.error('Error obteniendo Hechicero:', error);
+            const status = error.status || 500;
+            res.status(status).json({ message: status === 500 ? 'Error obteniendo hechicero' : error.message, details: error.message });
+        }
     },
     update: async (req, res) => {
         try {

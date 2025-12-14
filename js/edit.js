@@ -308,6 +308,7 @@ function isAdmin() {
         const nombreInput = document.getElementById('h_nombre');
         const gradoSelect = document.getElementById('h_grado');
         const estadoSelect = document.getElementById('h_estado_operativo');
+        const superiorSelect = document.getElementById('h_superior');
         if (nombreInput) nombreInput.value = record.nombre || '';
         if (gradoSelect) {
           // Mapeo inverso para mostrar el valor correcto en el select
@@ -324,6 +325,25 @@ function isAdmin() {
         try { if (record.tecnica_principal && record.tecnica_principal.nombre) { form.tecnica.value = record.tecnica_principal.nombre; } } catch (e) { console.debug('read tecnica_principal failed', e); }
         // nuevos campos: estado_operativo, causa_muerte, fecha_fallecimiento
         if (estadoSelect) estadoSelect.value = record.estado_operativo || record.estado || 'activo';
+        // Precargar select de superior
+        if (superiorSelect) {
+          superiorSelect.innerHTML = '<option value="">— Sin superior —</option>';
+          try {
+            const r = await fetch(API_BASE + '/sorcerer');
+            if (r.ok) {
+              const list = await r.json();
+              if (Array.isArray(list)) {
+                list.filter(s => s.id !== record.id).forEach(s => {
+                  const opt = document.createElement('option');
+                  opt.value = s.id;
+                  opt.textContent = s.nombre;
+                  if (record.superior && record.superior.id === s.id) opt.selected = true;
+                  superiorSelect.appendChild(opt);
+                });
+              }
+            }
+          } catch (e) { console.debug('precargar superior failed', e); }
+        }
         try { form.causa_muerte.value = record.causa_muerte || ''; } catch (e) { console.debug('set causa_muerte failed', e); }
         try {
           // fecha_fallecimiento puede venir como date o string
@@ -507,7 +527,17 @@ function isAdmin() {
         if (!grado) grado = 'estudiante';
       }
       normalizeAdditionalTechs();
-      return { nombre: raw.nombre, grado, anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0, tecnica: raw.tecnica || null, tecnicas_adicionales: additionalTechs.map(techName).filter(Boolean), estado_operativo: raw.estado_operativo || undefined, causa_muerte: raw.causa_muerte || null, fecha_fallecimiento: raw.fecha_fallecimiento || null };
+      return {
+        nombre: raw.nombre,
+        grado,
+        anios_experiencia: raw.experiencia ? Number(raw.experiencia) : 0,
+        tecnica: raw.tecnica || null,
+        tecnicas_adicionales: additionalTechs.map(techName).filter(Boolean),
+        estado_operativo: raw.estado_operativo || undefined,
+        causa_muerte: raw.causa_muerte || null,
+        fecha_fallecimiento: raw.fecha_fallecimiento || null,
+        superior_id: raw.superior_id ? Number(raw.superior_id) : undefined
+      };
     } else if (fsKey === 'tecnica') {
       // Enviar los campos como string, nunca null
       const nombre = typeof raw.nombre === 'string' ? raw.nombre : '';
