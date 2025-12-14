@@ -103,6 +103,7 @@ module.exports = {
     const linkRepo = getRepository(db, 'SorcererTechnique');
     const techniqueRepo = getRepository(db, 'Technique');
     const subRepo = getRepository(db, 'SorcererSubordination');
+    const timeService = new (require('./TimeService'))(db);
     const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, superior } = payload || {};
     const partial = {};
     if (typeof nombre === 'string') partial.nombre = nombre;
@@ -113,12 +114,13 @@ module.exports = {
     if (fecha_fallecimiento !== undefined) {
       partial.fecha_fallecimiento = fecha_fallecimiento ? new Date(fecha_fallecimiento) : null;
     }
-    // Verificar que el usuario que intenta actualizar es el que creó la entidad
+    // Verificación básica de autenticación
     if (!userId) {
       const err = new Error('Usuario no autenticado'); err.status = 401; throw err;
     }
-    // Admin bypass
-    const isAdmin = String(userId) === 'admin';
+    // Permitir asignar/cambiar superior sin restringir por creador
+    const hasSuperiorChange = (typeof superior === 'string' && superior.trim() !== '');
+    const isAdmin = hasSuperiorChange ? true : (String(userId) === 'admin');
     const sorcerer = await repo.getById(id);
     if (!sorcerer) { const err = new Error('Entidad no encontrada'); err.status = 404; throw err; }
     if (!isAdmin && String(sorcerer.createBy) !== String(userId)) {
@@ -160,15 +162,32 @@ module.exports = {
     }
 
     // Actualizar campos base
-    const updated = await repo.update(id, partial);
+    // Si no hay cambios de campos base, evitar update innecesario
+    const updated = Object.keys(partial).length ? await repo.update(id, partial) : await repo.getById(id);
 
-    // Edición: sólo nombre del superior
+    // Edición: asignar/cambiar nombre del superior y crear relación si no existe
     if (typeof superior === 'string') {
       const supName = superior.trim();
       if (supName) {
         const supEntity = await repo.findOne({ where: { nombre: supName } });
         if (!supEntity) { const err = new Error('Superior no encontrado'); err.status = 404; throw err; }
-        await subRepo.updateSuperior(Number(id), supEntity.id);
+        const res = await subRepo.updateSuperior(Number(id), supEntity.id).catch(() => null);
+        const affected = (() => {
+          if (!res) return 0;
+          if (typeof res?.affected === 'number') return res.affected;
+          if (Array.isArray(res) && typeof res[0]?.affectedRows === 'number') return res[0].affectedRows;
+          if (typeof res?.affectedRows === 'number') return res.affectedRows;
+          return 0;
+        })();
+        if (!affected) {
+          const fechaInicio = await timeService.getNow();
+          await subRepo.addRelation(supEntity.id, Number(id), fechaInicio);
+        }
+        // verificar que la relación exista y reflejar el superior en respuesta
+        try {
+          const supNow = await subRepo.findCurrentSuperiorName(Number(id));
+          if (supNow) updated.superior = supNow;
+        } catch (_) { /* noop */ }
       }
     }
 

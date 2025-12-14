@@ -40,13 +40,14 @@ module.exports = (db) => ({
     update: async (req, res) => {
         try {
             const userId = req.headers['x-user-id'];
+            if (!userId) {
+                return res.status(401).json({ message: 'Usuario no autenticado' });
+            }
             const saved = await service.update(db, req.params.id, req.body, userId);
             res.json(saved);
         } catch (error) {
             console.error('Error actualizando Hechicero:', error);
-            if (error && (error.code === 'ER_DUP_ENTRY' || /Duplicate entry/i.test(error.message || ''))) {
-                return res.status(409).json({ message: 'Nombre de Hechicero ya existe' });
-            }
+            // En actualización permitimos conservar/establecer nombres ya existentes del propio CRUD
             const status = error.status || 500;
             res.status(status).json({ message: status === 500 ? 'Error actualizando hechicero' : error.message, details: error.message });
         }
