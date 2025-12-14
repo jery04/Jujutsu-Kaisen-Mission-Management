@@ -184,6 +184,11 @@ window.addEventListener('keydown', function (e) {
         throw new Error(data?.message || 'No fue posible registrar');
       }
       closeRegisterModal();
+      // Guardar el nombre de usuario recién registrado para mostrarlo en index.html
+      try {
+        localStorage.setItem('username', regUsername);
+        sessionStorage.setItem('username', regUsername);
+      } catch (_) {}
       // Mostrar modal de confirmación de registro en lugar de alert
       try {
         const modal = document.getElementById('registerOkModal');
@@ -197,9 +202,11 @@ window.addEventListener('keydown', function (e) {
         closeBtn?.addEventListener('click', () => {
           modal.classList.remove('is-open');
           modal.setAttribute('aria-hidden', 'true');
+          window.location.href = 'index.html';
         }, { once: true });
       } catch (_) {
         alert('Registro completado. Ahora puedes iniciar sesión.');
+        window.location.href = 'index.html';
       }
     } catch (err) {
       // Mostrar modal de error de registro en lugar de alert

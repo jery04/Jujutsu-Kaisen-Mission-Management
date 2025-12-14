@@ -53,4 +53,19 @@ describe('TechniqueRepository básico', () => {
     const del = await repo.delete(t.id);
     expect(del.affected).toBe(1);
   });
+
+  test('getById returns null for missing id', async () => {
+    const techRepoMock = makeRepo([]);
+    const db = makeDb({ Technique: techRepoMock });
+    const repo = getRepository(db, 'Technique');
+    const got = await repo.getById(999);
+    expect(got).toBeNull();
+  });
+
+  test('update lanza error si id no existe', async () => {
+    const techRepoMock = makeRepo([]);
+    const db = makeDb({ Technique: techRepoMock });
+    const repo = getRepository(db, 'Technique');
+    await expect(repo.update(123, { nombre: 'x' })).rejects.toThrow();
+  });
 });

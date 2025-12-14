@@ -115,4 +115,17 @@ describe('missionService flujo', () => {
         expect(res.mission.estado).toBe('completada');
         expect(closedEvents.length).toBe(1);
     });
+    
+    test('createForCurse falla si curse no existe', async () => {
+        const curse = await curseRepo.getById(999);
+        await expect(missionService.createForCurse(db, curse)).rejects.toThrow();
+    });
+    
+    test('startMission falla si mission no existe', async () => {
+        await expect(missionService.startMission(db, 999)).rejects.toThrow();
+    });
+    
+    test('closeMission falla si mission no existe', async () => {
+        await expect(missionService.closeMission(db, 999, {}, { id: 1, role: 'soporte' })).rejects.toThrow();
+    });
 });

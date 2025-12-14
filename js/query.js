@@ -730,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPaginated(data, function (row) {
               const item = makeItem(row.hechicero || row.nombre || '-', [
                 `Grado: <strong>${row.grado || grado}</strong>`,
-                `Efectividad: <strong>${row.efectividad != null ? row.efectividad + '%' : '-'}</strong>`
+                `Efectividad: <strong>${row.promedio_efectividad != null ? row.promedio_efectividad + '%' : '-'}</strong>`
               ]);
               item.dataset.entity = 'sorcerer';
               results.appendChild(item);

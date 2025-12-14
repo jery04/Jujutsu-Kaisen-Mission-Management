@@ -47,4 +47,11 @@ describe('curseService.update', () => {
     expect(out.nombre).toBe('C3x');
     expect(out.ubicacion).toBe('Nagoya');
   });
+
+  test('update lanza error si id no existe', async () => {
+    const repo = makeRepo([]);
+    global.__curseRepo__ = repo;
+    const db = makeDb();
+    await expect(curseService.update(db, 999, { nombre: 'Nada' }, 'userX')).rejects.toThrow();
+  });
 });

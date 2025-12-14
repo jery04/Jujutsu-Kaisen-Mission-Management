@@ -69,4 +69,19 @@ describe('MissionRepository básico', () => {
     const del = await repo.delete(m.id);
     expect(del.affected).toBe(1);
   });
+
+  test('getById returns null for missing id', async () => {
+    const missionRepoMock = makeRepo([]);
+    const db = makeDb({ Mission: missionRepoMock });
+    const repo = getRepository(db, 'Mission');
+    const got = await repo.getById(999);
+    expect(got).toBeNull();
+  });
+
+  test('update lanza error si id no existe', async () => {
+    const missionRepoMock = makeRepo([]);
+    const db = makeDb({ Mission: missionRepoMock });
+    const repo = getRepository(db, 'Mission');
+    await expect(repo.update(123, { estado: 'x' })).rejects.toThrow();
+  });
 });

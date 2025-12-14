@@ -52,4 +52,19 @@ describe('CurseRepository básico', () => {
     const del = await repo.delete(c.id);
     expect(del.affected).toBe(1);
   });
+
+  test('getById returns null for missing id', async () => {
+    const curseRepoMock = makeRepo([]);
+    const db = makeDb({ Curse: curseRepoMock });
+    const repo = getRepository(db, 'Curse');
+    const got = await repo.getById(999);
+    expect(got).toBeNull();
+  });
+
+  test('update lanza error si id no existe', async () => {
+    const curseRepoMock = makeRepo([]);
+    const db = makeDb({ Curse: curseRepoMock });
+    const repo = getRepository(db, 'Curse');
+    await expect(repo.update(123, { nombre: 'x' })).rejects.toThrow();
+  });
 });

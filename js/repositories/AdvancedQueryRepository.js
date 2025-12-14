@@ -133,6 +133,7 @@ class AdvancedQueryRepository extends BaseRepository {
       GROUP BY s.id, s.nombre
       ORDER BY promedio_efectividad DESC
     `, [grado]);
+    console.log('Efectividad Hechiceros Grado', grado, rows);
     return rows;
   }
 

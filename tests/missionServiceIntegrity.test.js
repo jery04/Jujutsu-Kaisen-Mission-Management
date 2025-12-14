@@ -1,4 +1,4 @@
-describe.skip('Mission Service integrity (date ordering)', () => {
+describe('Mission Service integrity (date ordering)', () => {
   test('placeholder', () => {
     expect(true).toBe(true);
   });

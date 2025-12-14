@@ -60,4 +60,19 @@ describe('SorcererRepository básico', () => {
     const del = await repo.delete(created.id);
     expect(del.affected).toBe(1);
   });
+
+  test('getById returns null for missing id', async () => {
+    const sorcRepoMock = makeRepo([]);
+    const db = makeDb({ Sorcerer: sorcRepoMock });
+    const repo = getRepository(db, 'Sorcerer');
+    const got = await repo.getById(999);
+    expect(got).toBeNull();
+  });
+
+  test('update lanza error si id no existe', async () => {
+    const sorcRepoMock = makeRepo([]);
+    const db = makeDb({ Sorcerer: sorcRepoMock });
+    const repo = getRepository(db, 'Sorcerer');
+    await expect(repo.update(123, { nombre: 'x' })).rejects.toThrow();
+  });
 });

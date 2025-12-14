@@ -95,7 +95,7 @@ if (process.env.NODE_ENV === 'test') {
     username: process.env.DB_USER || 'root',
 
     // Ensure password is a string to satisfy mysql2 auth
-    password: String(process.env.DB_PASSWORD || 'Alexby9511*'),
+    password: String(process.env.DB_PASSWORD || '1234'),
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
