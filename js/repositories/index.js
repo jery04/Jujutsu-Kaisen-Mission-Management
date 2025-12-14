@@ -6,6 +6,7 @@ const SorcererTechniqueRepository = require('./SorcererTechniqueRepository');
 const TransferRepository = require('./TransferRepository');
 const CurseRepository = require('./CurseRepository');
 const ProjectTimeRepository = require('./ProjectTimeRepository');
+const SorcererSubordinationRepository = require('./SorcererSubordinationRepository');
 
 function getRepository(db, entity) {
   switch (entity) {
@@ -23,9 +24,11 @@ function getRepository(db, entity) {
       return new CurseRepository(db);
     case 'ProjectTime':
       return new ProjectTimeRepository(db);
+    case 'SorcererSubordination':
+      return new SorcererSubordinationRepository(db);
     default:
       return new BaseRepository(db, entity);
   }
 }
 
-module.exports = { BaseRepository, MissionRepository, TechniqueRepository, SorcererRepository, SorcererTechniqueRepository, TransferRepository, CurseRepository, ProjectTimeRepository, getRepository };
+module.exports = { BaseRepository, MissionRepository, TechniqueRepository, SorcererRepository, SorcererTechniqueRepository, TransferRepository, CurseRepository, ProjectTimeRepository, SorcererSubordinationRepository, getRepository };

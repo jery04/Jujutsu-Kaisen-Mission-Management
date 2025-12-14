@@ -16,7 +16,11 @@ const sorcererCreate = z.object({
   // Nombre de la técnica principal a vincular (opcional)
   tecnica: z.string().trim().min(1).optional(),
   // Lista opcional de técnicas adicionales por nombre
-  tecnicas_adicionales: z.array(z.string().trim().min(1)).optional()
+  tecnicas_adicionales: z.array(z.string().trim().min(1)).optional(),
+  // Nuevo: id del superior (opcional)
+  superior_id: z.coerce.number().int().positive().optional(),
+  // Nuevo: fecha de inicio de la subordinación (opcional)
+  fecha_inicio_subordinacion: z.string().trim().optional()
 });
 
 const sorcererUpdate = sorcererCreate.partial();

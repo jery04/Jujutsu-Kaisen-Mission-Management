@@ -5,7 +5,8 @@ module.exports = {
     const sorcererRepo = getRepository(db, 'Sorcerer');
     const techniqueRepo = getRepository(db, 'Technique');
     const linkRepo = getRepository(db, 'SorcererTechnique');
-    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica, tecnicas_adicionales } = payload || {};
+    const subordinationRepo = getRepository(db, 'SorcererSubordination');
+    const { nombre, grado, anios_experiencia, estado_operativo, causa_muerte, fecha_fallecimiento, tecnica, tecnicas_adicionales, superior_id, fecha_inicio_subordinacion } = payload || {};
     if (!nombre) throw Object.assign(new Error('nombre requerido'), { status: 400 });
     if (!grado) throw Object.assign(new Error('grado requerido'), { status: 400 });
     // Validaciones previas: la técnica principal es obligatoria y debe existir
@@ -55,6 +56,22 @@ module.exports = {
         await linkRepo.addNonPrincipal(saved.id, t.id, 0);
       }
     }
+
+    // Si se provee superior_id, registrar subordinación
+    if (saved && superior_id) {
+      // fecha_inicio_subordinacion puede venir del payload, si no, usar fecha actual
+      let fecha_inicio = fecha_inicio_subordinacion;
+      if (!fecha_inicio) {
+        const now = new Date();
+        fecha_inicio = now.toISOString().slice(0, 10); // yyyy-mm-dd
+      }
+      await subordinationRepo.add({
+        superior_id: Number(superior_id),
+        subordinate_id: Number(saved.id),
+        fecha_inicio
+      });
+    }
+
     // Ya no se vincula con UserSorcerer, el campo createBy lo registra
     return result;
   },

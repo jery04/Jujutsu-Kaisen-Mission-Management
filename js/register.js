@@ -271,6 +271,19 @@
             const anios_experiencia = raw.experiencia ? Number(raw.experiencia) : 0;
             payload = { nombre: raw.nombre, grado: raw.grado, anios_experiencia, tecnica: raw.tecnica };
             if (extraTechs.length) payload.tecnicas_adicionales = [...extraTechs];
+            // Si hay superior seleccionado, incluirlo en el payload
+            if (raw.superior) {
+                payload.superior_id = Number(raw.superior);
+                // Obtener fecha virtual actual del label, si existe
+                let fecha_inicio = '';
+                const label = document.querySelector('[data-virtual-time]');
+                if (label && label.textContent) {
+                    const d = new Date(label.textContent);
+                    if (!isNaN(d.getTime())) fecha_inicio = d.toISOString().slice(0, 10);
+                    else fecha_inicio = label.textContent;
+                }
+                if (fecha_inicio) payload.fecha_inicio_subordinacion = fecha_inicio;
+            }
             endpoint += '/sorcerer';
         }
         else if (entityType === 'tecnica') {
@@ -331,30 +344,7 @@
             let result;
             try { result = await response.json(); } catch (_) { result = {}; }
 
-            // Si es hechicero y hay superior seleccionado, crear subordinación
-            if (entityType === 'hechicero' && raw.superior) {
-                // Obtener fecha virtual actual del label
-                let fecha_inicio = '';
-                const label = document.querySelector('[data-virtual-time]');
-                if (label && label.textContent) {
-                    // Intentar parsear a ISO, si no, usar como string
-                    const d = new Date(label.textContent);
-                    if (!isNaN(d.getTime())) fecha_inicio = d.toISOString().slice(0, 10); // yyyy-mm-dd
-                    else fecha_inicio = label.textContent;
-                }
-                // id del hechicero creado
-                const subordinate_id = result.id || result?.sorcerer?.id;
-                const superior_id = raw.superior;
-                if (subordinate_id && superior_id && fecha_inicio) {
-                    try {
-                        await fetch(`${API_BASE}/sorcerer_subordination`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', ...(userId ? { 'x-user-id': userId } : {}) },
-                            body: JSON.stringify({ superior_id, subordinate_id, fecha_inicio })
-                        });
-                    } catch (e) { console.error('Error creando subordinación:', e); }
-                }
-            }
+            // Ya no es necesario crear subordinación manualmente, se maneja en el backend
 
             console.log('[register.js] response status:', response.status, 'body:', result);
             if (!response.ok) {
