@@ -40,6 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
       <h1>Efectividad en Emergencias Críticas</h1>
       <p>Determinar el porcentaje de efectividad de cada hechicero de grado medio en misiones de emergencia crítica que involucraron maldiciones de grado especial, y comparar este rendimiento con otros hechiceros</p>
     `;
+    // Eliminar el select 'entity-select' si existe
+    const entitySelect = document.getElementById('entity-select');
+    if (entitySelect && entitySelect.parentNode) {
+      try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
+    }
+    // Listar todos los hechiceros
+    if (typeof loadSorcerers === 'function') {
+      loadSorcerers();
+    }
     // Limpiar la bandera para futuras visitas
     sessionStorage.removeItem('showEfectividadEmergenciasTitle');
   }
@@ -822,6 +831,56 @@ document.addEventListener('DOMContentLoaded', () => {
           ev.preventDefault();
           const raw = String(searchInput.value || '').trim();
           const selected = (entitySelect && entitySelect.value) ? entitySelect.value : 'sorcerer';
+
+          // Modo especial (botón 7): rendimiento del equipo por nombre del superior
+          try {
+            const specialMode = sessionStorage.getItem('mode');
+            if (specialMode === 'teamPerformance') {
+              if (!raw) {
+                clearResults();
+                if (results) results.innerHTML = '<div class="query-item"><h3>Ingresa el nombre del superior</h3></div>';
+                return;
+              }
+              (async function () {
+                clearResults();
+                try {
+                  const url = `${API_BASE}/advanced/team-performance?superiorName=${encodeURIComponent(raw)}`;
+                  const r = await fetch(url);
+                  const payload = await r.json().catch(() => null);
+                  if (!r.ok) {
+                    const msg = payload && payload.error ? String(payload.error) : ('HTTP ' + r.status);
+                    throw new Error(msg);
+                  }
+
+                  const rows = Array.isArray(payload)
+                    ? payload
+                    : (payload && Array.isArray(payload.data) ? payload.data
+                      : (payload && Array.isArray(payload.rows) ? payload.rows
+                        : (payload && Array.isArray(payload.results) ? payload.results : [])));
+
+                  if (!rows.length) {
+                    if (results) results.innerHTML = '<div class="query-item"><h3>Sin resultados</h3><p>No se encontraron subordinados para ese superior.</p></div>';
+                    return;
+                  }
+
+                  renderPaginated(rows, function (row) {
+                    const subordinado = row.subordinado || row.nombre || '-';
+                    const completadas = row.misiones_completadas != null ? row.misiones_completadas : (row.completadas != null ? row.completadas : 0);
+                    const fracasos = row.misiones_completada_fracaso != null ? row.misiones_completada_fracaso : (row.fracasos != null ? row.fracasos : 0);
+                    const item = makeItem(String(subordinado), [
+                      `Misiones completadas: <strong>${completadas}</strong>`,
+                      `Misiones fallidas: <strong>${fracasos}</strong>`
+                    ]);
+                    item.dataset.entity = 'advanced';
+                    results.appendChild(item);
+                  }, 'hechiceros');
+                } catch (err) {
+                  if (results) results.innerHTML = '<div class="query-item"><h3>Error conectando a la API</h3><p>' + err.message + '</p></div>';
+                }
+              }());
+              return;
+            }
+          } catch (_) { }
 
           // Modo especial: misiones por hechicero
           try {

@@ -52,7 +52,11 @@ module.exports = (db) => {
 
   const getSorcererTeamPerformance = async (req, res, next) => {
     try {
-      const result = await advancedQueryService.getSorcererTeamPerformance();
+      const { superiorName } = req.query;
+      if (!superiorName) {
+        return res.status(400).json({ error: 'Falta el parámetro superiorName' });
+      }
+      const result = await advancedQueryService.getSorcererTeamPerformance(superiorName);
       res.json(result);
     } catch (err) {
       next(err);

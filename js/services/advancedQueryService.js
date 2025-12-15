@@ -28,8 +28,8 @@ class AdvancedQueryService {
     return await this.advancedQueryRepository.getTopSorcerersByMissionLevel(nivel);
   }
 
-  async getSorcererTeamPerformance() {
-    return await this.advancedQueryRepository.getSorcererTeamPerformance();
+  async getSorcererTeamPerformance(superiorName) {
+    return await this.advancedQueryRepository.getSorcererTeamPerformance(superiorName);
   }
 
   async getEffectivenessComparisonCriticalSpecial(grado) {

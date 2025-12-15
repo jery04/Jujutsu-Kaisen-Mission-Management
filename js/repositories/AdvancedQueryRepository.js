@@ -95,20 +95,22 @@ class AdvancedQueryRepository extends BaseRepository {
   }
 
   // 6. Relación de hechicero y discípulos/equipo, conteo de misiones exitosas/fallidas
-  async getSorcererTeamPerformance() {
+  async getSorcererTeamPerformance(superiorName) {
     const rows = await this.db.query(`
-      SELECT s.nombre AS hechicero,
-        GROUP_CONCAT(sd.nombre) AS discipulos_equipo,
-        SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) AS misiones_exitosas,
-        SUM(CASE WHEN m.resultado = 'Fallo' THEN 1 ELSE 0 END) AS misiones_fallidas
-      FROM Sorcerer s
-      LEFT JOIN SorcererSubordination ss ON ss.masterId = s.id
-      LEFT JOIN Sorcerer sd ON sd.id = ss.discipleId
-      LEFT JOIN MissionParticipant mp ON mp.sorcererId = s.id
-      LEFT JOIN Mission m ON m.id = mp.missionId
-      GROUP BY s.id
-      ORDER BY (SUM(CASE WHEN m.resultado = 'Exito' THEN 1 ELSE 0 END) - SUM(CASE WHEN m.resultado = 'Fallo' THEN 1 ELSE 0 END)) DESC
-    `);
+      SELECT 
+        s_sub.nombre AS subordinado,
+        COUNT(DISTINCT CASE WHEN m.estado = 'completada' THEN m.id END) AS misiones_completadas,
+        COUNT(DISTINCT CASE WHEN m.estado = 'completada_fracaso' THEN m.id END) AS misiones_completada_fracaso
+      FROM sorcerer_subordination ss
+      JOIN sorcerer s_sup ON ss.superior_id = s_sup.id
+      JOIN sorcerer s_sub ON ss.subordinate_id = s_sub.id
+      LEFT JOIN mission_participant mp ON mp.sorcerer_id = s_sub.id
+      LEFT JOIN mission m ON mp.mission_id = m.id
+      WHERE s_sup.nombre = ?
+      GROUP BY s_sub.id, s_sub.nombre
+      ORDER BY (2 * misiones_completadas
+              - misiones_completada_fracaso) DESC;
+    `, [superiorName]);
     return rows;
   }
 

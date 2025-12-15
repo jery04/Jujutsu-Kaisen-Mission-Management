@@ -93,21 +93,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (idx === 6) {
                 // Bloque para el botón 7
-                // Señalar que se debe mostrar el título y descripción personalizados en query.html para efectividad en emergencias críticas
+                // Al entrar en este modo, se desactiva el select (entity-select) y se listan todos los hechiceros
                 try {
                     sessionStorage.setItem('showEfectividadEmergenciasTitle', 'true');
-                    // Indicar que se debe sustituir el select por uno especial de grados
-                    sessionStorage.setItem('replaceEntitySelect', 'true');
-                    sessionStorage.setItem('gradoOptions', JSON.stringify({
-                        'grado_medio': 'grado medio',
-                        'grado_alto': 'grado alto'
-                    }));
+                    sessionStorage.setItem('listAllSorcerers', 'true');
+                    sessionStorage.setItem('removeEntitySelect', 'true');
                     // Limpiar otros modos que puedan interferir
-                    sessionStorage.removeItem('mode');
+                    // En este modo, el buscador ejecutará la consulta de rendimiento del equipo por superior
+                    sessionStorage.setItem('mode', 'teamPerformance');
                     sessionStorage.removeItem('estadoOptions');
                     sessionStorage.removeItem('nivelOptions');
+                    sessionStorage.removeItem('replaceEntitySelect');
+                    sessionStorage.removeItem('gradoOptions');
+                    // Eliminar la bandera para que sí se listen los hechiceros inicialmente
+                    sessionStorage.removeItem('noInitialList');
                 } catch (e) {
-                    console.warn('No se pudo guardar showEfectividadEmergenciasTitle o gradoOptions en sessionStorage', e);
+                    console.warn('No se pudo configurar el modo de listar todos los hechiceros o eliminar entity-select', e);
                 }
             }
 
