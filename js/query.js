@@ -40,15 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <h1>Efectividad en Emergencias Críticas</h1>
       <p>Determinar el porcentaje de efectividad de cada hechicero de grado medio en misiones de emergencia crítica que involucraron maldiciones de grado especial, y comparar este rendimiento con otros hechiceros</p>
     `;
-    // Eliminar el select 'entity-select' si existe
-    const entitySelect = document.getElementById('entity-select');
-    if (entitySelect && entitySelect.parentNode) {
-      try { entitySelect.parentNode.removeChild(entitySelect); } catch (_) { }
-    }
-    // Listar todos los hechiceros
-    if (typeof loadSorcerers === 'function') {
-      loadSorcerers();
-    }
     // Limpiar la bandera para futuras visitas
     sessionStorage.removeItem('showEfectividadEmergenciasTitle');
   }
@@ -373,6 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    let didForceSorcererList = false;
+    let entitySelectWasRemoved = false;
+
     // Al salir de esta sección, limpiar el modo especial
     try {
       window.addEventListener('beforeunload', function () {
@@ -403,6 +397,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnTec = document.getElementById('techniques');
     const btnCur = document.getElementById('curses');
     const entitySelect = document.getElementById('entity-select');
+
+    // Modo botón idx=5 (queryplus): remover el select y listar hechiceros
+    try {
+      const removeEntitySelectFlag = sessionStorage.getItem('removeEntitySelect') === 'true';
+      const listAllSorcerersFlag = sessionStorage.getItem('listAllSorcerers') === 'true';
+
+      if (removeEntitySelectFlag) {
+        // Eliminar el select 'entity-select' si existe
+        const sel = document.getElementById('entity-select');
+        if (sel && sel.parentNode) {
+          try { sel.parentNode.removeChild(sel); } catch (_) { }
+          entitySelectWasRemoved = true;
+        }
+        try { sessionStorage.removeItem('removeEntitySelect'); } catch (_) { }
+      }
+
+      if (listAllSorcerersFlag) {
+        // Listar todos los hechiceros
+        if (typeof loadSorcerers === 'function') {
+          loadSorcerers();
+          didForceSorcererList = true;
+        }
+        try { sessionStorage.removeItem('listAllSorcerers'); } catch (_) { }
+      }
+    } catch (_) { }
 
     // Asegurar que el select tenga como valor por defecto "hechicero" (sorcerer)
     try {
@@ -654,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSor) btnSor.addEventListener('click', loadSorcerers);
     if (btnTec) btnTec.addEventListener('click', loadTechniques);
     if (btnCur) btnCur.addEventListener('click', loadCurses);
-    if (entitySelect) entitySelect.addEventListener('change', function () {
+    if (entitySelect && !entitySelectWasRemoved) entitySelect.addEventListener('change', function () {
 
       // Si el select fue adaptado para estados, tratar la selección como filtro de maldiciones
       if (entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
@@ -809,7 +828,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Si estamos en modo 'estado' (primer botón), NO cargar hechiceros por defecto.
       if (entitySelect && entitySelect.dataset && entitySelect.dataset.mode === 'estado') {
         // Dejar que el usuario elija un estado antes de mostrar resultados.
-      } else if (!noInitial) {
+      } else if (!noInitial && !didForceSorcererList) {
         if (view === 'technique') loadTechniques();
         else if (view === 'curses') loadCurses();
         else if (view === 'recursos' || view === 'resource') loadResources();

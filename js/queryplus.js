@@ -88,14 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Señalar que se debe mostrar el título y descripción personalizados en query.html para relación de hechiceros y discípulos
                 try {
                     sessionStorage.setItem('showRelacionTitle', 'true');
-                } catch (e) {
-                    console.warn('No se pudo guardar showRelacionTitle en sessionStorage', e);
-                }
-            } else if (idx === 6) {
-                // Bloque para el botón 7
-                // Al entrar en este modo, se desactiva el select (entity-select) y se listan todos los hechiceros
-                try {
-                    sessionStorage.setItem('showEfectividadEmergenciasTitle', 'true');
+
+
                     sessionStorage.setItem('listAllSorcerers', 'true');
                     sessionStorage.setItem('removeEntitySelect', 'true');
                     // Limpiar otros modos que puedan interferir
@@ -107,8 +101,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     sessionStorage.removeItem('gradoOptions');
                     // Eliminar la bandera para que sí se listen los hechiceros inicialmente
                     sessionStorage.removeItem('noInitialList');
+
+
                 } catch (e) {
-                    console.warn('No se pudo configurar el modo de listar todos los hechiceros o eliminar entity-select', e);
+                    console.warn('No se pudo guardar showRelacionTitle en sessionStorage', e);
+                }
+            } else if (idx === 6) {
+                // Bloque para el botón 7
+                // Señalar que se debe mostrar el título y descripción personalizados en query.html para efectividad en emergencias críticas
+                try {
+                    sessionStorage.setItem('showEfectividadEmergenciasTitle', 'true');
+                    // Indicar que se debe sustituir el select por uno especial de grados
+                    sessionStorage.setItem('replaceEntitySelect', 'true');
+                    sessionStorage.setItem('gradoOptions', JSON.stringify({
+                        'grado_medio': 'grado medio',
+                        'grado_alto': 'grado alto'
+                    }));
+                    // Limpiar otros modos que puedan interferir
+                    sessionStorage.removeItem('mode');
+                    sessionStorage.removeItem('estadoOptions');
+                    sessionStorage.removeItem('nivelOptions');
+                } catch (e) {
+                    console.warn('No se pudo guardar showEfectividadEmergenciasTitle o gradoOptions en sessionStorage', e);
                 }
             }
 
