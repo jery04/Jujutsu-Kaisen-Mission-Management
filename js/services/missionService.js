@@ -259,8 +259,23 @@ module.exports = {
       const err = new Error('No autorizado para cerrar misión'); err.status = 403; throw err;
     }
     const { descripcion_evento, danos_colaterales } = payload || {};
-    // Estado neutral: siempre 'completada' (sin éxito/fracaso)
-    const estado = 'completada';
+    // Determinar fracaso si algún hechicero participante murió
+    let estado = 'completada';
+    try {
+      const mpRepo = getRepository(db, 'MissionParticipant');
+      const participants = await mpRepo.find({ where: { mission: { id: Number(missionId) } } });
+      if (participants && participants.length) {
+        const sorcRepo = getRepository(db, 'Sorcerer');
+        for (const p of participants) {
+          const sid = p.sorcerer_id || (p.sorcerer && p.sorcerer.id);
+          if (!sid) continue;
+          const s = await sorcRepo.getById(Number(sid));
+          if (!s) continue;
+          if (s.fecha_fallecimiento) { estado = 'completada_fracaso'; break; }
+        }
+      }
+      // No cambiar estado si nadie murió: mantener lógica existente ('completada')
+    } catch (_) { /* si falla la comprobación, mantener estado neutral */ }
     const timeService = new TimeService(db);
     const virtualNow = await timeService.getNow();
     const upd = await missionRepo.update(missionId, {
