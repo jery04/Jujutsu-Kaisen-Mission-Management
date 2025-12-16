@@ -85,7 +85,7 @@ class AdvancedQueryRepository extends BaseRepository {
       FROM mission m
       INNER JOIN mission_participant mp ON mp.mission_id = m.id
       INNER JOIN sorcerer s ON s.id = mp.sorcerer_id
-      WHERE m.estado = 'completada' AND m.nivel_urgencia = ?
+      WHERE m.estado IN ('completada', 'completada_fracaso') AND m.nivel_urgencia = ?
       GROUP BY m.nivel_urgencia, s.id, s.nombre
       ORDER BY exitos DESC
       LIMIT 3

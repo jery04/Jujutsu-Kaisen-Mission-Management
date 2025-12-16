@@ -95,7 +95,7 @@ if (process.env.NODE_ENV === 'test') {
     username: process.env.DB_USER || 'root',
 
     // Ensure password is a string to satisfy mysql2 auth
-    password: String(process.env.DB_PASSWORD || '1234'),
+    password: String(process.env.DB_PASSWORD || 'Alexby9511*'),
     database: process.env.DB_NAME || 'jujutsu_misiones_db',
     entities: [
       Sorcerer,
@@ -116,7 +116,7 @@ if (process.env.NODE_ENV === 'test') {
       ProjectTime,
       // ...existing code...
     ],
-    synchronize: false // Evitar cambios automáticos en producción/BD existente
+    synchronize: true // Evitar cambios automáticos en producción/BD existente
   }).then(async (dbConn) => {
     console.log('Conectado a la base de datos jujutsu_misiones_db');
     // Registrar rutas desacopladas (N-capas) y preparar Socket.IO
