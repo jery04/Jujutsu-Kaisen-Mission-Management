@@ -1,14 +1,17 @@
-# 🧙‍♂️ Jujutsu Kaisen Mission Management
+# 🧙‍♂️ Jujutsu Kaisen Mission Management — Tech Emoji Boost 💻⚙️🛠️🔌📡🧪🧰💾🔒
 
-Welcome! ✨ This project manages missions, curses, techniques and resources inspired by the Jujutsu Kaisen universe. It provides:
+💻 ⚙️ 🛠️ 🔧 🔌 🧰 🧪 🧬 📡 💾 🗄️ 🔒  — Technical emoji bar
 
-- Curse registration and automatic mission generation
-- Team assignment, mission lifecycle (start/close), and automated mission progression
-- Advanced queries (ranking, success in a date range, per-sorcerer history)
-- Real-time events for dashboards and notifications via Socket.IO
-- REST API with OpenAPI documentation and automated tests
+Welcome! ✨ This project manages missions, curses, techniques and resources inspired by the Jujutsu Kaisen universe. It provides a technical toolset and observability-ready features:
 
-This repository follows a clear N-layer architecture and is built to be testable and maintainable.
+- 📝 Curse registration and automatic mission generation
+- 🧭 Team assignment, mission lifecycle (start/close), and automated mission progression
+- 📊 Advanced queries (ranking, success in a date range, per-sorcerer history)
+- 📡 Real-time events for dashboards and notifications via Socket.IO
+- 🧪 REST API with OpenAPI documentation and automated tests
+- ⚙️ Designed for testability, maintainability, and observability (logs, metrics)
+
+This repository follows a clear N-layer architecture and is built to be testable and maintainable. 🛠️🔍
 
 ---
 
