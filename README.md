@@ -1,135 +1,133 @@
-# 🧙‍♂️ Jujutsu Kaisen Mission Management — Tech Emoji Boost 💻⚙️🛠️🔌📡🧪🧰💾🔒
+# 🧙‍♂️ Jujutsu Kaisen Mission Management ⚙️💻🛠️🔧
 
-💻 ⚙️ 🛠️ 🔧 🔌 🧰 🧪 🧬 📡 💾 🗄️ 🔒  — Technical emoji bar
+Welcome! ✨🚀💻 This project manages missions, curses, techniques and resources inspired by the Jujutsu Kaisen universe. It provides a technical toolset and observability-ready features for engineers and maintainers:
 
-Welcome! ✨ This project manages missions, curses, techniques and resources inspired by the Jujutsu Kaisen universe. It provides a technical toolset and observability-ready features:
+- 📝 Curse registration and automatic mission generation 🧪🔁
+- 🧭 Team assignment, mission lifecycle (start/close), and automated mission progression ⚙️🔄
+- 📊 Advanced queries (ranking, success in a date range, per-sorcerer history) 🧮📈
+- 📡 Real-time events for dashboards and notifications via Socket.IO 🔔🔗
+- 🧪 REST API with OpenAPI documentation and automated tests 🧰🧩
+- ⚙️ Designed for testability, maintainability, and observability (logs, metrics) 🔍📈
 
-- 📝 Curse registration and automatic mission generation
-- 🧭 Team assignment, mission lifecycle (start/close), and automated mission progression
-- 📊 Advanced queries (ranking, success in a date range, per-sorcerer history)
-- 📡 Real-time events for dashboards and notifications via Socket.IO
-- 🧪 REST API with OpenAPI documentation and automated tests
-- ⚙️ Designed for testability, maintainability, and observability (logs, metrics)
-
-This repository follows a clear N-layer architecture and is built to be testable and maintainable. 🛠️🔍
+This repository follows a clear N-layer architecture and is built to be testable and maintainable. 🛠️🔎🔥
 
 ---
 
-## Table of Contents
+## Table of Contents 🧭🔎
 
-- Project overview
-- Architecture
-- Technology stack
-- Project layout
-- Mission states
-- Key endpoints & events
-- Running locally
-- Environment variables
-- Scripts
-- Testing
-- Linting & formatting
-- Database & migrations
-- Contributing
-- Further reading
+- Project overview 📘
+- Architecture 🏗️
+- Technology stack 🧰
+- Project layout 🗂️
+- Mission states 🔁
+- Key endpoints & events 🔌
+- Running locally 🖥️
+- Environment variables 🔐
+- Scripts 🧩
+- Testing 🧪
+- Linting & formatting 🧹
+- Database & migrations 🗄️
+- Contributing 🤝
+- Further reading 📚
 
 ---
 
-## Project overview
+## Project overview 📘
 
 Core goals:
 
-- Centralize mission and participant management
-- Automatically create missions when a curse is reported
-- Provide advanced analytics and ranking engines
-- Expose a stable REST API with OpenAPI docs and unit/integration tests
+- Centralize mission and participant management 🧭
+- Automatically create missions when a curse is reported ⚡🔁
+- Provide advanced analytics and ranking engines 📊🧮
+- Expose a stable REST API with OpenAPI docs and unit/integration tests 🧪
 
 Typical request flow:
 
-1. HTTP request reaches [js/routes/index.js](js/routes/index.js#L1)
-2. Controller validates and orchestrates the call
-3. Service implements business rules (assignment, state transitions)
-4. Repository layer talks to TypeORM and the database
-5. Entities live in `database_tables/`
+1. HTTP request reaches [js/routes/index.js](js/routes/index.js#L1) 🔗
+2. Controller validates and orchestrates the call 🧭
+3. Service implements business rules (assignment, state transitions) ⚙️
+4. Repository layer talks to TypeORM and the database 🗄️
+5. Entities live in `database_tables/` 🧩
 
-## Architecture
+## Architecture 🏗️
 
 This is an N-layer app:
 
-- Routes → Controllers → Services → Repositories → ORM / Entities
+- Routes → Controllers → Services → Repositories → ORM / Entities 🔁
 
-Benefits: separation of concerns, easier testing, and predictable boundaries.
+Benefits: separation of concerns, easier testing, and predictable boundaries. ✅🔒
 
-## Technology stack
+## Technology stack 🧰
 
-- Runtime: Node.js (recommended 18+)
-- Framework: Express.js
-- ORM: TypeORM (EntitySchema style JS entities)
-- Database driver: `mysql2` (MySQL / MariaDB)
-- Real-time: Socket.IO
-- Validation: `zod` (used across services)
-- Security: `helmet`, `express-rate-limit`, `cors`
-- Environment: `dotenv`
-- PDF generation: `jspdf`
+- Runtime: Node.js (recommended 18+) 🟢
+- Framework: Express.js ⚡
+- ORM: TypeORM (EntitySchema style JS entities) 🧩
+- Database driver: `mysql2` (MySQL / MariaDB) 🗄️
+- Real-time: Socket.IO 📡
+- Validation: `zod` (used across services) 🎯
+- Security: `helmet`, `express-rate-limit`, `cors` 🔐
+- Environment: `dotenv` 🌱
+- PDF generation: `jspdf` 📜
 
 Dev & testing tools:
 
-- Test runner: Jest + Supertest
-- Linting: ESLint
-- Formatting: Prettier
-- Dev server: nodemon
+- Test runner: Jest + Supertest 🧪🧰
+- Linting: ESLint 🧹
+- Formatting: Prettier 🎨
+- Dev server: nodemon 🔁
 
 Main dependencies (see [package.json](package.json#L1)):
 
-- express, typeorm, mysql2, socket.io, zod, dotenv, helmet, cors
+- express, typeorm, mysql2, socket.io, zod, dotenv, helmet, cors ⚙️
 
 Dev dependencies:
 
-- jest, supertest, eslint, prettier, nodemon
+- jest, supertest, eslint, prettier, nodemon 🧪
 
-## Project layout (high level)
+## Project layout (high level) 🗂️
 
-- `js/server.js` — application entrypoint and DB connection ([open file](js/server.js#L1))
-- `js/routes/` — route registration
-- `js/controllers/` — request handlers
-- `js/services/` — business logic (assignment, ranking, mission progression)
-- `js/repositories/` — data access helpers
-- `database_tables/` — TypeORM entity schemas
-- `scripts/` — helper scripts (seed, schema apply, smoke tests)
-- `tests/` — unit & integration tests (Jest)
-- `docs/openapi.yaml` — OpenAPI spec
+- `js/server.js` — application entrypoint and DB connection ([open file](js/server.js#L1)) 🖥️
+- `js/routes/` — route registration 🔀
+- `js/controllers/` — request handlers 🧭
+- `js/services/` — business logic (assignment, ranking, mission progression) ⚙️
+- `js/repositories/` — data access helpers 🗃️
+- `database_tables/` — TypeORM entity schemas 🧩
+- `scripts/` — helper scripts (seed, schema apply, smoke tests) 🛠️
+- `tests/` — unit & integration tests (Jest) 🧪
+- `docs/openapi.yaml` — OpenAPI spec 📘
 
-## Mission states
+## Mission states 🔁
 
-- `pendiente` — pending
-- `en_ejecucion` — in progress
-- `completada_exito` — completed (success)
-- `completada_fracaso` — completed (failure)
-- `cancelada` — cancelled
+- `pendiente` — pending ⏳
+- `en_ejecucion` — in progress ▶️
+- `completada_exito` — completed (success) ✅
+- `completada_fracaso` — completed (failure) ❌
+- `cancelada` — cancelled ⛔
 
-## Key endpoints & events
+## Key endpoints & events 🔌
 
 Example endpoints (see API spec in [docs/openapi.yaml](docs/openapi.yaml)):
 
-- `POST /curses` — create a curse and auto-generate a mission
-- `POST /missions/:id/start` — start a mission
-- `POST /missions/:id/close` — close a mission with result
-- `GET /missions/sorcerer/:id` — list missions a sorcerer participated in
-- `GET /missions/success-range?from=ISO&to=ISO` — success within date range
+- `POST /curses` — create a curse and auto-generate a mission ⚡📝
+- `POST /missions/:id/start` — start a mission ▶️
+- `POST /missions/:id/close` — close a mission with result 🏁
+- `GET /missions/sorcerer/:id` — list missions a sorcerer participated in 🧭
+- `GET /missions/success-range?from=ISO&to=ISO` — success within date range 📅📈
 
 Real-time events emitted via Socket.IO:
 
-- `mission:created`, `mission:started`, `mission:progress`, `mission:closed`
+- `mission:created`, `mission:started`, `mission:progress`, `mission:closed` 🔔📡
 
-## Authentication note
+## Authentication note 🔐
 
-Current repository includes a simple demo auth middleware at [js/middleware/authMiddleware.js](js/middleware/authMiddleware.js#L1) that expects a header `x-usuario` for demo purposes. Replace with a proper auth mechanism (JWT, sessions, OAuth) for production.
+Current repository includes a simple demo auth middleware at [js/middleware/authMiddleware.js](js/middleware/authMiddleware.js#L1) that expects a header `x-usuario` for demo purposes. Replace with a proper auth mechanism (JWT, sessions, OAuth) for production. 🔑
 
-## Running locally
+## Running locally 🖥️
 
 Prerequisites:
 
-- Node.js 18+ and npm
-- MySQL-compatible database (MySQL, MariaDB). A local Docker container is recommended in development.
+- Node.js 18+ and npm 🟢
+- MySQL-compatible database (MySQL, MariaDB). A local Docker container is recommended in development 🐳
 
 Quick start:
 
@@ -153,7 +151,7 @@ Production start:
 npm start
 ```
 
-### Example `.env` (development)
+### Example `.env` (development) 🔧
 
 ```
 PORT=3000
@@ -167,22 +165,22 @@ CORS_ORIGIN=http://localhost:3000
 RATE_LIMIT_MAX=1000
 ```
 
-Important: `js/server.js` uses `synchronize: true` for TypeORM by default — this will auto-sync entities to schema and can be destructive for production databases. Disable synchronize and use proper migrations for production.
+Important: `js/server.js` uses `synchronize: true` for TypeORM by default — this will auto-sync entities to schema and can be destructive for production databases. Disable synchronize and use proper migrations for production. ⚠️
 
-## Scripts
+## Scripts 🧩
 
 Key npm scripts (see [package.json](package.json#L1)):
 
-- `npm run dev` — start dev server with nodemon
-- `npm start` — production start
-- `npm run setup` — install (alias)
-- `npm run seed` — run `scripts/seed.js` to populate sample data
-- `npm run smoke` — run `scripts/smoke.js` (basic smoke tests)
-- `npm test` — run Jest tests
-- `npm run lint` / `npm run lint:fix` — ESLint
-- `npm run format` — Prettier
+- `npm run dev` — start dev server with nodemon 🔁
+- `npm start` — production start 🚀
+- `npm run setup` — install (alias) 🛠️
+- `npm run seed` — run `scripts/seed.js` to populate sample data 🌱
+- `npm run smoke` — run `scripts/smoke.js` (basic smoke tests) 🔥
+- `npm test` — run Jest tests 🧪
+- `npm run lint` / `npm run lint:fix` — ESLint 🧹
+- `npm run format` — Prettier 🎨
 
-## Testing
+## Testing 🧪
 
 Unit & integration tests with Jest live under `tests/`. Example single-test run (PowerShell):
 
@@ -190,21 +188,21 @@ Unit & integration tests with Jest live under `tests/`. Example single-test run 
 npm test -- --verbose curseService.test.js
 ```
 
-CI: Add a workflow that runs `npm ci`, `npm run lint`, and `npm test` on PRs.
+CI: Add a workflow that runs `npm ci`, `npm run lint`, and `npm test` on PRs. 🤖
 
-## Database & migrations
+## Database & migrations 🗄️
 
 - ORM: TypeORM with EntitySchema-style JS entities located in `database_tables/`.
 - Driver: `mysql2`.
 - Seeding: `scripts/seed.js`.
-- Warning: `synchronize: true` is enabled in dev by default in `js/server.js` — switch to migrations for production.
+- Warning: `synchronize: true` is enabled in dev by default in `js/server.js` — switch to migrations for production. ⚠️
 
-## Security & best practices
+## Security & best practices 🔒
 
 - Use `helmet`, set strict CORS via `CORS_ORIGIN`, and enable `express-rate-limit` (configured via `RATE_LIMIT_MAX`).
-- Do not commit `.env` or credentials. Store secrets in secure vaults in production.
+- Do not commit `.env` or credentials. Store secrets in secure vaults in production. 🔐
 
-## Contributing
+## Contributing 🤝
 
 - Fork the repo and create feature branches.
 - Keep changes small, add tests for new behavior, run lint and format before opening PR.
@@ -217,7 +215,7 @@ npm test
 npm run format
 ```
 
-## Further reading
+## Further reading 📚
 
 - OpenAPI spec: [docs/openapi.yaml](docs/openapi.yaml)
 - Main entry: [js/server.js](js/server.js#L1)
@@ -227,9 +225,9 @@ npm run format
 
 If you want, I can also:
 
-- Add a minimal `docker-compose.yml` for a MySQL + app dev environment
-- Add a GitHub Actions CI workflow (`lint` + `test`) template
-- Harden `js/server.js` for production (disable `synchronize`, add migrations)
+- Add a minimal `docker-compose.yml` for a MySQL + app dev environment 🐳🧩
+- Add a GitHub Actions CI workflow (`lint` + `test`) template 🤖
+- Harden `js/server.js` for production (disable `synchronize`, add migrations) 🔒
 
 Which of these would you like me to do next?
 
