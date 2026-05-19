@@ -1,5 +1,7 @@
 # 🧙‍♂️ Jujutsu Kaisen Mission Management ⚙️💻🛠️🔧
 
+![readme1](img/readme1.png)
+
 Welcome! ✨🚀💻 This project manages missions, curses, techniques and resources inspired by the Jujutsu Kaisen universe. It provides a technical toolset and observability-ready features for engineers and maintainers:
 
 - 📝 Curse registration and automatic mission generation 🧪🔁
@@ -8,6 +10,10 @@ Welcome! ✨🚀💻 This project manages missions, curses, techniques and resou
 - 📡 Real-time events for dashboards and notifications via Socket.IO 🔔🔗
 - 🧪 REST API with OpenAPI documentation and automated tests 🧰🧩
 - ⚙️ Designed for testability, maintainability, and observability (logs, metrics) 🔍📈
+
+A quick look at the home section
+
+![readme2](img/readme2.png)
 
 This repository follows a clear N-layer architecture and is built to be testable and maintainable. 🛠️🔎🔥
 
@@ -48,6 +54,10 @@ Typical request flow:
 3. Service implements business rules (assignment, state transitions) ⚙️
 4. Repository layer talks to TypeORM and the database 🗄️
 5. Entities live in `database_tables/` 🧩
+
+Another quick snapshot of the flow
+
+![readme3](img/readme3.png)
 
 ## Architecture 🏗️
 
